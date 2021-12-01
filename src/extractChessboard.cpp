@@ -2,6 +2,24 @@
 
 using namespace std;
 
+bool chessboardExtractor::extract(string& lidarPath, pcl::PoinCloud<pcl::PointXYZ>& plane_cloud)
+{
+    pcl::PointCloud<pcl::PointXYZ>::Ptr input_cloud (new pcl::PointCloud<pcl::PointXYZ>);
+    if (pcl::io::loadPCDFile<pcl::PointXYZ> (lidarPath, *input_cloud) == -1) 
+    {
+        PCL_ERROR ("Couldn't read file \n");
+        return false;
+    }
+    this->pass_filter(input_cloud);
+    std::vector<pcl::PointIndices> indices_clusters;
+    this->pcd_clustering(input_cloud, indices_clusters);
+    if(!this->fitPlane(input_cloud, indices_clusters)){
+        return false;
+    }
+    plane_cloud = input_cloud;
+    return true;
+}
+
 
 // void chessboardExtractor::extract(pcl::PointCloud<pcl::PointXYZ>::Ptr input_lidar_pcd,
 //                                   pcl::PointCloud<pcl::PointXYZ>::Ptr chessboard_pcd)
@@ -100,24 +118,33 @@ void chessboardExtractor::pcd_clustering(pcl::PointCloud<pcl::PointXYZ>::Ptr& in
     return;
 }
 
-// bool chessboardExtractor::fitPlane(pcl::PointCloud<pcl::PointXYZ>::Ptr input_pcd,
-//     pcl::PointCloud<pcl::PointXYZ>::Ptr plane_pcd)
-// {
+bool chessboardExtractor::fitPlane(pcl::PointCloud<pcl::PointXYZ>::Ptr &input_pcd,
+              std::vector<pcl::PointIndices> &indices_clusters)
+{
+    pcl::ExtractIndices<pcl::PointXYZ> extract;
+    extract.setInputCloud(input_pcd);
+    for (auto &cluster : indices_clusters)
+    {
+        pcl::PointCloud<pcl::PointXYZ>::Ptr pcd_cluster(new pcl::PointCloud<pcl::PointXYZ>);
+        extract.setIndices(boost::shared_ptr<pcl::PointIndices>(new pcl::PointIndices(cluster)));
+        extract.setNegative(false);
+        extract.filter(*pcd_cluster);
 
-//     pcl::ModelCoefficients::Ptr coefficients(new pcl::ModelCoefficients);
-//     pcl::PointIndices::Ptr inliers(new pcl::PointIndices);
-//     pcl::SACSegmentation<pcl::PointXYZ> seg;
-//     seg.setOptimizeCoefficients(true);
-//     seg.setModelType(pcl::SACMODEL_PLANE);
-//     seg.setMethodType(pcl::SAC_RANSAC);
-//     seg.setDistanceThreshold(0.04);
-//     seg.setInputCloud(input_pcd);
-//     seg.segment(*inliers, *coefficients);
-//     double inliers_percentage = double(inliers->indices.size()) / input_pcd->size();
-//     if(inliers_percentage>0.9){
-//         extract_pcd_by_indices(inliers, input_pcd, plane_pcd);
-//         return true;
-//     } 
-//     return false;
-// }
-
+        pcl::ModelCoefficients::Ptr coefficients(new pcl::ModelCoefficients);
+        pcl::PointIndices::Ptr inliers(new pcl::PointIndices);
+        pcl::SACSegmentation<pcl::PointXYZ> seg;
+        seg.setOptimizeCoefficients(true);
+        seg.setModelType(pcl::SACMODEL_PLANE);
+        seg.setMethodType(pcl::SAC_RANSAC);
+        seg.setDistanceThreshold(0.04);
+        seg.setInputCloud(pcd_cluster);
+        seg.segment(*inliers, *coefficients);
+        double inliers_percentage = double(inliers->indices.size()) / pcd_cluster->points.size();
+        if (inliers_percentage > 0.9)
+        {
+            input_pcd = pcd_cluster;
+            return true;
+        }
+    }
+    return false;
+}

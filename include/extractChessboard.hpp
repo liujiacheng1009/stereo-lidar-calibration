@@ -18,6 +18,8 @@
 #include <pcl/filters/crop_box.h>
 #include <pcl/visualization/cloud_viewer.h>
 
+#include <string>
+
 
 struct PassFilterParams{
     double min_x,max_x;
@@ -39,15 +41,14 @@ public:
     chessboardExtractor(PassFilterParams& pass_filter_params):m_pass_filter_params(pass_filter_params){}
 public:
     // 主函数， 从环境点云中提取marker board 点云
-    void extract(pcl::PointCloud<pcl::PointXYZ>::Ptr input_lidar_point_cloud,
-                 pcl::PointCloud<pcl::PointXYZ>::Ptr chessboard_point_cloud);
+    bool extract(string& lidarPath, pcl::PoinCloud<pcl::PointXYZ>& plane_cloud);
 
     // 点云聚类， 获取可能的点云簇
     void pcd_clustering(pcl::PointCloud<pcl::PointXYZ>::Ptr& input_pcd,
         std::vector<pcl::PointIndices>& pcd_clusters);
     // 对上面的点云簇进行平面拟合 
-    bool fitPlane(pcl::PointCloud<pcl::PointXYZ>::Ptr input_pcd,
-        pcl::PointCloud<pcl::PointXYZ>::Ptr plane_pcd);
+    bool fitPlane(pcl::PointCloud<pcl::PointXYZ>::Ptr& input_pcd,
+        std::vector<pcl::PointIndices>& indices_clusters);
 
     // 将原始点云投影到估计的平面上
     void projPlaneFilter(pcl::PointCloud<pcl::PointXYZ>::Ptr &cloud,
