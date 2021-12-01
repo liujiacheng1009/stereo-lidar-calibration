@@ -7,6 +7,16 @@
 #include <pcl/filters/passthrough.h>
 #include <pcl/sample_consensus/ransac.h>
 #include <pcl/sample_consensus/sac_model_plane.h>
+#include <pcl/features/normal_3d.h>
+#include <pcl/search/kdtree.h>
+#include <pcl/search/search.h>
+#include <pcl/segmentation/extract_clusters.h>
+#include <pcl/segmentation/region_growing.h>
+#include <pcl/segmentation/sac_segmentation.h>
+#include <pcl/filters/extract_indices.h>
+#include <pcl/filters/project_inliers.h>
+#include <pcl/filters/crop_box.h>
+#include <pcl/visualization/cloud_viewer.h>
 
 
 struct PassFilterParams{
@@ -33,8 +43,8 @@ public:
                  pcl::PointCloud<pcl::PointXYZ>::Ptr chessboard_point_cloud);
 
     // 点云聚类， 获取可能的点云簇
-    void get_pcds_by_cluster(pcl::PointCloud<pcl::PointXYZ>::Ptr input_pcd,
-        std::vector<pcl::PointIndices> pcd_clusters);
+    void pcd_clustering(pcl::PointCloud<pcl::PointXYZ>::Ptr& input_pcd,
+        std::vector<pcl::PointIndices>& pcd_clusters);
     // 对上面的点云簇进行平面拟合 
     bool fitPlane(pcl::PointCloud<pcl::PointXYZ>::Ptr input_pcd,
         pcl::PointCloud<pcl::PointXYZ>::Ptr plane_pcd);

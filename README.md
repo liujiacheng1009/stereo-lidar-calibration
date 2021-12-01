@@ -7,4 +7,8 @@
 先查看下点云能不能读成POINTXYZIR格式，
 matlab 的toolbox 直接读取的点云PointXYZ, 没有用到 ring和 intensity特征
 
-2、
+2、pass filter 需要确保包括chess board [-10,10]
+
+3、可以直接通过限制点云簇的大小获得chessboard 点云
+
+4、

@@ -75,32 +75,30 @@ void chessboardExtractor::pass_filter(pcl::PointCloud<pcl::PointXYZ>::Ptr& input
     return;
 }
 
-// void chessboardExtractor::get_pcds_by_cluster(pcl::PointCloud<pcl::PointXYZ>::Ptr input_pcd,
-//                                               std::vector<pcl::PointIndices> pcd_clusters)
-// {
-//     pcl::search::Search<pcl::PointXYZ>::Ptr tree(new pcl::search::KdTree<pcl::PointXYZ>);
-//     pcl::PointCloud<pcl::Normal>::Ptr normals(new pcl::PointCloud<pcl::Normal>);
-//     pcl::NormalEstimation<pcl::PointXYZ, pcl::Normal> normal_estimator;
-//     normal_estimator.setSearchMethod(tree);
-//     normal_estimator.setInputCloud(cloud);
-//     normal_estimator.setKSearch(50);
-//     normal_estimator.compute(*normals);
+void chessboardExtractor::pcd_clustering(pcl::PointCloud<pcl::PointXYZ>::Ptr& input_pcd,
+                                              std::vector<pcl::PointIndices>& pcd_clusters)
+{
+    pcl::search::Search<pcl::PointXYZ>::Ptr tree(new pcl::search::KdTree<pcl::PointXYZ>);
+    pcl::PointCloud<pcl::Normal>::Ptr normals(new pcl::PointCloud<pcl::Normal>);
+    pcl::NormalEstimation<pcl::PointXYZ, pcl::Normal> normal_estimator;
+    normal_estimator.setSearchMethod(tree);
+    normal_estimator.setInputCloud(input_pcd);
+    normal_estimator.setKSearch(50);
+    normal_estimator.compute(*normals);
 
-//     // Region growing to create potentatial planes
-//     pcl::RegionGrowing<pcl::PointXYZ, pcl::Normal> reg;
-//     reg.setMinClusterSize(150);
-//     reg.setMaxClusterSize(6000);
-//     reg.setSearchMethod(tree);
-//     reg.setNumberOfNeighbours(60);
-//     reg.setInputCloud(cloud);
-//     reg.setInputNormals(normals);
-//     reg.setSmoothnessThreshold(3.0 / 180.0 * M_PI);
-//     reg.setCurvatureThreshold(0.3);
+    pcl::RegionGrowing<pcl::PointXYZ, pcl::Normal> reg;
+    reg.setMinClusterSize(400);
+    reg.setMaxClusterSize(3500);
+    reg.setSearchMethod(tree);
+    reg.setNumberOfNeighbours(60);
+    reg.setInputCloud(input_pcd);
+    reg.setInputNormals(normals);
+    reg.setSmoothnessThreshold(3.0 / 180.0 * M_PI);
+    reg.setCurvatureThreshold(0.3);
 
-//     std::vector<pcl::PointIndices> clusters;
-//     reg.extract(clusters);
-//     return;
-// }
+    reg.extract(pcd_clusters);
+    return;
+}
 
 // bool chessboardExtractor::fitPlane(pcl::PointCloud<pcl::PointXYZ>::Ptr input_pcd,
 //     pcl::PointCloud<pcl::PointXYZ>::Ptr plane_pcd)
