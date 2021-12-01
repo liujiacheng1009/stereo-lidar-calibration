@@ -10,6 +10,17 @@ void LidarFeatureDetector::getRings(std::vector<std::vector<pcl::PointXYZIr>>& r
     return;
 }
 
+void LidarFeatureDetector::projPlaneFilter(pcl::PointCloud<pcl::PointXYZIR>::Ptr &cloud_seg,
+                        pcl::PointCloud<pcl::PointXYZIR>::Ptr &cloud_projected,
+                        pcl::ModelCoefficients::Ptr &coefficients)
+{
+    pcl::ProjectInliers<pcl::PointXYZIR> proj;
+    proj.setModelType(pcl::SACMODEL_PLANE);
+    proj.setInputCloud(cloud_seg);
+    proj.setModelCoefficients(coefficients);
+    proj.filter(*cloud_projected);
+    return;
+}
 
 void LidarFeatureDetector::getEdgePointCloud(std::vector<std::vector<pcl::PointXYZIr>>& rings,pcl::PointCloud<pcl::PointXYZIr>::Ptr& edge_pcd)
 {
@@ -33,6 +44,8 @@ void LidarFeatureDetector::getEdgePointCloud(std::vector<std::vector<pcl::PointX
     }
     return;
 }
+
+
 
 bool LidarFeatureDetector::extractFourEdges(pcl::PointCloud<pcl::PointXYZIr>::Ptr &edge_pcd,
                                             std::vector<pcl::PointCloud<pcl::PointXYZI>> &line_points,
