@@ -1,3 +1,6 @@
+#ifndef STEREO_LIDAR_CALIBRATION_EXTRACTCHESSBOARD_HPP
+#define STEREO_LIDAR_CALIBRATION_EXTRACTCHESSBOARD_HPP
+
 #include <pcl/common/common.h>
 #include <pcl/ModelCoefficients.h>
 #include <pcl/point_cloud.h>
@@ -17,7 +20,7 @@
 #include <pcl/filters/project_inliers.h>
 #include <pcl/filters/crop_box.h>
 #include <pcl/visualization/cloud_viewer.h>
-
+#include <pcl/io/pcd_io.h>
 #include <string>
 
 
@@ -41,8 +44,7 @@ public:
     chessboardExtractor(PassFilterParams& pass_filter_params):m_pass_filter_params(pass_filter_params){}
 public:
     // 主函数， 从环境点云中提取marker board 点云
-    bool extract(string& lidarPath, pcl::PoinCloud<pcl::PointXYZ>& plane_cloud);
-
+    bool extract(std::string& lidarPath, pcl::PointCloud<pcl::PointXYZ>::Ptr& plane_cloud);
     // 点云聚类， 获取可能的点云簇
     void pcd_clustering(pcl::PointCloud<pcl::PointXYZ>::Ptr& input_pcd,
         std::vector<pcl::PointIndices>& pcd_clusters);
@@ -65,3 +67,4 @@ private:
     PassFilterParams m_pass_filter_params;
 };
 
+#endif

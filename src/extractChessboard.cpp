@@ -2,7 +2,7 @@
 
 using namespace std;
 
-bool chessboardExtractor::extract(string& lidarPath, pcl::PoinCloud<pcl::PointXYZ>& plane_cloud)
+bool chessboardExtractor::extract(std::string& lidarPath, pcl::PointCloud<pcl::PointXYZ>::Ptr& plane_cloud)
 {
     pcl::PointCloud<pcl::PointXYZ>::Ptr input_cloud (new pcl::PointCloud<pcl::PointXYZ>);
     if (pcl::io::loadPCDFile<pcl::PointXYZ> (lidarPath, *input_cloud) == -1) 
