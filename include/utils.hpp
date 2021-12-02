@@ -32,6 +32,13 @@ void display_colored_by_depth(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud)
     }
 }
 
+cv::Point2d project(cv::Point3d p, cv::Mat CameraMat)
+{
+    cv::Point2d pix;
+    pix.x = (p.x * CameraMat.at<double>(0, 0)) / p.z + CameraMat.at<double>(0, 2);
+    pix.y = ((p.y * CameraMat.at<double>(1, 1)) / p.z + CameraMat.at<double>(1, 2));
+    return pix;
+}
 // #include <stdio.h>
 // #include <stdlib.h>
 // #include "mat.h"

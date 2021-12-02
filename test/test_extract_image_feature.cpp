@@ -1,5 +1,5 @@
 #include "extractImageFeature.hpp"
-
+#include "utils.hpp"
 
 int main()
 {
@@ -20,13 +20,27 @@ int main()
     std::vector<cv::Point2f> image_corners;
     if(!image_feature_detector.detectImageCorner(img, image_corners))
         return -1;
+    for(auto& corner:image_corners){
+        std::cout<<corner<<std::endl;
+    }
     cv::Mat rvec, tvec;
     image_feature_detector.estimatePose(image_corners, rvec, tvec);
+    std::vector<cv::Point3d> chessboard_3d_corners;
+    image_feature_detector.calculate3DCorners(chessboard_3d_corners, rvec, tvec);
+
+    // for(auto& corner:chessboard_3d_corners){
+    //     std::cout<< corner<<std::endl;
+    //     cv::Point2d p = project(corner,camera_matrix);
+    //     cv::circle(img, p, 5, cv::Scalar(0, 255, 0), -1);
+    // }
+    // cv::Point3d ori_p(tvec);
+    // cv::Point2d p = project(ori_p,camera_matrix);
+    // cv::circle(img, p, 5, cv::Scalar(0, 255, 0), -1);
     // std::cout<< rvec <<std::endl;
     // std::cout<< tvec <<std::endl;
     
-	// cv::imshow("chessboard corners", img);
-	// cv::waitKey(0);
+	cv::imshow("chessboard corners", img);
+	cv::waitKey(0);
 
     return 0;
 }

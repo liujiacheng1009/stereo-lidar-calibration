@@ -28,6 +28,8 @@ public:
     bool detectImageCorner(cv::Mat& input_image, vector<cv::Point2f>& image_corners); // 从图像检测角点
     void undistort_corners(vector<cv::Point2f>& input_corners, cv::Mat &rectified_corners); // 角点畸变校正
     void estimatePose(vector<cv::Point2f>& chessboard_corners, cv::Mat& rvec, cv::Mat&tvec); // 从角点pnp恢复位姿
+    void calculate3DCorners(vector<cv::Point3d>& chessboard_3d_corners, cv::Mat& rvec, cv::Mat& tvec); // 计算marker板的3D角点位置，需考虑偏移
+
 
     const cv::Mat get_camera_matrix(){
         return m_camera_matrix;
@@ -42,7 +44,8 @@ private:
     cv::Size m_board_size = cv::Size(4,7);  // chessboard 规格大小
     double m_square_size; // 格子边长(m)
     cv::Mat m_camera_matrix, m_dist_coeffs; // 相机的内参和畸变矩阵
-    std::vector<cv::Point3f> m_3d_corners; // 世界坐标系下的角点坐标
+    //std::vector<cv::Point3f> m_3d_corners; // 世界坐标系下的角点坐标
+    std::vector<double> m_padding = {0,0,0,0};
 };
 
 #endif
