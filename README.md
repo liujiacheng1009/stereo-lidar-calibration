@@ -11,4 +11,8 @@ matlab 的toolbox 直接读取的点云PointXYZ, 没有用到 ring和 intensity�
 
 3、可以直接通过限制点云簇的大小获得chessboard 点云
 
-4、
+4、cv::findChessboardCorners 和 cv::cornerSubPix 获得的角点类型是cv::Point2f, 其他类型会报错。
+
+5、cv::undistortPoints的调用方式为：
+cv::undistortPoints(chessboard_corners, undistort_corners, m_camera_matrix, m_dist_coeffs, cv::noArray(), m_camera_matrix);
+最后的camera_matrix不能是noArray();

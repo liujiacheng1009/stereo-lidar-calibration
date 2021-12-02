@@ -15,18 +15,18 @@ int main()
     dist_coeffs.at<double>(1,0) = 0.020426051162860;
     double square_size = 0.2;
     ImageFeatureDetector image_feature_detector(camera_matrix, dist_coeffs, square_size);
-    std::cout<<image_feature_detector.get_camera_matrix()<<std::endl;
-    std::cout<< image_feature_detector.get_dist_coeffs() <<std::endl;
-    if(img.empty())
-    {
-        std::cout << "Could not read the image: " << image_path << std::endl;
-        return 1;
-    }
-    cv::imshow("Display window", img);
-    int k = cv::waitKey(0); // Wait for a keystroke in the window
-    if(k == 'q')
-    {
-        return 0;
-    }
+    // std::cout<<image_feature_detector.get_camera_matrix()<<std::endl;
+    // std::cout<< image_feature_detector.get_dist_coeffs() <<std::endl;
+    std::vector<cv::Point2f> image_corners;
+    if(!image_feature_detector.detectImageCorner(img, image_corners))
+        return -1;
+    cv::Mat rvec, tvec;
+    image_feature_detector.estimatePose(image_corners, rvec, tvec);
+    // std::cout<< rvec <<std::endl;
+    // std::cout<< tvec <<std::endl;
+    
+	// cv::imshow("chessboard corners", img);
+	// cv::waitKey(0);
+
     return 0;
 }
