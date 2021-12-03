@@ -20,6 +20,13 @@
 #include <pcl/sample_consensus/ransac.h>
 #include <pcl/sample_consensus/sac_model_line.h>
 #include <pcl/filters/radius_outlier_removal.h>
+#include <pcl/filters/filter.h>
+#include <pcl/filters/extract_indices.h>
+#include <pcl/filters/project_inliers.h>
+#include <pcl/sample_consensus/method_types.h>
+#include <pcl/sample_consensus/model_types.h>
+#include <pcl/segmentation/sac_segmentation.h>
+#include <pcl/common/intersections.h>
 #include <Eigen/Core>
 
 
@@ -40,13 +47,17 @@ public:
     void extractEdgeCloud(pcl::PointCloud<pcl::PointXYZ>::Ptr &input_cloud, pcl::PointCloud<pcl::PointXYZ>::Ptr &edge_pcd);
     bool extractFourLines(pcl::PointCloud<pcl::PointXYZ>::Ptr &edge_pcd,
                           std::vector<Eigen::VectorXf> &lines_params,
-                          std::vector<pcl::PointCloud<pcl::PointXYZ>> &lines_pcd);
+                          std::vector<pcl::PointCloud<pcl::PointXYZ>> &lines_points);
+    void estimateFourCorners(std::vector<Eigen::VectorXf> &line_params, std::vector<pcl::PointXYZ>& corners); // 从直线方程中获取四个角点
 
 private:
     // void getRings(std::vector<std::vector<pcl::PointXYZ>>& rings); // 将marker board点云按照线束id存储
     void remove_inliers(const pcl::PointCloud<pcl::PointXYZ> &cloud_in,
                         std::vector<int> inliers_indices,
                         pcl::PointCloud<pcl::PointXYZ> &cloud_out); 
+
+    void reorder_lines(std::vector<Eigen::VectorXf>& lines_params,
+                    std::vector<pcl::PointCloud<pcl::PointXYZ>>& lines_points);
     pcl::PointCloud<pcl::PointXYZ>::Ptr m_marker_board_pcd;
     int m_number_of_rings;
 

@@ -79,9 +79,46 @@ bool LidarFeatureDetector::extractFourLines(pcl::PointCloud<pcl::PointXYZ>::Ptr 
     }
     if (lines_points.size() == 4)
     {
+        reorder_lines(lines_params,lines_points );
         return true;
     }
     return false;
+}
+
+void LidarFeatureDetector::reorder_lines(std::vector<Eigen::VectorXf> &v_line_coeff,
+                                         std::vector<pcl::PointCloud<pcl::PointXYZ>> &v_line_cloud)
+{
+    int line_num = v_line_coeff.size();
+    std::vector<std::pair<Eigen::VectorXf, pcl::PointCloud<pcl::PointXYZ>>> coeff_cloud_v;
+    for (size_t i = 0; i < line_num; ++i)
+    {
+        coeff_cloud_v.emplace_back(std::make_pair(v_line_coeff[i], v_line_cloud[i]));
+    }
+    std::sort(coeff_cloud_v.begin(), coeff_cloud_v.end(), [](std::pair<Eigen::VectorXf, pcl::PointCloud<pcl::PointXYZ>> &lhs, std::pair<Eigen::VectorXf, pcl::PointCloud<pcl::PointXYZ>> &rhs)
+              { return lhs.first(2) > rhs.first(2); });
+    // sort by descending order
+    // The six coefficients of the line are given by a point on the line and the direction of the line as:
+    // [point_on_line.x point_on_line.y point_on_line.z line_direction.x line_direction.y line_direction.z]
+    // line order in clockwise: top-left, top-right, bottom-right, bottom-left
+    if (coeff_cloud_v[0].first(1) < coeff_cloud_v[1].first(1))
+    {
+        std::swap(coeff_cloud_v[0], coeff_cloud_v[1]);
+    }
+    if (coeff_cloud_v[2].first(1) > coeff_cloud_v[3].first(1))
+    {
+        std::swap(coeff_cloud_v[2], coeff_cloud_v[3]);
+    }
+
+    v_line_coeff.clear();
+    v_line_cloud.clear();
+    for (size_t i = 0; i < line_num; ++i)
+    {
+        // std::cout << "coeff: " << coeff_cloud_v[i].first.size() << std::endl;
+        // std::cout << "cloud: " << coeff_cloud_v[i].second.size() << std::endl;
+        v_line_coeff.emplace_back(coeff_cloud_v[i].first);
+        v_line_cloud.emplace_back(coeff_cloud_v[i].second);
+    }
+    return;
 }
 
 void LidarFeatureDetector::remove_inliers(const pcl::PointCloud<pcl::PointXYZ> &cloud_in,
@@ -163,6 +200,21 @@ void LidarFeatureDetector::remove_inliers(const pcl::PointCloud<pcl::PointXYZ> &
 //     return;
 // }
 
+void LidarFeatureDetector::estimateFourCorners(std::vector<Eigen::VectorXf> &line_params, std::vector<pcl::PointXYZ> &corners)
+{
+    Eigen::Vector4f p1, p2, p_intersect;
+    for (int i = 0; i < 4; ++i)
+    {
+        pcl::lineToLineSegment(line_params[i], line_params[(i + 1) % 4], p1, p2);
+        for (int j = 0; j < 4; j++)
+        {
+            p_intersect(j) = (p1(j) + p2(j)) / 2.0;
+        }
+        corners.push_back(pcl::PointXYZ(p_intersect(0), p_intersect(1), p_intersect(2)));
+    }
+    return;
+}
+
 void LidarFeatureDetector::extractEdgeCloud(pcl::PointCloud<pcl::PointXYZ>::Ptr &input_cloud, pcl::PointCloud<pcl::PointXYZ>::Ptr &edge_pcd)
 {
     edge_pcd->clear();
@@ -183,7 +235,6 @@ void LidarFeatureDetector::extractEdgeCloud(pcl::PointCloud<pcl::PointXYZ>::Ptr 
     boundEst.setSearchMethod(tree);
     pcl::PointCloud<pcl::Boundary> boundaries;
     boundEst.compute(boundaries);
-    pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_boundary(new pcl::PointCloud<pcl::PointXYZ>);
     for (int i = 0; i < input_cloud->points.size(); i++)
     {
 
