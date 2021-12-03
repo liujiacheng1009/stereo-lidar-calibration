@@ -17,6 +17,10 @@
 #include <pcl/features/boundary.h>
 #include <pcl/visualization/cloud_viewer.h>
 #include <pcl/visualization/pcl_visualizer.h>
+#include <pcl/sample_consensus/ransac.h>
+#include <pcl/sample_consensus/sac_model_line.h>
+#include <pcl/filters/radius_outlier_removal.h>
+#include <Eigen/Core>
 
 
 class LidarFeatureDetector{
@@ -34,10 +38,15 @@ public:
     // void detectPlane(pcl::PointCloud<PointXYZ>::Ptr& plane_pcd);
 
     void extractEdgeCloud(pcl::PointCloud<pcl::PointXYZ>::Ptr &input_cloud, pcl::PointCloud<pcl::PointXYZ>::Ptr &edge_pcd);
+    bool extractFourLines(pcl::PointCloud<pcl::PointXYZ>::Ptr &edge_pcd,
+                          std::vector<Eigen::VectorXf> &lines_params,
+                          std::vector<pcl::PointCloud<pcl::PointXYZ>> &lines_pcd);
 
 private:
     // void getRings(std::vector<std::vector<pcl::PointXYZ>>& rings); // 将marker board点云按照线束id存储
-
+    void remove_inliers(const pcl::PointCloud<pcl::PointXYZ> &cloud_in,
+                        std::vector<int> inliers_indices,
+                        pcl::PointCloud<pcl::PointXYZ> &cloud_out); 
     pcl::PointCloud<pcl::PointXYZ>::Ptr m_marker_board_pcd;
     int m_number_of_rings;
 

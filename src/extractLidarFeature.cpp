@@ -45,8 +45,59 @@
 //     return;
 // }
 
+bool LidarFeatureDetector::extractFourLines(pcl::PointCloud<pcl::PointXYZ>::Ptr &edge_pcd,
+                                            std::vector<Eigen::VectorXf> &lines_params,
+                                            std::vector<pcl::PointCloud<pcl::PointXYZ>> &lines_points)
+{
+    lines_params.clear();
+    lines_points.clear();
+    for (int i = 0; i < 4; i++)
+    {
+        pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_ptr(edge_pcd);
+        pcl::SampleConsensusModelLine<pcl::PointXYZ>::Ptr model_l(new pcl::SampleConsensusModelLine<pcl::PointXYZ>(cloud_ptr));
+        pcl::RandomSampleConsensus<pcl::PointXYZ> ransac_l(model_l);
+        ransac_l.setDistanceThreshold(0.03);
+        ransac_l.computeModel();
+        std::vector<int> line_inliers;
+        ransac_l.getInliers(line_inliers);
+        if (!line_inliers.empty())
+        {
+            pcl::PointCloud<pcl::PointXYZ> line_i;
+            pcl::copyPointCloud<pcl::PointXYZ>(*edge_pcd,
+                                               line_inliers,
+                                               line_i);
+            lines_points.push_back(line_i);                       // 边界点云
+            lines_params.push_back(ransac_l.model_coefficients_); // 边界线的参数
+        }
+        else
+        {
+            break;
+        }
+        pcl::PointCloud<pcl::PointXYZ> plane_no_line;
+        remove_inliers(*cloud_ptr, line_inliers, plane_no_line);
+        *edge_pcd = plane_no_line;
+    }
+    if (lines_points.size() == 4)
+    {
+        return true;
+    }
+    return false;
+}
 
-
+void LidarFeatureDetector::remove_inliers(const pcl::PointCloud<pcl::PointXYZ> &cloud_in,
+                                          std::vector<int> inliers_indices,
+                                          pcl::PointCloud<pcl::PointXYZ> &cloud_out)
+{
+    std::vector<int> outliers_indicies;
+    for (size_t i = 0; i < cloud_in.size(); i++)
+    {
+        if (find(inliers_indices.begin(), inliers_indices.end(), i) == inliers_indices.end())
+        {
+            outliers_indicies.push_back(i);
+        }
+    }
+    pcl::copyPointCloud<pcl::PointXYZ>(cloud_in, outliers_indicies, cloud_out);
+}
 // bool LidarFeatureDetector::extractFourEdges(pcl::PointCloud<pcl::PointXYZIr>::Ptr &edge_pcd,
 //                                             std::vector<pcl::PointCloud<pcl::PointXYZI>> &line_points,
 //                                             std::vector<Eigen::VectorXf> &line_params)
