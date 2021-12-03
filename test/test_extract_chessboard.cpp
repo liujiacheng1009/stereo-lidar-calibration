@@ -44,6 +44,7 @@ int main(){
     // pcl::PointCloud<pcl::PointXYZIR>::Ptr chessboard_point_cloud;
     // chessboardExtractor extractor;
     // extractor.extract(input_cloud, chessboard_point_cloud);
+    pcl::io::savePCDFileASCII ("/home/jc/Documents/stereo-lidar-calibration/exclude_dir/debug_data/chessboard_plane_0002.pcd", *plane_pcd);
     display_colored_by_depth(plane_pcd);
     return 0;
 

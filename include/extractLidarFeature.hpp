@@ -3,25 +3,42 @@
 #include <pcl/common/common.h>
 #include <vector>
 #include <Eigen/Core>
+#include <vector>
+#include <ctime>
+#include <boost/thread/thread.hpp>
+#include <pcl/io/ply_io.h>
+#include <pcl/io/pcd_io.h>
+#include <pcl/visualization/pcl_visualizer.h>
+#include <pcl/console/parse.h>
+#include <pcl/features/eigen.h>
+#include <pcl/features/feature.h>
+#include <pcl/features/normal_3d.h>
+#include <pcl/impl/point_types.hpp>
+#include <pcl/features/boundary.h>
+#include <pcl/visualization/cloud_viewer.h>
+#include <pcl/visualization/pcl_visualizer.h>
 
 
 class LidarFeatureDetector{
 public:
-    void getCorners(std::vector<Eigen::VectorXf> &line_params, vector<pcl::PointXYZ>& chessboard_corners); // 从直线方程中获取四个角点
+    LidarFeatureDetector(){}
+    // void getCorners(std::vector<Eigen::VectorXf> &line_params, std::vector<pcl::PointXYZ>& chessboard_corners); // 从直线方程中获取四个角点
 
-    void getEdgePointCloud(std::vector<std::vector<PointXYZIr>>& rings,pcl::PointCloud<pcl::PointXYZIr>::Ptr& edge_pcd);// 从rings中提取边缘点云
+    // void getEdgePointCloud(std::vector<std::vector<pcl::PointXYZ>>& rings,pcl::PointCloud<pcl::PointXYZ>::Ptr& edge_pcd);// 从rings中提取边缘点云
 
-    bool extractFourEdges(pcl::PointCloud<pcl::PointXYZIr>::Ptr &edge_pcd,
-                          std::vector<pcl::PointCloud<pcl::PointXYZI>> &line_points,
-                          std::vector<Eigen::VectorXf> &line_params); // 从边缘点云中拟合四个直线
+    // bool extractFourEdges(pcl::PointCloud<pcl::PointXYZ>::Ptr &edge_pcd,
+    //                       std::vector<pcl::PointCloud<pcl::PointXYZ>> &line_points,
+    //                       std::vector<Eigen::VectorXf> &line_params); // 从边缘点云中拟合四个直线
 
     
-    void detectPlane(pcl::PointCloud<PointXYZIr>::Ptr& plane_pcd);
+    // void detectPlane(pcl::PointCloud<PointXYZ>::Ptr& plane_pcd);
+
+    void extractEdgeCloud(pcl::PointCloud<pcl::PointXYZ>::Ptr &input_cloud, pcl::PointCloud<pcl::PointXYZ>::Ptr &edge_pcd);
 
 private:
-    void getRings(std::vector<std::vector<PointXYZIr>>& rings); // 将marker board点云按照线束id存储
+    // void getRings(std::vector<std::vector<pcl::PointXYZ>>& rings); // 将marker board点云按照线束id存储
 
-    pcl::PointCloud<pcl::PointXYZIr>::Ptr m_marker_board_pcd;
+    pcl::PointCloud<pcl::PointXYZ>::Ptr m_marker_board_pcd;
     int m_number_of_rings;
 
 };
