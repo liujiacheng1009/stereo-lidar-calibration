@@ -2,21 +2,23 @@
 
 bool ImageFeatureDetector::detectImageCorner(cv::Mat &input_image, vector<cv::Point2f> &image_corners)
 {
+    image_corners.clear();
     cv::Mat gray_img;
     cv::cvtColor(input_image, gray_img, cv::COLOR_BGR2GRAY);
     std::vector<cv::Point2f> points;
     const int chessBoardFlags = cv::CALIB_CB_ADAPTIVE_THRESH | cv::CALIB_CB_NORMALIZE_IMAGE;
     bool found = cv::findChessboardCorners(gray_img, m_board_size, points, chessBoardFlags);
-    // std::cout << points.size() << std::endl;
+
     if (found)
     {
         cv::cornerSubPix(gray_img, points, cv::Size(11, 11), cv::Size(-1, -1), cv::TermCriteria(cv::TermCriteria::EPS + cv::TermCriteria::COUNT, 30, 0.1));
         image_corners = points;
-        cv::drawChessboardCorners(input_image, m_board_size, image_corners, found);
+        // cv::drawChessboardCorners(input_image, m_board_size, image_corners, found);
+        // cv::imshow("debug", input_image);
+        // cv::waitKey(0);
         return true;
     }
     return false;
-    ;
 }
 
 //  void ImageFeatureDetector::calcBoardCornerPositions()

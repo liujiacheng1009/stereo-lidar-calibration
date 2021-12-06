@@ -41,7 +41,7 @@ public:
     
 private:
     void calcBoardCornerPositions(); // 计算board corners 在世界坐标系的坐标
-    cv::Size m_board_size = cv::Size(4,7);  // chessboard 规格大小
+    cv::Size m_board_size = cv::Size(7,4);  // chessboard 规格大小
     double m_square_size; // 格子边长(m)
     cv::Mat m_camera_matrix, m_dist_coeffs; // 相机的内参和畸变矩阵
     //std::vector<cv::Point3f> m_3d_corners; // 世界坐标系下的角点坐标

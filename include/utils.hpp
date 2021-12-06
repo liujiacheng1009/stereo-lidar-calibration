@@ -1,3 +1,5 @@
+#ifndef STEREO_LIDAR_CALIBRATION_UTILS_HPP
+#define STEREO_LIDAR_CALIBRATION_UTILS_HPP
 #include <pcl/ModelCoefficients.h>
 #include <pcl/point_types.h>
 #include <pcl/io/pcd_io.h>
@@ -11,7 +13,7 @@
 #include <pcl/segmentation/extract_clusters.h>
 #include <pcl/visualization/pcl_visualizer.h>
 #include <pcl/point_types.h>
-
+#include <boost/filesystem.hpp>
 #include <opencv2/core.hpp>
 #include <opencv2/imgcodecs.hpp>
 #include <opencv2/highgui.hpp>
@@ -44,125 +46,127 @@ cv::Point2d project(cv::Point3d p, cv::Mat CameraMat)
     pix.y = ((p.y * CameraMat.at<double>(1, 1)) / p.z + CameraMat.at<double>(1, 2));
     return pix;
 }
-// #include <stdio.h>
-// #include <stdlib.h>
-// #include "mat.h"
 
-// int diagnose(const char *file) {
-//   MATFile *pmat;
-//   const char **dir;
-//   const char *name;
-//   int	  ndir;
-//   int	  i;
-//   mxArray *pa;
-  
-//   printf("Reading file %s...\n\n", file);
+// 获取指定路径下指定后缀名的文件完整路径
+void get_data_by_path(std::vector<std::string>& data, std::string& path, std::string ext)
+{
 
-//   /*
-//    * Open file to get directory
-//    */
-//   pmat = matOpen(file, "r");
-//   if (pmat == NULL) {
-//     printf("Error opening file %s\n", file);
-//     return(1);
-//   }
-  
-//   /*
-//    * get directory of MAT-file
-//    */
-//   dir = (const char **)matGetDir(pmat, &ndir);
-//   if (dir == NULL) {
-//     printf("Error reading directory of file %s\n", file);
-//     return(1);
-//   } else {
-//     printf("Directory of %s:\n", file);
-//     for (i=0; i < ndir; i++)
-//       printf("%s\n",dir[i]);
-//   }
-//   mxFree(dir);
+    data.clear();
+    boost::filesystem::path data_path(path);
+    if(!boost::filesystem::exists(data_path)) return;
+    boost::filesystem::recursive_directory_iterator end_iter;
+    for( boost::filesystem::recursive_directory_iterator iter(data_path);iter!=end_iter;iter++)
+    {
+        if(boost::filesystem::is_directory( *iter )) continue;
+        boost::filesystem::path file_path(iter->path().string());
+        if(file_path.extension()==ext){
+            data.push_back(iter->path().string());
+        }
+    }
+    return;
+}
 
-//   /* In order to use matGetNextXXX correctly, reopen file to read in headers. */
-//   if (matClose(pmat) != 0) {
-//     printf("Error closing file %s\n",file);
-//     return(1);
-//   }
-//   pmat = matOpen(file, "r");
-//   if (pmat == NULL) {
-//     printf("Error reopening file %s\n", file);
-//     return(1);
-//   }
+// 检查图像和激光点云的文件是否对应
+bool check_data_by_index(std::vector<std::string>& data1, std::vector<std::string>& data2)
+{
+    assert(data1.size()>0&& data1.size()==data2.size());
+    for(int i=0;i<data1.size();++i){
+        std::string& file1 = data1[i];
+        std::string& file2 = data2[i];
+        boost::filesystem::path bfile1(file1);
+        if(!boost::filesystem::exists(bfile1)) return false;
+        boost::filesystem::path bfile2(file2);
+        if(!boost::filesystem::exists(bfile2)) return false;
+        std::string file_name1 = bfile1.stem().string();
+        std::string file_name2 = bfile2.stem().string();
+        if(file_name1!=file_name2) return false;
+    }
+    return true;
+}
 
-//   /* Get headers of all variables */
-//   printf("\nExamining the header for each variable:\n");
-//   for (i=0; i < ndir; i++) {
-//     pa = matGetNextVariableInfo(pmat, &name);
-//     if (pa == NULL) {
-// 	printf("Error reading in file %s\n", file);
-// 	return(1);
-//     }
-//     /* Diagnose header pa */
-//     printf("According to its header, array %s has %d dimensions\n",
-// 	   name, mxGetNumberOfDimensions(pa));
-//     if (mxIsFromGlobalWS(pa))
-//       printf("  and was a global variable when saved\n");
-//     else
-//       printf("  and was a local variable when saved\n");
-//     mxDestroyArray(pa);
-//   }
-
-//   /* Reopen file to read in actual arrays. */
-//   if (matClose(pmat) != 0) {
-//     printf("Error closing file %s\n",file);
-//     return(1);
-//   }
-//   pmat = matOpen(file, "r");
-//   if (pmat == NULL) {
-//     printf("Error reopening file %s\n", file);
-//     return(1);
-//   }
-
-//   /* Read in each array. */
-//   printf("\nReading in the actual array contents:\n");
-//   for (i=0; i<ndir; i++) {
-//       pa = matGetNextVariable(pmat, &name);
-//       if (pa == NULL) {
-// 	  printf("Error reading in file %s\n", file);
-// 	  return(1);
-//       } 
-//       /*
-//        * Diagnose array pa
-//        */
-//       printf("According to its contents, array %s has %d dimensions\n",
-// 	     name, mxGetNumberOfDimensions(pa));
-//       if (mxIsFromGlobalWS(pa))
-// 	printf("  and was a global variable when saved\n");
-//       else
-// 	printf("  and was a local variable when saved\n");
-//       mxDestroyArray(pa);
-//   }
-
-//   if (matClose(pmat) != 0) {
-//       printf("Error closing file %s\n",file);
-//       return(1);
-//   }
-//   printf("Done\n");
-//   return(0);
-// }
-
-// int main(int argc, char **argv)
+// bool readConfigFile(const std::string& config_file_name)
 // {
-  
-//   int result;
-
-//   if (argc > 1)
-//     result = diagnose(argv[1]);
-//   else{
-//     result = 0;
-//     printf("Usage: matdgns <matfile>");
-//     printf(" where <matfile> is the name of the MAT-file");
-//     printf(" to be diagnosed\n");
+//   cv::FileStorage fs_reader(config_file_name, cv::FileStorage::READ);
+//   if (!fs_reader.isOpened())
+//   {
+//     std::cout << config_file_name << " is wrong!" << std::endl;
+//     return false;
 //   }
-
-//   return (result==0)?EXIT_SUCCESS:EXIT_FAILURE;
-
+//   fs_reader["calib_frame_num"] >> calib_frame_num_;
+//   fs_reader["calib_result_file"] >> calib_result_file_;
+//   fs_reader.release();
+//   if (calib_frame_num_ < 0)
+//   {
+//     std::cout << "calib frame num should large than 0 or equal to -1!" << std::endl;
+//     return false;:
+//   }
+//   return true;
 // }
+
+
+// 保存YAML 文件
+// void saveYamlFile(const std::string file_name, const aruco::CameraParameters& cam_param,
+//                   const std::vector<double>& pose, const Eigen::Matrix4d& transformation)
+// {
+//   cv::FileStorage fs_writer(file_name, cv::FileStorage::WRITE);
+//   if (fs_writer.isOpened())
+//   {
+//     cv::Mat trans_mat;
+//     cv::eigen2cv(transformation, trans_mat);
+//     fs_writer << "CameraMat" << cam_param.CameraMatrix;
+//     fs_writer << "DistCoeff" << cam_param.Distorsion;
+//     fs_writer << "ImageSize" << cam_param.CamSize;
+//     fs_writer << "CameraExtrinsicMat" << trans_mat;
+//     fs_writer << "Pose" << pose;
+//     fs_writer.release();
+//     INFO << "Save result file successfully!" << REND;
+//   }
+//   else
+//   {
+//     WARN << "Fail to open yaml file" << REND;
+//   }
+//   fs_writer.release();
+// }
+// }  // namespace cicv
+
+// 文件路径操作
+bool isDirExist(const std::string& path_name)
+{
+  if (boost::filesystem::exists(path_name) && boost::filesystem::is_directory(path_name))
+  {
+    return true;
+  }
+  return false;
+}
+
+// bool createNewDir(const std::string& path_name)
+// {
+//   if (isDirExist(path_name))
+//   {
+//     return true;
+//   }
+//   return boost::filesystem::create_directories(path_name);
+// }
+
+// bool isFileExist(const std::string& file_name)
+// {
+//   if (boost::filesystem::exists(file_name) && boost::filesystem::is_regular_file(file_name))
+//   {
+//     return true;
+//   }
+//   return false;
+// }
+
+// bool createNewFile(const std::string& file_name)
+// {
+//   if (isFileExist(file_name))
+//   {
+//     return true;
+//   }
+//   boost::filesystem::ofstream file(file_name);
+//   file.close();
+//   return isFileExist(file_name);
+// }
+
+
+#endif

@@ -245,3 +245,50 @@ void LidarFeatureDetector::extractEdgeCloud(pcl::PointCloud<pcl::PointXYZ>::Ptr 
     }
     return;
 }
+
+// 判断四个角点是否有效
+// bool ArucoCalib::isValidCorners(const pcl::PointCloud<pcl::PointXYZ>::Ptr corners_ptr)
+// {
+//   int corner_num = corners_ptr->size();
+//   if (corner_num != 4)
+//   {
+//     return false;
+//   }
+
+//   const float board_length = laser_proc_ptr_->board_length_;  // meter
+//   const float board_angle = M_PI / 2.0;
+
+//   // 计算距离评分和角度评分
+//   pcl::PointXYZ pre_corner, cur_corner, next_corner;
+//   float length_diff = 0.0, angle_diff = 0.0;
+//   for (size_t i = 0; i < corner_num; ++i)
+//   {
+//     pre_corner = corners_ptr->points[(i + 3) % 4];
+//     cur_corner = corners_ptr->points[i];
+//     next_corner = corners_ptr->points[(i + 1) % 4];
+//     float dist = pcl::euclideanDistance(cur_corner, next_corner);
+//     length_diff += std::abs(dist - board_length);
+
+//     Eigen::Vector3f a, b;
+//     a << (cur_corner.x - pre_corner.x), (cur_corner.y - pre_corner.y), (cur_corner.z - pre_corner.z);
+//     b << (cur_corner.x - next_corner.x), (cur_corner.y - next_corner.y), (cur_corner.z - next_corner.z);
+//     float angle = std::acos(a.dot(b) / (a.norm() * b.norm()));
+//     angle_diff += std::abs(angle - board_angle);
+//   }
+//   length_diff /= corner_num;
+//   angle_diff /= corner_num;
+
+//   float length_core = 1 - length_diff / board_length;
+//   float angle_core = 1 - angle_diff / board_angle;
+
+// #if LCDEBUG
+//   INFO << "length core is: " << length_core * 100 << REND;
+//   INFO << "angle core is: " << angle_core * 100 << REND;
+// #endif
+
+//   if (length_core < 0.95 || angle_core < 0.95)
+//   {
+//     return false;
+//   }
+//   return true;
+// }

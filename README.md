@@ -18,3 +18,7 @@ cv::undistortPoints(chessboard_corners, undistort_corners, m_camera_matrix, m_di
 最后的camera_matrix不能是noArray();
 
 6、cv::findChessboardCorners和matlab 得到的角点的排列顺序不同
+
+7、icp 4 点的求解精度不高
+
+8、cv::findChessboardCorners在高分辨率图像上有bug， 需要缩小图像
