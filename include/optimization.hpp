@@ -28,7 +28,8 @@
 #include <pcl/sample_consensus/model_types.h>
 #include <pcl/segmentation/sac_segmentation.h>
 #include <pcl/common/intersections.h>
-
+#include <pcl/registration/icp.h>
+#include <pcl/common/distances.h>
 // class StereoMatchingError
 // {
 // public:
@@ -102,12 +103,60 @@ private:
     const double m_w;
 };
 
+
+// 计算点到直线的距离损失
+
+// class PointToLineError2
+// {
+// public:
+//     EIGEN_MAKE_ALIGNED_OPERATOR_NEW 
+//     PointToLineError2(const Eigen::Vector3d& pt,
+//                     const Eigen::Vector3d& line_pt,
+//                     const Eigen::Vector3d& line_dir, 
+//                     const double& w):
+//                     m_pt(pt),
+//                     m_line_pt(line_pt),
+//                     m_line_dir(line_dir),
+//                     m_w(w){}
+//     template<typename T>
+//     bool operator ()(const T* const R_t, T* residual) const
+//     {
+//         T p1[3] = {
+//             T(m_pt(0)),
+//             T(m_pt(1)),
+//             T(m_pt(2))
+//         };
+//         T p2[3];
+//         ceres::AngleAxisRotatePoint(R_t, p1, p2);
+//         p2[0] += R_t[3];
+//         p2[1] += R_t[4];
+//         p2[2] += R_t[5];
+//         Eigen::Matrix<T,4, 1> pt, line_pt, line_dir;
+//         pt<< (T)p2[0], (T)p2[1], (T)p2[2], (T)0.0;
+//         line_pt << (T)m_line_pt[0], (T)m_line_pt[1], (T)m_line_pt[2], (T)0.0;
+//         line_dir<< (T)m_line_dir[0], (T)m_line_dir[1], (T)m_line_dir[2], (T)0.0;
+//         double err = sqrt(pcl::sqrPointToLineDistance(pt, line_pt, line_dir));
+//         Eigen::Matrix<double,1,1> err1;
+//         err1(0) = err;
+//         residual[0] = err1.template cast<T>().norm();
+//         residual[0] *= m_w;
+//         return true;
+//     }
+// private:
+//     const Eigen::Vector3d m_pt;
+//     const Eigen::Vector3d m_line_pt;
+//     const Eigen::Vector3d m_line_dir;
+//     const double m_w;
+// };
+
+
+
 // 计算点到直线的损失
-class PointToLineError
+class PointToLineError1
 {
 public:
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW 
-    PointToLineError(const Eigen::Vector3d& point,
+    PointToLineError1(const Eigen::Vector3d& point,
                     const Eigen::Vector3d& line_normal,
                     const double& w):
                     m_point(point),

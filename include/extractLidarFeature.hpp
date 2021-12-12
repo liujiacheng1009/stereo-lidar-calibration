@@ -28,7 +28,7 @@
 #include <pcl/segmentation/sac_segmentation.h>
 #include <pcl/common/intersections.h>
 #include <Eigen/Core>
-
+#include <algorithm>
 
 class LidarFeatureDetector{
 public:
@@ -54,11 +54,13 @@ private:
     // void getRings(std::vector<std::vector<pcl::PointXYZ>>& rings); // 将marker board点云按照线束id存储
     void remove_inliers(const pcl::PointCloud<pcl::PointXYZ> &cloud_in,
                         std::vector<int> inliers_indices,
-                        pcl::PointCloud<pcl::PointXYZ> &cloud_out); 
+                        pcl::PointCloud<pcl::PointXYZ> &cloud_out);
 
-    void reorder_lines(std::vector<Eigen::VectorXf>& lines_params,
-                    std::vector<pcl::PointCloud<pcl::PointXYZ>>& lines_points);
+    void reorder_lines(std::vector<Eigen::VectorXf> &lines_params,
+                       std::vector<pcl::PointCloud<pcl::PointXYZ>> &lines_points);
+
+    void reorder_lines1(std::vector<Eigen::VectorXf> &lines_params,
+                        std::vector<pcl::PointCloud<pcl::PointXYZ>> &lines_points);
     pcl::PointCloud<pcl::PointXYZ>::Ptr m_marker_board_pcd;
     int m_number_of_rings;
-
 };

@@ -2,7 +2,7 @@
 
 using namespace std;
 
-bool chessboardExtractor::extract(std::string& lidarPath, pcl::PointCloud<pcl::PointXYZ>::Ptr& plane_cloud)
+bool ChessboardExtractor::extract(std::string& lidarPath, pcl::PointCloud<pcl::PointXYZ>::Ptr& plane_cloud)
 {
     pcl::PointCloud<pcl::PointXYZ>::Ptr input_cloud (new pcl::PointCloud<pcl::PointXYZ>);
     if (pcl::io::loadPCDFile<pcl::PointXYZ> (lidarPath, *input_cloud) == -1) 
@@ -10,7 +10,8 @@ bool chessboardExtractor::extract(std::string& lidarPath, pcl::PointCloud<pcl::P
         PCL_ERROR ("Couldn't read file \n");
         return false;
     }
-    this->pass_filter(input_cloud);
+    PassFilterParams pass_filter_params(std::vector<double>({-10,10,-10,10,-10,10}));
+    this->pass_filter(input_cloud, pass_filter_params);
     std::vector<pcl::PointIndices> indices_clusters;
     this->pcd_clustering(input_cloud, indices_clusters);
     if(!this->fitPlane(input_cloud, indices_clusters)){
@@ -21,7 +22,7 @@ bool chessboardExtractor::extract(std::string& lidarPath, pcl::PointCloud<pcl::P
 }
 
 
-// void chessboardExtractor::extract(pcl::PointCloud<pcl::PointXYZ>::Ptr input_lidar_pcd,
+// void ChessboardExtractor::extract(pcl::PointCloud<pcl::PointXYZ>::Ptr input_lidar_pcd,
 //                                   pcl::PointCloud<pcl::PointXYZ>::Ptr chessboard_pcd)
 // {
 //     getPointCloudInROI();
@@ -42,7 +43,7 @@ bool chessboardExtractor::extract(std::string& lidarPath, pcl::PointCloud<pcl::P
 //     return;
 // }
 
-// void chessboardExtractor::extract_pcd_by_indices(pcl::PointIndices &indices,
+// void ChessboardExtractor::extract_pcd_by_indices(pcl::PointIndices &indices,
 //                                                  pcl::PointCloud<pcl::PointXYZ>::Ptr &input_pcd,
 //                                                      pcl::PointCloud<pcl::PointXYZ>::Ptr &output_pcd)
 // {
@@ -54,7 +55,7 @@ bool chessboardExtractor::extract(std::string& lidarPath, pcl::PointCloud<pcl::P
 //     return;
 // }
 
-// void chessboardExtractor::getPointCloudInROI()
+// void ChessboardExtractor::getPointCloudInROI()
 // {
 //     pcl::PassThrough<pcl::PointXYZ> filter;
 //     filter.setInputCloud(pcd_in_roi_);
@@ -72,28 +73,28 @@ bool chessboardExtractor::extract(std::string& lidarPath, pcl::PointCloud<pcl::P
 //     return;
 // }
 
-void chessboardExtractor::pass_filter(pcl::PointCloud<pcl::PointXYZ>::Ptr& input_pcd)
+void ChessboardExtractor::pass_filter(pcl::PointCloud<pcl::PointXYZ>::Ptr& input_pcd, PassFilterParams& params)
 {
     auto &pcd_in_roi = input_pcd;
     pcl::PassThrough<pcl::PointXYZ> filter;
     filter.setInputCloud(pcd_in_roi);
     filter.setFilterFieldName("z");
-    filter.setFilterLimits(m_pass_filter_params.min_z, m_pass_filter_params.max_z);
+    filter.setFilterLimits(params.min_z, params.max_z);
     filter.filter(*pcd_in_roi);
 
     filter.setInputCloud(pcd_in_roi);
     filter.setFilterFieldName("y");
-    filter.setFilterLimits(m_pass_filter_params.min_y, m_pass_filter_params.max_y);
+    filter.setFilterLimits(params.min_y, params.max_y);
     filter.filter(*pcd_in_roi);
 
     filter.setInputCloud(pcd_in_roi);
     filter.setFilterFieldName("x");
-    filter.setFilterLimits(m_pass_filter_params.min_x, m_pass_filter_params.max_x);
+    filter.setFilterLimits(params.min_x, params.max_x);
     filter.filter(*pcd_in_roi);
     return;
 }
 
-void chessboardExtractor::pcd_clustering(pcl::PointCloud<pcl::PointXYZ>::Ptr& input_pcd,
+void ChessboardExtractor::pcd_clustering(pcl::PointCloud<pcl::PointXYZ>::Ptr& input_pcd,
                                               std::vector<pcl::PointIndices>& pcd_clusters)
 {
     pcl::search::Search<pcl::PointXYZ>::Ptr tree(new pcl::search::KdTree<pcl::PointXYZ>);
@@ -118,7 +119,7 @@ void chessboardExtractor::pcd_clustering(pcl::PointCloud<pcl::PointXYZ>::Ptr& in
     return;
 }
 
-bool chessboardExtractor::fitPlane(pcl::PointCloud<pcl::PointXYZ>::Ptr &input_pcd,
+bool ChessboardExtractor::fitPlane(pcl::PointCloud<pcl::PointXYZ>::Ptr &input_pcd,
               std::vector<pcl::PointIndices> &indices_clusters)
 {
     pcl::ExtractIndices<pcl::PointXYZ> extract;

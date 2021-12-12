@@ -36,7 +36,7 @@ void OptimizationLC::addPointToLineConstriants(ceres::Problem &problem,
             Eigen::Vector3d point_3d(line_pcd->points[i].x,
                                      line_pcd->points[i].y,
                                      line_pcd->points[i].z);
-            ceres::CostFunction *cost_function = new ceres::AutoDiffCostFunction<PointToLineError, 1, 6>(new PointToLineError(point_3d, normal, w));
+            ceres::CostFunction *cost_function = new ceres::AutoDiffCostFunction<PointToLineError1, 1, 6>(new PointToLineError1(point_3d, normal, w));
             problem.AddResidualBlock(cost_function, loss_function, m_R_t.data());
         }
     }
@@ -44,8 +44,8 @@ void OptimizationLC::addPointToLineConstriants(ceres::Problem &problem,
 }
 
 void OptimizationLC::addPointToPointConstriants(ceres::Problem &problem,
-                                                std::vector<pcl::PointXYZ> &image_corners_3d,
-                                                std::vector<pcl::PointXYZ> &lidar_corners_3d)
+                                                std::vector<pcl::PointXYZ> &lidar_corners_3d,
+                                                std::vector<pcl::PointXYZ> &image_corners_3d)
 {
     assert(image_corners_3d.size() == lidar_corners_3d.size());
     if (image_corners_3d.size() != 4)
@@ -59,7 +59,7 @@ void OptimizationLC::addPointToPointConstriants(ceres::Problem &problem,
         Eigen::Vector3d lidar_point(lidar_corners_3d[i].x,lidar_corners_3d[i].y,lidar_corners_3d[i].z);
         ceres::LossFunction *loss_function = NULL;
         double w = 1 / sqrt((double)image_corners_3d.size());
-        ceres::CostFunction *cost_function = new ceres::AutoDiffCostFunction<PointToPointError, 1, 6>(new PointToPointError(image_point, lidar_point, w));
+        ceres::CostFunction *cost_function = new ceres::AutoDiffCostFunction<PointToPointError, 1, 6>(new PointToPointError(lidar_point,image_point, w));
         problem.AddResidualBlock(cost_function, loss_function, m_R_t.data());
     }
     return;
@@ -104,6 +104,8 @@ void OptimizationLC::addPointToPointConstriants(ceres::Problem &problem,
 //   trans = temp_trans.cast<double>();
 //   return true;
 // }
+
+
 
 // SVD 分解计算 trans
 // bool ArucoCalib::computeTransSVD(const pcl::PointCloud<pcl::PointXYZ>::Ptr source_cloud,

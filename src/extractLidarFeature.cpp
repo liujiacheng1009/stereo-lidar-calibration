@@ -79,7 +79,7 @@ bool LidarFeatureDetector::extractFourLines(pcl::PointCloud<pcl::PointXYZ>::Ptr 
     }
     if (lines_points.size() == 4)
     {
-        reorder_lines(lines_params,lines_points );
+        reorder_lines1(lines_params,lines_points );
         return true;
     }
     return false;
@@ -117,6 +117,26 @@ void LidarFeatureDetector::reorder_lines(std::vector<Eigen::VectorXf> &v_line_co
         // std::cout << "cloud: " << coeff_cloud_v[i].second.size() << std::endl;
         v_line_coeff.emplace_back(coeff_cloud_v[i].first);
         v_line_cloud.emplace_back(coeff_cloud_v[i].second);
+    }
+    return;
+}
+
+void LidarFeatureDetector::reorder_lines1(std::vector<Eigen::VectorXf> &v_line_coeff,
+                                         std::vector<pcl::PointCloud<pcl::PointXYZ>> &v_line_cloud)
+{
+    assert(v_line_coeff.size()==v_line_cloud.size()&& v_line_cloud.size()==4);
+    Eigen::Vector3d line0,line1;
+    line0 << v_line_coeff[0](3) , v_line_coeff[0](4), v_line_coeff[0](5);
+    line1<< v_line_coeff[1](3) , v_line_coeff[1](4), v_line_coeff[1](5);    
+    double rad =line0.dot(line1) /(line0.norm()*line1.norm());
+    if(abs(rad)>0.2){
+        Eigen::VectorXf line = v_line_coeff[1];
+        pcl::PointCloud<pcl::PointXYZ> cloud = v_line_cloud[1];
+        v_line_coeff[1] = v_line_coeff[2];
+        v_line_cloud[1] = v_line_cloud[2];
+        v_line_cloud[2] = cloud;
+        v_line_coeff[2] = line;
+        // swap(v_line_cloud[1], v_line_cloud[2]);
     }
     return;
 }

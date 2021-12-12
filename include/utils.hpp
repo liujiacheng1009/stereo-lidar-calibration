@@ -12,13 +12,16 @@
 #include <pcl/segmentation/sac_segmentation.h>
 #include <pcl/segmentation/extract_clusters.h>
 #include <pcl/visualization/pcl_visualizer.h>
+#include <pcl/visualization/cloud_viewer.h>
 #include <pcl/point_types.h>
 #include <boost/filesystem.hpp>
+#include <pcl/common/geometry.h>
 #include <opencv2/core.hpp>
 #include <opencv2/imgcodecs.hpp>
 #include <opencv2/highgui.hpp>
-
+#include <pcl/registration/icp.h>
 #include <string>
+#include <cmath>
 #include <unistd.h>
 
 
@@ -38,6 +41,196 @@ void display_colored_by_depth(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud)
         sleep(0.1);
     }
 }
+
+// void show_cloud(pcl::PointCloud<pcl::PointXYZ>& cloud, std::string viewer_name="debug"){
+//     pcl::visualization::CloudViewer viewer(viewer_name);
+//     viewer.showCloud(cloud);
+//     while (!viewer.wasStopped ())
+//     {
+//         sleep(0.1);
+//     }
+//     return;
+// }
+bool computeTransICP(const pcl::PointCloud<pcl::PointXYZ>::Ptr source_cloud,
+                     const pcl::PointCloud<pcl::PointXYZ>::Ptr target_cloud, Eigen::Matrix4d &trans)
+{
+    pcl::IterativeClosestPoint<pcl::PointXYZ, pcl::PointXYZ> icp;
+    icp.setMaximumIterations (1000);
+    icp.setInputSource(source_cloud);
+    icp.setInputTarget(target_cloud);
+    icp.setTransformationEpsilon(1e-8);
+    pcl::PointCloud<pcl::PointXYZ> Final;
+    icp.align(Final);
+    if (!icp.hasConverged())
+    {
+        return false;
+    }
+    Eigen::Matrix4f temp_trans = icp.getFinalTransformation(); // colomn major
+    trans = temp_trans.cast<double>();
+    std::cout<<icp.getFitnessScore()<<std::endl;
+    return true;
+}
+
+pcl::visualization::PCLVisualizer::Ptr show_multi_clouds(std::vector<pcl::PointCloud<pcl::PointXYZ>>& clouds)
+{
+    pcl::visualization::PCLVisualizer::Ptr viewer(new pcl::visualization::PCLVisualizer ("debug"));
+    viewer->setBackgroundColor(0,0,0);
+    std::stringstream cloud_name;
+    int counter = 0;
+    for(auto& cloud:clouds){
+        counter ++;
+        cloud_name.str("");
+        cloud_name << "Cloud " << counter;
+        pcl::RGB rgb;
+        pcl::visualization::getRandomColors(rgb);
+        auto cloud_ptr = cloud.makeShared();
+        pcl::visualization::PointCloudColorHandlerCustom<pcl::PointXYZ> single_color(cloud_ptr, rgb.r, rgb.g, rgb.b);
+        viewer->addPointCloud<pcl::PointXYZ>(cloud_ptr, single_color, cloud_name.str());
+        viewer->setPointCloudRenderingProperties (pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 3, cloud_name.str());
+    }
+    viewer->addCoordinateSystem (1.0);
+    viewer->initCameraParameters();
+    return (viewer);
+}
+
+pcl::visualization::PCLVisualizer::Ptr show_multi_clouds_with_specified_colors(std::vector<pcl::PointCloud<pcl::PointXYZ>>& clouds)
+{
+    assert(clouds.size()==4);
+    std::vector<pcl::RGB> colors = {pcl::RGB(255, 0, 0),
+                                    pcl::RGB(0, 255, 0),
+                                    pcl::RGB(0, 0, 255),
+                                    pcl::RGB(255, 255, 0)};
+    pcl::visualization::PCLVisualizer::Ptr viewer(new pcl::visualization::PCLVisualizer ("debug"));
+    viewer->setBackgroundColor(0,0,0);
+    std::stringstream cloud_name;
+    int counter = 0;
+    for(auto& cloud:clouds){
+        counter ++;
+        cloud_name.str("");
+        cloud_name << "Cloud " << counter;
+        pcl::RGB rgb = colors[counter-1];
+        //pcl::visualization::getRandomColors(rgb);
+        auto cloud_ptr = cloud.makeShared();
+        pcl::visualization::PointCloudColorHandlerCustom<pcl::PointXYZ> single_color(cloud_ptr, rgb.r, rgb.g, rgb.b);
+        viewer->addPointCloud<pcl::PointXYZ>(cloud_ptr, single_color, cloud_name.str());
+        viewer->setPointCloudRenderingProperties (pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 3, cloud_name.str());
+    }
+    viewer->addCoordinateSystem (1.0);
+    viewer->initCameraParameters();
+    return (viewer);
+}
+
+
+// void MonoPattern::getOrderedCorner(const cv::Mat& cam_corners, pcl::PointCloud<pcl::PointXYZ>::Ptr corner_cloud)
+// {
+//   corner_cloud->clear();
+//   // camera coordinate: x axis points to right, y axis points to down, z axis points to front which is vertical to x-y
+//   // plane. So the top point's y is smallest.
+//   double min_y = cam_corners.at<float>(1, 0);
+//   int min_y_pos = 0;
+//   for (int i = 1; i < 4; ++i)
+//   {
+//     if (cam_corners.at<float>(1, i) < min_y)
+//     {
+//       min_y = cam_corners.at<float>(1, i);
+//       min_y_pos = i;
+//     }
+//   }
+//   for (int i = 0; i < 4; ++i)
+//   {
+//     int cur_pos = (i + min_y_pos) % 4;
+//     corner_cloud->points.emplace_back(cam_corners.at<float>(0, cur_pos), cam_corners.at<float>(1, cur_pos),
+//                                       cam_corners.at<float>(2, cur_pos));
+//   }
+// }
+void reorder_corners1(std::vector<cv::Point3d>& ori_corners, std::vector<cv::Point3d>& reordered_corners)
+{
+    sort(ori_corners.begin(), ori_corners.end(),[](cv::Point3d& a, cv::Point3d& b){
+        return a.x>b.x;
+    });
+    if(ori_corners[0].y<ori_corners[1].y){
+        reordered_corners.push_back(ori_corners[0]);
+        reordered_corners.push_back(ori_corners[1]);
+    }else{
+        reordered_corners.push_back(ori_corners[1]);
+        reordered_corners.push_back(ori_corners[0]);
+    }
+    if(ori_corners[2].y>ori_corners[3].y){
+        reordered_corners.push_back(ori_corners[2]);
+        reordered_corners.push_back(ori_corners[3]);
+    }else{
+        reordered_corners.push_back(ori_corners[3]);
+        reordered_corners.push_back(ori_corners[2]);
+    }
+    return;
+}
+
+void reorder_corners1(std::vector<pcl::PointXYZ>& ori_corners, std::vector<pcl::PointXYZ>& reordered_corners)
+{
+    sort(ori_corners.begin(), ori_corners.end(),[](pcl::PointXYZ& a, pcl::PointXYZ& b){
+        return a.z>b.z;
+    });
+}
+// 调整lidar points 的顺序
+void reorder_corners(std::vector<pcl::PointXYZ>& ori_corners, std::vector<pcl::PointXYZ>& reordered_corners)
+{
+    reordered_corners.clear();
+    float d1 = pcl::geometry::distance(ori_corners[0], ori_corners[0]);
+    float d2 = pcl::geometry::distance(ori_corners[1], ori_corners[2]);
+    if(d1<d2){
+        std::reverse(ori_corners.begin()+1, ori_corners.end());
+    }
+    if(std::max(ori_corners[0].z, ori_corners[1].z)< std::max(ori_corners[2].z, ori_corners[3].z)){
+        reordered_corners.push_back(ori_corners[2]);
+        reordered_corners.push_back(ori_corners[3]);
+        reordered_corners.push_back(ori_corners[0]);
+        reordered_corners.push_back(ori_corners[1]);
+    }else{
+        reordered_corners = ori_corners;
+    }
+    if(reordered_corners[0].y<reordered_corners[1].y){
+        std::reverse(reordered_corners.begin(), reordered_corners.begin()+2);
+        std::reverse(reordered_corners.begin()+2, reordered_corners.end());
+    }
+    return;
+}
+
+void reorder_corners(std::vector<cv::Point3d>& ori_corners, std::vector<cv::Point3d>& reordered_corners)
+{
+    //reorder_corners.clear();
+    double min_y = ori_corners[0].y;
+    int min_pos = 0;
+    for(int i=1;i<4;++i){
+        if(ori_corners[i].y<min_y){
+            min_y = ori_corners[i].y;
+            min_pos = i;
+        }
+    }
+    for(int i=0;i<4;++i){
+        int cur_pos = (i+min_pos) % 4;
+        reordered_corners.push_back(ori_corners[cur_pos]);
+    }
+    if(reordered_corners[0].x>reordered_corners[1].x){
+        reverse(reordered_corners.begin()+1, reordered_corners.end());
+    }
+
+    return;
+}
+// pcl::visualization::PCLVisualizer::Ptr customColourVis (pcl::PointCloud<pcl::PointXYZ>::ConstPtr cloud)
+// {
+//   // --------------------------------------------
+//   // -----Open 3D viewer and add point cloud-----
+//   // --------------------------------------------
+//   pcl::visualization::PCLVisualizer::Ptr viewer (new pcl::visualization::PCLVisualizer ("3D Viewer"));
+//   viewer->setBackgroundColor (0, 0, 0);
+//   pcl::visualization::PointCloudColorHandlerCustom<pcl::PointXYZ> single_color(cloud, 0, 255, 0);
+//   viewer->addPointCloud<pcl::PointXYZ> (cloud, single_color, "sample cloud");
+//   viewer->setPointCloudRenderingProperties (pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 3, "sample cloud");
+//   viewer->addCoordinateSystem (1.0);
+//   viewer->initCameraParameters ();
+//   return (viewer);
+// }
+
 
 cv::Point2d project(cv::Point3d p, cv::Mat CameraMat)
 {

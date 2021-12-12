@@ -36,6 +36,29 @@ bool ImageFeatureDetector::detectImageCorner(cv::Mat &input_image, vector<cv::Po
 //     return;
 //  }
 
+// void MonoPattern::getOrderedCorner(const cv::Mat& cam_corners, pcl::PointCloud<pcl::PointXYZ>::Ptr corner_cloud)
+// {
+//   corner_cloud->clear();
+//   // camera coordinate: x axis points to right, y axis points to down, z axis points to front which is vertical to x-y
+//   // plane. So the top point's y is smallest.
+//   double min_y = cam_corners.at<float>(1, 0);
+//   int min_y_pos = 0;
+//   for (int i = 1; i < 4; ++i)
+//   {
+//     if (cam_corners.at<float>(1, i) < min_y)
+//     {
+//       min_y = cam_corners.at<float>(1, i);
+//       min_y_pos = i;
+//     }
+//   }
+//   for (int i = 0; i < 4; ++i)
+//   {
+//     int cur_pos = (i + min_y_pos) % 4;
+//     corner_cloud->points.emplace_back(cam_corners.at<float>(0, cur_pos), cam_corners.at<float>(1, cur_pos),
+//                                       cam_corners.at<float>(2, cur_pos));
+//   }
+// }
+
 void ImageFeatureDetector::estimatePose(vector<cv::Point2f> &chessboard_corners, cv::Mat &rvec, cv::Mat &tvec)
 {
     std::vector<cv::Point2f> undistort_corners;

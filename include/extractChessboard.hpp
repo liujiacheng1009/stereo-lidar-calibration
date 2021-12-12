@@ -39,9 +39,9 @@ struct PassFilterParams{
     }
 };
 
-class chessboardExtractor{
+class ChessboardExtractor{
 public:
-    chessboardExtractor(PassFilterParams& pass_filter_params):m_pass_filter_params(pass_filter_params){}
+    ChessboardExtractor(){}
 public:
     // 主函数， 从环境点云中提取marker board 点云
     bool extract(std::string& lidarPath, pcl::PointCloud<pcl::PointXYZ>::Ptr& plane_cloud);
@@ -57,14 +57,13 @@ public:
                          pcl::PointCloud<pcl::PointXYZ>::Ptr &proj_cloud,
                          pcl::ModelCoefficients::Ptr &coeff);
 
-    void pass_filter(pcl::PointCloud<pcl::PointXYZ>::Ptr& input_pcd);
+    void pass_filter(pcl::PointCloud<pcl::PointXYZ>::Ptr& input_pcd, PassFilterParams& params);
 
 private:
     // 预处理， 滤出固定范围外的点云
     void getPointCloudInROI();
     void extract_pcd_by_indices(pcl::PointIndices &indices, pcl::PointCloud<pcl::PointXYZ>::Ptr &input_pcd,
                                 pcl::PointCloud<pcl::PointXYZ>::Ptr &output_pcd);
-    PassFilterParams m_pass_filter_params;
 };
 
 #endif

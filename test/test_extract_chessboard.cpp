@@ -18,11 +18,11 @@ int main(){
         return (-1);
     }
     PassFilterParams pass_filter_params(std::vector<double>({-10,10,-10,10,-10,10}));
-    chessboardExtractor extractor(pass_filter_params);
+    ChessboardExtractor extractor;
     
     //display_colored_by_depth(input_cloud);
     // std::cout<< input_cloud->width* input_cloud->height << "points"<<std::endl;
-    extractor.pass_filter(input_cloud);
+    extractor.pass_filter(input_cloud,pass_filter_params);
     // std::cout<< input_cloud->width* input_cloud->height << "points"<<std::endl;
     std::vector<pcl::PointIndices> indices_clusters;
     extractor.pcd_clustering(input_cloud, indices_clusters);
