@@ -259,7 +259,7 @@ public:
                                     Eigen::Vector3d &plane_normal,
                                     Eigen::Vector3d &plane_centroid);
     void addPointToLineConstriants(ceres::Problem &problem,
-                                   std::vector<pcl::PointCloud<pcl::PointXYZ>::Ptr> &lines_pcd,
+                                   std::vector<pcl::PointCloud<pcl::PointXYZ>> &lines_pcd,
                                    std::vector<Eigen::VectorXd> &line_normals);
     // ceres::Problem constructProblem();
     void addPointToPointConstriants(ceres::Problem &problem,

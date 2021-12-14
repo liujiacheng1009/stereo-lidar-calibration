@@ -21,21 +21,21 @@ void OptimizationLC::addPointToPlaneConstraints(ceres::Problem &problem,
 }
 
 void OptimizationLC::addPointToLineConstriants(ceres::Problem &problem,
-                                               std::vector<pcl::PointCloud<pcl::PointXYZ>::Ptr> &lines_pcd,
+                                               std::vector<pcl::PointCloud<pcl::PointXYZ>> &lines_pcd,
                                                std::vector<Eigen::VectorXd> &line_normals)
 {
     assert(lines_pcd.size() == 4);
     for (int i = 0; i < 4; ++i)
     {
-        auto &line_pcd = lines_pcd[i];
+        auto& line_pcd = lines_pcd[i];
         auto &normal = line_normals[i];
         ceres::LossFunction *loss_function = NULL;
-        double w = 1 / sqrt((double)line_pcd->points.size());
-        for (int j = 0; j < line_pcd->points.size(); j++)
+        double w = 1 / sqrt((double)line_pcd.points.size());
+        for (int j = 0; j < line_pcd.points.size(); j++)
         {
-            Eigen::Vector3d point_3d(line_pcd->points[i].x,
-                                     line_pcd->points[i].y,
-                                     line_pcd->points[i].z);
+            Eigen::Vector3d point_3d(line_pcd.points[i].x,
+                                     line_pcd.points[i].y,
+                                     line_pcd.points[i].z);
             ceres::CostFunction *cost_function = new ceres::AutoDiffCostFunction<PointToLineError1, 1, 6>(new PointToLineError1(point_3d, normal, w));
             problem.AddResidualBlock(cost_function, loss_function, m_R_t.data());
         }

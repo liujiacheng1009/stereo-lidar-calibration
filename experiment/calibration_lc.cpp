@@ -6,6 +6,7 @@
 
 using namespace std;
 using namespace Eigen;
+using namespace cv;
 
 int main()
 {
@@ -40,6 +41,7 @@ int main()
     std::vector<int> valid_image_index;
     std::vector<std::vector<cv::Point3d>> image_3d_corners; // 图像3d角点
     vector<VectorXd> image_planes; // 图像的平面方程
+    vector<vector<VectorXd>> image_lines; // 图像边缘直线方程
     for (int i = 0;i<images.size();++i)
     {
         cv::Mat img = cv::imread(images[i], cv::IMREAD_COLOR);
@@ -63,6 +65,9 @@ int main()
         // reorder_corners(chessboard_3d_corners, reordered_image_3d_corners);
         VectorXd plane;
         image_feature_detector.calculatePlane1(chessboard_3d_corners, plane);
+        vector<VectorXd> lines;
+        image_feature_detector.calculateLines(chessboard_3d_corners, lines);
+        image_lines.push_back(lines);
         image_planes.push_back(plane);
         image_3d_corners.push_back(chessboard_3d_corners);
         valid_image_index.push_back(i);
@@ -126,19 +131,38 @@ int main()
         //         }
         //     }
         // }
-        lines_pcds.push_back(lines_points);
+
         std::vector<pcl::PointXYZ> corners, reordered_corners;
         lidar_feature_detector.estimateFourCorners(lines_params,corners );
+        vector<pair<std::pair<pcl::PointXYZ, pcl::PointXYZ> , pcl::PointCloud<pcl::PointXYZ>>> line_corners_to_points;
+        for(int i=0;i<4;i++){
+            line_corners_to_points.push_back(make_pair(make_pair(corners[i], corners[(i+1)%4]), lines_points[(i+1)%4]));
+        }
         reorder_corners(corners, reordered_corners);
+        lines_points.clear();
+        for(int i=0;i<4;++i){
+            auto p1 = make_pair(reordered_corners[i], reordered_corners[(i+1)%4]);
+            auto p2 = make_pair(reordered_corners[(i+1)%4], reordered_corners[i]);
+            for(int j=0;j<4;++j){
+                auto& corners_points = line_corners_to_points[j];
+                if(pcl::geometry::distance(corners_points.first.first, p1.first)< 1e-2 && pcl::geometry::distance(corners_points.first.second, p1.second)<1e-2){
+                    lines_points.push_back(corners_points.second);
+                }
+                if(pcl::geometry::distance(corners_points.first.first, p2.first)< 1e-2 && pcl::geometry::distance(corners_points.first.second, p2.second)<1e-2){
+                    lines_points.push_back(corners_points.second);
+                }
+            }
+        }
+        lines_pcds.push_back(lines_points);
         cloud_3d_corners.push_back(reordered_corners);
         valid_cloud_index1.push_back(valid_cloud_index[i]);
-        for (auto &corner : reordered_corners)
-        {
-            std::cout << corner.x << " "
-                      << corner.y << " "
-                      << corner.z << std::endl;
-            std::cout << std::endl;
-        }
+        // for (auto &corner : reordered_corners)
+        // {
+        //     std::cout << corner.x << " "
+        //               << corner.y << " "
+        //               << corner.z << std::endl;
+        //     std::cout << std::endl;
+        // }
     }
     // auto& lines_pcd = lines_pcds[2];
     // for(auto& line:lines_pcd){
@@ -238,6 +262,21 @@ int main()
         Vector3d plane_centroid = plane.head<3>();
         Vector3d plane_normal = plane.tail<3>();
         optimizer_lc.addPointToPlaneConstraints(problem, plane_cloud, plane_centroid, plane_normal);
+    }
+
+    // 添加点到直线的约束
+    for(int i=0;i<lines_pcds.size();++i){
+        auto& lines_points = lines_pcds[i];
+        auto& lines_params = image_lines[i];
+        vector<VectorXd> lines_normal;
+        for(int j=0;j<4;++j){
+            auto& line_params = lines_params[j];
+            Vector3d a = line_params.head<3>();
+            Vector3d b = line_params.head<3>() + line_params.tail<3>();
+            Vector3d line_normal = a.cross(b);
+            lines_normal.push_back(line_normal);
+        }
+        optimizer_lc.addPointToLineConstriants(problem, lines_points,lines_normal);
     }
 
     ceres::Solver::Options options;
