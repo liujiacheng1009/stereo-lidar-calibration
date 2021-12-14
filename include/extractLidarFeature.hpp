@@ -29,6 +29,8 @@
 #include <pcl/common/intersections.h>
 #include <Eigen/Core>
 #include <algorithm>
+#include <unordered_map>
+#include <map>
 
 class LidarFeatureDetector{
 public:

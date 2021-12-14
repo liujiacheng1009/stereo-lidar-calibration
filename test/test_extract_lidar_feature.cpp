@@ -7,6 +7,9 @@
 #include "extractLidarFeature.hpp"
 #include "extractChessboard.hpp"
 
+using namespace std;
+using namespace Eigen;
+
 void run1()
 {
     std::vector<std::string> lidar_clouds_paths;
@@ -39,6 +42,7 @@ void run1()
     LidarFeatureDetector lidar_feature_detector;
     std::vector<std::vector<pcl::PointXYZ>> cloud_3d_corners;
     std::vector<std::vector<pcl::PointCloud<pcl::PointXYZ>>> lines_pcds;
+
     for(int i=0;i<plane_clouds.size();++i){
         auto input_cloud = plane_clouds[i].makeShared();
         pcl::PointCloud<pcl::PointXYZ>::Ptr edge_pcd(new pcl::PointCloud<pcl::PointXYZ>);
@@ -49,32 +53,58 @@ void run1()
         {
             continue;
         }
-        // // debug
-        // {
-        //     if(i==3){
-        //         for(auto& params:lines_params){
-        //             std::cout<<params<<std::endl;
-        //             std::cout<<std::endl;
-        //         }
-        //     }
+        // for(int i=0;i<4;++i){
+        //     line_points_and_params[lines_params[i]] = lines_points[i];
         // }
-        lines_pcds.push_back(lines_points);
         std::vector<pcl::PointXYZ> corners, reordered_corners;
         lidar_feature_detector.estimateFourCorners(lines_params,corners);
-        reorder_corners(corners, reordered_corners);
+        vector<pair<std::pair<pcl::PointXYZ, pcl::PointXYZ> , pcl::PointCloud<pcl::PointXYZ>>> line_corners_to_points;
+        for(int i=0;i<4;i++){
+            line_corners_to_points.push_back(make_pair(make_pair(corners[i], corners[(i+1)%4]), lines_points[(i+1)%4]));
+        }
+        reorder_corners(corners, reordered_corners); // 角点重排序
+        lines_points.clear();
+        for(int i=0;i<4;++i){
+            auto p1 = make_pair(reordered_corners[i], reordered_corners[(i+1)%4]);
+            auto p2 = make_pair(reordered_corners[(i+1)%4], reordered_corners[i]);
+            for(int j=0;j<4;++j){
+                auto& corners_points = line_corners_to_points[j];
+                if(pcl::geometry::distance(corners_points.first.first, p1.first)< 1e-2 && pcl::geometry::distance(corners_points.first.second, p1.second)<1e-2){
+                    lines_points.push_back(corners_points.second);
+                }
+                if(pcl::geometry::distance(corners_points.first.first, p2.first)< 1e-2 && pcl::geometry::distance(corners_points.first.second, p2.second)<1e-2){
+                    lines_points.push_back(corners_points.second);
+                }
+            }
+        }
+        lines_pcds.push_back(lines_points);
         cloud_3d_corners.push_back(reordered_corners);
         valid_cloud_index1.push_back(valid_cloud_index[i]);
     }
 
-    for(auto& corners: cloud_3d_corners){
-        for (auto &corner : corners)
-        {
-            std::cout << corner.x << " "
-                      << corner.y << " "
-                      << corner.z << std::endl;
+
+    // for(auto& corners: cloud_3d_corners){
+    //     for (auto &corner : corners)
+    //     {
+    //         std::cout << corner.x << " "
+    //                   << corner.y << " "
+    //                   << corner.z << std::endl;
+    //     }
+    //     std::cout << std::endl;
+    // }
+    for(auto& lines_points: lines_pcds)
+    {
+        for(auto& line:lines_points){
+            cout<< line.width* line.height<<endl;
         }
-        std::cout << std::endl;
+        auto viewer = show_multi_clouds_with_specified_colors(lines_points);
+        while (!viewer->wasStopped())
+        {
+            viewer->spinOnce();
+        }
     }
+
+
 
     return;
 }
@@ -83,7 +113,7 @@ void run1()
 
 int main(){
     run1();
-    
+
     // pcl::PointCloud<pcl::PointXYZ>::Ptr input_cloud(new pcl::PointCloud<pcl::PointXYZ>);
     // if (pcl::io::loadPCDFile<pcl::PointXYZ>("/home/jc/Documents/stereo-lidar-calibration/exclude_dir/debug_data/chessboard_plane_0002.pcd", *input_cloud) == -1) //* load the file
     // {
