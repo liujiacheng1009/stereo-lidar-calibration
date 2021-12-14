@@ -73,10 +73,40 @@ void runs1()
     return;
 }
 
+void runs2(){
+    std::vector<cv::Point3d> corners = {
+        cv::Point3d(-0.7703, -0.5006, 3.1952),
+        cv::Point3d(0.8134, -0.6382, 3.0134),
+        cv::Point3d(0.9016, 0.3578, 3.0281),
+        cv::Point3d(-0.6820, 0.4954, 3.2099)
+    };
+    cv::Mat camera_matrix = cv::Mat::eye(3, 3, CV_64F);
+    camera_matrix.at<double>(0,0) = 1.614546232069338e+03;
+    camera_matrix.at<double>(0,2) = 6.412276358621397e+02;
+    camera_matrix.at<double>(1,1) = 1.614669013419422e+03;
+    camera_matrix.at<double>(1,2) = 4.801410561665820e+02;
+    cv::Mat dist_coeffs = cv::Mat::zeros(5, 1, CV_64F);
+    dist_coeffs.at<double>(0,0) = -0.004497294509341;
+    dist_coeffs.at<double>(1,0) = 0.020426051162860;
+    double square_size = 0.2;
+
+    ImageFeatureDetector image_feature_detector(camera_matrix, dist_coeffs, square_size);
+    std::vector<Eigen::VectorXd> lines;
+    Eigen::VectorXd plane;
+    image_feature_detector.calculateLines(corners, lines);
+    std::cout<<lines.size()<<std::endl;
+    for(auto& line:lines){
+        std::cout<<line<<std::endl;
+    }
+    image_feature_detector.calculatePlane(corners, plane);
+    std::cout<<plane<<std::endl;
+    return;
+}
+
 
 int main()
 {
-    runs1();
+    runs2();
     // std::string image_path = "/home/jc/Documents/stereo-lidar-calibration/exclude_dir/lcc/HDL64/images/0002.png";
     // cv::Mat img = cv::imread(image_path, cv::IMREAD_COLOR);
     // cv::Mat camera_matrix = cv::Mat::eye(3, 3, CV_64F);

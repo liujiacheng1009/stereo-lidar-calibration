@@ -83,6 +83,7 @@ void run1()
 
 int main(){
     run1();
+    
     // pcl::PointCloud<pcl::PointXYZ>::Ptr input_cloud(new pcl::PointCloud<pcl::PointXYZ>);
     // if (pcl::io::loadPCDFile<pcl::PointXYZ>("/home/jc/Documents/stereo-lidar-calibration/exclude_dir/debug_data/chessboard_plane_0002.pcd", *input_cloud) == -1) //* load the file
     // {

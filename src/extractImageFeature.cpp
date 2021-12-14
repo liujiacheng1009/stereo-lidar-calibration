@@ -95,3 +95,35 @@ void ImageFeatureDetector::calculate3DCorners(vector<cv::Point3d>& chessboard_3d
     }
     return ;
 }
+
+    // void calculateLines(std::vector<cv::Point3d>& corners, std::vector<Eigen::VectorXd>& lines); // 通过四个角点计算四条边的方程
+    // void calculatePlane(std::vector<cv::Point3d>& corners, Eigen::VectorXd& plane); // 通过四个角点计算平面的方程
+
+void ImageFeatureDetector::calculateLines(std::vector<cv::Point3d>& corners, std::vector<Eigen::VectorXd>& lines)
+{
+    assert(corners.size()==4);
+    lines.clear();
+    for(int i=0;i<4;++i){
+        Eigen::VectorXd line(6);
+        cv::Point3d line_pt = corners[i];
+        cv::Point3d line_dir = corners[(i+1)%4]- corners[i];
+        line<<line_pt.x, line_pt.y, line_pt.z, line_dir.x, line_dir.y, line_dir.z;
+        lines.push_back(line);
+    }
+    return;
+}
+
+void ImageFeatureDetector::calculatePlane(std::vector<cv::Point3d>& corners, Eigen::VectorXd& plane)
+{
+    assert(corners.size()==4);
+    Eigen::Vector3d a(corners[0].x, corners[0].y, corners[0].z );
+    Eigen::Vector3d b(corners[1].x, corners[1].y, corners[1].z);
+    Eigen::Vector3d c(corners[2].x, corners[2].y, corners[2].z);
+    Eigen::Vector3d n;
+    n = (b-a).cross(c-b);
+    double d = -n.dot(a);
+    plane = Eigen::Vector4d::Zero();
+    plane.head<3>() = n;
+    plane(3) = d;
+    return;
+}
