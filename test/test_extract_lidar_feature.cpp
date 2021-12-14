@@ -53,14 +53,18 @@ void run1()
         {
             continue;
         }
-        // for(int i=0;i<4;++i){
-        //     line_points_and_params[lines_params[i]] = lines_points[i];
-        // }
+        for(auto& line:lines_points){
+            cout<< line.width* line.height<<endl;
+        }
+
         std::vector<pcl::PointXYZ> corners, reordered_corners;
         lidar_feature_detector.estimateFourCorners(lines_params,corners);
         vector<pair<std::pair<pcl::PointXYZ, pcl::PointXYZ> , pcl::PointCloud<pcl::PointXYZ>>> line_corners_to_points;
         for(int i=0;i<4;i++){
             line_corners_to_points.push_back(make_pair(make_pair(corners[i], corners[(i+1)%4]), lines_points[(i+1)%4]));
+        }
+        for(auto& corner:corners){
+            cout<<corner.x<<" "<<corner.y<<" "<<corner.z<<endl;
         }
         reorder_corners(corners, reordered_corners); // 角点重排序
         lines_points.clear();
@@ -92,20 +96,20 @@ void run1()
     //     }
     //     std::cout << std::endl;
     // }
+    cout<< endl;
+    cout<< endl;
+
     for(auto& lines_points: lines_pcds)
     {
         for(auto& line:lines_points){
             cout<< line.width* line.height<<endl;
         }
-        auto viewer = show_multi_clouds_with_specified_colors(lines_points);
-        while (!viewer->wasStopped())
-        {
-            viewer->spinOnce();
-        }
+        // auto viewer = show_multi_clouds_with_specified_colors(lines_points);
+        // while (!viewer->wasStopped())
+        // {
+        //     viewer->spinOnce();
+        // }
     }
-
-
-
     return;
 }
 

@@ -4,9 +4,8 @@
 #include "optimization.hpp"
 #include "utils.hpp"
 
-
-
-
+using namespace std;
+using namespace Eigen;
 
 int main()
 {
@@ -39,7 +38,8 @@ int main()
     // }
     ImageFeatureDetector image_feature_detector(camera_matrix, dist_coeffs, square_size);
     std::vector<int> valid_image_index;
-    std::vector<std::vector<cv::Point3d>> image_3d_corners;
+    std::vector<std::vector<cv::Point3d>> image_3d_corners; // 图像3d角点
+    vector<VectorXd> image_planes; // 图像的平面方程
     for (int i = 0;i<images.size();++i)
     {
         cv::Mat img = cv::imread(images[i], cv::IMREAD_COLOR);
@@ -61,6 +61,9 @@ int main()
         std::vector<cv::Point3d> chessboard_3d_corners, reordered_image_3d_corners;
         image_feature_detector.calculate3DCorners(chessboard_3d_corners, rvec, tvec);
         // reorder_corners(chessboard_3d_corners, reordered_image_3d_corners);
+        VectorXd plane;
+        image_feature_detector.calculatePlane1(chessboard_3d_corners, plane);
+        image_planes.push_back(plane);
         image_3d_corners.push_back(chessboard_3d_corners);
         valid_image_index.push_back(i);
     }
@@ -226,6 +229,15 @@ int main()
             p2.push_back(cloud_corners[j]);
         }
         optimizer_lc.addPointToPointConstriants(problem, p1, p2);
+    }
+
+    // 添加点到平面的约束
+    for(int i=0;i<plane_clouds.size();++i ){
+        auto plane_cloud = plane_clouds[i].makeShared();
+        auto& plane = image_planes[i];
+        Vector3d plane_centroid = plane.head<3>();
+        Vector3d plane_normal = plane.tail<3>();
+        optimizer_lc.addPointToPlaneConstraints(problem, plane_cloud, plane_centroid, plane_normal);
     }
 
     ceres::Solver::Options options;

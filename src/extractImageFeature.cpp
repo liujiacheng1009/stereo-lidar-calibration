@@ -1,4 +1,8 @@
- #include "extractImageFeature.hpp"
+#include "extractImageFeature.hpp"
+
+using namespace std;
+using namespace Eigen;
+using namespace cv;
 
 bool ImageFeatureDetector::detectImageCorner(cv::Mat &input_image, vector<cv::Point2f> &image_corners)
 {
@@ -125,5 +129,32 @@ void ImageFeatureDetector::calculatePlane(std::vector<cv::Point3d>& corners, Eig
     plane = Eigen::Vector4d::Zero();
     plane.head<3>() = n;
     plane(3) = d;
+    return;
+}
+
+
+
+void ImageFeatureDetector::calculatePlane1(vector<Point3d>& corners, VectorXd& plane)
+{
+    //Point3d zero(0.,0.,0.);
+    //auto centroid = accumulate(corners.begin(), corners.end(),zero)/4.0;
+    assert(corners.size()==4);
+    auto func1 = [](vector<Point3d>&corners){
+        Point3d p(0.,0.,0.);
+        for(auto& corner:corners){
+            p += corner;
+        }
+        return p;
+    };
+    auto centroid = func1(corners);
+    centroid /= 4.0;
+    Eigen::Vector3d a(corners[0].x, corners[0].y, corners[0].z );
+    Eigen::Vector3d b(corners[1].x, corners[1].y, corners[1].z);
+    Eigen::Vector3d c(corners[2].x, corners[2].y, corners[2].z);
+    Eigen::Vector3d n;
+    n = (b-a).cross(c-b);
+    plane.resize(6);
+    plane.head<3>() = n;
+    plane.tail<3>() = Vector3d(centroid.x,centroid.y, centroid.z );
     return;
 }
