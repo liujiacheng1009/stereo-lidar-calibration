@@ -1,5 +1,6 @@
 #include "optimization.hpp"
 #include "utils.hpp"
+#include "extractImageFeature.hpp"
 #include <bits/stdc++.h>
 using namespace Eigen;
 using namespace std;
@@ -182,42 +183,128 @@ bool get_sim_data(Cloud&source_cloud, Cloud&target_cloud)
 //     std::cout<< R_t<<std::endl;
 // }
 
-int main()
+void runs1()
 {
-    // test_point_to_line_error();
-    Eigen::VectorXd R_t(6);
-    R_t << 0., 0., 0., 0., 0., 0.;
-    OptimizationLC optimizer_lc(R_t);
-    ceres::Problem problem;
-    // problem.AddParameterBlock(R_t.data(), 6);
-    // std::vector<Eigen::Vector3d> p1, p2;
-    // generate_simulation_points(p1, p2, 4);
-    Cloud source_cloud;
-    Cloud target_cloud;
-    get_sim_data(source_cloud,target_cloud);
-    for(int i=0;i<8;i++){
-        auto& p1 = source_cloud[i];
-        auto& p2 = target_cloud[i];
-        optimizer_lc.addPointToPointConstriants(problem, p1, p2);
-    }
+    std::string left_image_path = "/home/jc/Documents/stereo-lidar-calibration/exclude_dir/lcc/HDL64/images/0001.png";
+    std::string right_image_path = "/home/jc/Documents/stereo-lidar-calibration/exclude_dir/lcc/HDL64/images/0002.png";
+    cv::Mat left_image = cv::imread(left_image_path, cv::IMREAD_COLOR);
+    cv::Mat right_image = cv::imread(right_image_path, cv::IMREAD_COLOR);
+    cv::Mat camera_matrix = cv::Mat::eye(3, 3, CV_64F);
+    camera_matrix.at<double>(0,0) = 1.614546232069338e+03;
+    camera_matrix.at<double>(0,2) = 6.412276358621397e+02;
+    camera_matrix.at<double>(1,1) = 1.614669013419422e+03;
+    camera_matrix.at<double>(1,2) = 4.801410561665820e+02;
+    cv::Mat dist_coeffs = cv::Mat::zeros(5, 1, CV_64F);
+    dist_coeffs.at<double>(0,0) = -0.004497294509341;
+    dist_coeffs.at<double>(1,0) = 0.020426051162860;
+    double square_size = 0.2;
+    ImageFeatureDetector image_feature_detector_left(camera_matrix, dist_coeffs, square_size);
+    std::vector<cv::Point2f> left_image_corners;
+    if(!image_feature_detector_left.detectImageCorner(left_image, left_image_corners))
+        return ;
 
-    // for(auto& p:p1){
-    //     std::cout<<p<<std::endl;
+    ImageFeatureDetector image_feature_detector_right(camera_matrix, dist_coeffs, square_size);
+    std::vector<cv::Point2f> right_image_corners;
+    if(!image_feature_detector_right.detectImageCorner(right_image, right_image_corners))
+        return ;
+
+    Eigen::VectorXd Rt_c1_c2(6);
+    Rt_c1_c2 << 0.1, 2, 1, 0.1, 1.0, 0.1;
+    OptimizationLCC optimizer_lcc(Rt_c1_c2);
+    ceres::Problem problem;
+    // std::cout<< left_image_corners.size()<<std::endl;
+    // for(auto& corner:left_image_corners){
+    //     std::cout<< corner << std::endl;
     // }
-    // for(auto& p:p2){
-    //     std::cout<<p<<std::endl;
+    // std::cout<< right_image_corners.size()<<std::endl;
+    // for(auto& corner:right_image_corners){
+    //     std::cout<< corner << std::endl;
     // }
-    // optimizer_lc.addPointToPointConstriants(problem, p1, p2);
+    optimizer_lcc.addStereoMatchingConstraints(problem, left_image_corners, right_image_corners,camera_matrix);
     ceres::Solver::Options options;
-    options.max_num_iterations = 200;
+    options.max_num_iterations = 500;
     options.linear_solver_type = ceres::SPARSE_NORMAL_CHOLESKY;
     options.minimizer_progress_to_stdout = false;
     ceres::Solver::Summary summary;
     ceres::Solve(options, &problem, &summary);
     std::cout << summary.BriefReport() << "\n";
-    R_t = optimizer_lc.get_R_t();
+    cout << optimizer_lcc.get_Rt_c1_c2() << std::endl;
 
-    cout << optimizer_lc.get_R_t() << std::endl;
+    // for(auto& corner:image_corners){
+    //     std::cout<<corner<<std::endl;
+    // }
+    // cv::Mat rvec, tvec;
+    // image_feature_detector.estimatePose(image_corners, rvec, tvec);
+    // std::vector<cv::Point3d> chessboard_3d_corners;
+    // image_feature_detector.calculate3DCorners(chessboard_3d_corners, rvec, tvec);
+ 
+    // for(auto& corner:chessboard_3d_corners){
+    //     std::cout<< corner<<std::endl;
+    //     cv::Point2d p = project(corner,camera_matrix);
+    //     cv::circle(img, p, 5, cv::Scalar(0, 255, 0), -1);
+    // }
+    // cv::Point3d ori_p(tvec);
+    // cv::Point2d p = project(ori_p,camera_matrix);
+    // cv::circle(img, p, 5, cv::Scalar(0, 255, 0), -1);
+    // std::cout<< rvec <<std::endl;
+    // std::cout<< tvec <<std::endl;
+    return;
+}
+
+void runs2()
+{
+    Eigen::VectorXd Rt1(6);
+    Rt1<< 0.1, 0.1,0.1, 0.1, 0.1,0.1;
+    Eigen::Affine3d aff1;
+    vector2Affine(Rt1,aff1);
+    std::cout<< aff1.matrix()<<std::endl;
+    affine2Vector(aff1,Rt1);
+    std::cout<< Rt1<<std::endl;
+    Eigen::VectorXd Rt2(6);
+    Rt2<< 0.2, 0.2, 0.2, 0.2, 0.2,0.2;
+    Eigen::Affine3d aff2, aff3;
+    vector2Affine(Rt2, aff2);
+    aff3 = aff2.inverse()* aff1;
+    std::cout<<aff3.matrix()<<std::endl;
+}
+
+int main()
+{
+    runs2();
+    // // test_point_to_line_error();
+    // Eigen::VectorXd R_t(6);
+    // R_t << 0., 0., 0., 0., 0., 0.;
+    // OptimizationLC optimizer_lc(R_t);
+    // ceres::Problem problem;
+    // // problem.AddParameterBlock(R_t.data(), 6);
+    // // std::vector<Eigen::Vector3d> p1, p2;
+    // // generate_simulation_points(p1, p2, 4);
+    // Cloud source_cloud;
+    // Cloud target_cloud;
+    // get_sim_data(source_cloud,target_cloud);
+    // for(int i=0;i<8;i++){
+    //     auto& p1 = source_cloud[i];
+    //     auto& p2 = target_cloud[i];
+    //     optimizer_lc.addPointToPointConstriants(problem, p1, p2);
+    // }
+
+    // // for(auto& p:p1){
+    // //     std::cout<<p<<std::endl;
+    // // }
+    // // for(auto& p:p2){
+    // //     std::cout<<p<<std::endl;
+    // // }
+    // // optimizer_lc.addPointToPointConstriants(problem, p1, p2);
+    // ceres::Solver::Options options;
+    // options.max_num_iterations = 200;
+    // options.linear_solver_type = ceres::SPARSE_NORMAL_CHOLESKY;
+    // options.minimizer_progress_to_stdout = false;
+    // ceres::Solver::Summary summary;
+    // ceres::Solve(options, &problem, &summary);
+    // std::cout << summary.BriefReport() << "\n";
+    // R_t = optimizer_lc.get_R_t();
+
+    // cout << optimizer_lc.get_R_t() << std::endl;
 
     // icp求解
     // pcl::PointCloud<pcl::PointXYZ>::Ptr source(new pcl::PointCloud<pcl::PointXYZ>);

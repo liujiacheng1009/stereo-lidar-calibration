@@ -50,3 +50,5 @@ target_link_libraries(test_optimization ${OpenCV_LIBS} ${PCL_LIBRARIES}  ${CERES
 add_executable(calibration_lc experiment/calibration_lc.cpp ${SOURCE_FILES} ${HEADER_FILES})
 target_link_libraries(calibration_lc ${OpenCV_LIBS} ${PCL_LIBRARIES}  ${CERES_LIBRARIES} ${Boost_LIBRARIES})
 
+add_executable(calibration_lcc experiment/calibration_lcc.cpp ${SOURCE_FILES} ${HEADER_FILES})
+target_link_libraries(calibration_lcc ${OpenCV_LIBS} ${PCL_LIBRARIES}  ${CERES_LIBRARIES} ${Boost_LIBRARIES})

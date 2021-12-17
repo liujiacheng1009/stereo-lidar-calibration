@@ -30,43 +30,7 @@
 #include <pcl/common/intersections.h>
 #include <pcl/registration/icp.h>
 #include <pcl/common/distances.h>
-// class StereoMatchingError
-// {
-// public:
-//     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-//     StereoMatchingError(const cv::Mat &camera_matrix,
-//                         const cv::Point2d &camera1_corner,
-//                         const cv::Point2d &camera2_corner,
-//                         const double &w) : m_camera_matrix(camera_matrix),
-//                                            m_camera1_corner(camera1_corner),
-//                                            m_camera2_corner(camera2_corner),
-//                                            m_w(w) {}
-//     template<typename T>
-//     bool operator () (const T* const R_t,
-//                       T* residual) const {
-//     {
-//         Eigen::Matrix<T, 3, 1> r();
-//         cv::Mat R,t;
-//         cv::Mat camera1_corner({m_camera1_corner.x,m_camera1_corner.y, 1});
-//         cv::Mat camera2_corner({m_camera2_corner.x,m_camera2_corner.y, 1});
-//         cv::Mat camera_matrix_inv = m_camera_matrix.inverse();
-//         cv::Mat F_matrix = camera_matrix_inv.transpose()*skew(t)*R*camera_matrix_inv;
-//         residual[0] = camera1_corner.transpose()*F_matrix*camera2_corner(0,0);
-//         residual[0] = m_w * residual[0];
-//     }
 
-//     cv::Mat skew(cv::Mat& t)
-//     {
-//         return cv::Mat({0, t(0, 0), -t(0, 1),
-//                         -t(0, 0), 0, t(0, 2),
-//                         t(0, 1), -t(0, 2), 0});
-//     }
-
-// private:
-//     const cv::Mat m_camera_matrix;
-//     const cv::Point2d m_camera1_corner, m_camera2_corner;
-//     const double m_w;
-// };
 
 
 // 点到点的距离损失
@@ -250,9 +214,59 @@ private:
 //     Sophus::SE3d m_t_ij;
 // };
 
+class StereoMatchingError
+{
+public:
+    EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+    StereoMatchingError(const Eigen::MatrixXd &camera_matrix,
+                        const Eigen::Vector2d &camera1_corner,
+                        const Eigen::Vector2d &camera2_corner,
+                        const double &w) : m_camera_matrix(camera_matrix),
+                                           m_camera1_corner(camera1_corner),
+                                           m_camera2_corner(camera2_corner),
+                                           m_w(w) {}
+
+    template<typename T>
+    bool operator() (const T* const R_t,
+                     T* residual) const {
+        T rot[3*3];
+        ceres::AngleAxisToRotationMatrix(R_t, rot);
+        Eigen::Matrix<T, 3, 3> R = Eigen::Matrix<T, 3, 3>::Identity();
+        for (int i = 0; i < 3; ++i) {
+            for (int j = 0; j < 3; ++j) {
+                R(i, j) = rot[i+3*j];
+            }
+        }
+        Eigen::Map<const Eigen::Matrix<T,3,1>> t(R_t+3);
+        // T rot[3*3];
+        // ceres::AngleAxisToRotationMatrix(R_t, rot);
+        // Eigen::Map<const Eigen::Matrix<T,3,3>> R(rot);
+        // Eigen::Map<const Eigen::Matrix<T,3,1>> t(R_t+3);
+        Eigen::Matrix<T, 3, 1> camera1_corner(T(m_camera1_corner(0)),T(m_camera1_corner(1)), T(1.0));
+        Eigen::Matrix<T, 3, 1> camera2_corner(T(m_camera2_corner(0)),T(m_camera2_corner(1)), T(1.0));
+        Eigen::Matrix<T, 3, 3> camera_matrix_inv = m_camera_matrix.inverse().template cast<T>();
+        Eigen::Matrix<T, 3, 3> skew_t;
+        skew_t << T(0), T(t(0)), T(-t(1)), T(-t(0)), T(0), T(t(2)), T(t(1)), T(-t(2)), T(0);
+        Eigen::Matrix<T, 3, 3> F_matrix = camera_matrix_inv.transpose().template cast<T>()*skew_t*R*camera_matrix_inv;
+        residual[0] = camera1_corner.transpose().dot(F_matrix*camera2_corner);
+        residual[0] = m_w* residual[0];
+        return true;
+    }
+
+private:
+    const Eigen::Matrix3d m_camera_matrix;
+    const Eigen::Vector2d m_camera1_corner;
+    const Eigen::Vector2d m_camera2_corner;
+    const double m_w;
+};
+
+
+
 class OptimizationLC
 {
 public:
+    OptimizationLC(){}
+    ~OptimizationLC(){}
     OptimizationLC(Eigen::VectorXd &R_t) : m_R_t(R_t) {}
     void addPointToPlaneConstraints(ceres::Problem &problem,
                                     pcl::PointCloud<pcl::PointXYZ>::Ptr &plane_pcd,
@@ -266,6 +280,7 @@ public:
                                     std::vector<pcl::PointXYZ> &image_corners_3d,
                                     std::vector<pcl::PointXYZ> &lidar_corners_3d);
 
+
     Eigen::VectorXd get_R_t()
     {
         return m_R_t;
@@ -278,16 +293,59 @@ private:
     // std::vector<Eigen::Vector3d> m_line_normal;
 };
 
-// class OptimizationLCC : public OptimizationLC
-// {
-// public:
-//     ceres::Problem constructProblem();
+class OptimizationLCC : public OptimizationLC
+{
+public:
+    OptimizationLCC(){}
+    ~OptimizationLCC(){}
+    OptimizationLCC(Eigen::VectorXd &Rt_l1_c1,
+                    Eigen::VectorXd &Rt_l1_c2,
+                    Eigen::VectorXd &Rt_c1_c2) : m_Rt_l1_c1(Rt_l1_c1),
+                                                 m_Rt_l1_c2(Rt_l1_c2),
+                                                 m_Rt_c1_c2(Rt_c1_c2) {}
 
-// private:
-//     Eigen::VectorXd(6) m_R_t_l1_c1, m_R_t_l1_c2, m_R_t_c1_c2;
-//     Eigen::Vector3d m_plane_normal_l1_c1, m_plane_normal_l1_c2;
-//     Eigen::Vector3d m_plane_centroid_l1_c1, m_plane_centroid_l1_c2;
-//     vector<Eigen::Vector3d> m_line_normal_l1_c1, m_line_normal_l1_c2;  
-// };
+    OptimizationLCC(Eigen::VectorXd &Rt_c1_c2)
+        :m_Rt_c1_c2(Rt_c1_c2) {}
+
+    void addStereoMatchingConstraints(ceres::Problem &problem,
+                                    std::vector<cv::Point2f> &left_image_corners,
+                                    std::vector<cv::Point2f> &right_image_corners,
+                                    cv::Mat& camera_matrix);
+
+    void addPointToPlaneConstraints(ceres::Problem &problem,
+                                    pcl::PointCloud<pcl::PointXYZ>::Ptr &plane_pcd,
+                                    Eigen::Vector3d &plane_normal,
+                                    Eigen::Vector3d &plane_centroid,
+                                    Eigen::VectorXd &params);
+    void addPointToLineConstriants(ceres::Problem &problem,
+                                   std::vector<pcl::PointCloud<pcl::PointXYZ>> &lines_pcd,
+                                   std::vector<Eigen::VectorXd> &line_normals,
+                                   Eigen::VectorXd &params);
+    // ceres::Problem constructProblem();
+    void addPointToPointConstriants(ceres::Problem &problem,
+                                    std::vector<pcl::PointXYZ> &image_corners_3d,
+                                    std::vector<pcl::PointXYZ> &lidar_corners_3d,
+                                    Eigen::VectorXd &params);
+
+    Eigen::VectorXd get_Rt_l1_c1()
+    {
+        return m_Rt_l1_c1;
+    }
+    Eigen::VectorXd get_Rt_l1_c2()
+    {
+        return m_Rt_l1_c2;
+    }
+    Eigen::VectorXd get_Rt_c1_c2()
+    {
+        return m_Rt_c1_c2;
+    }
+private:
+    Eigen::VectorXd m_Rt_l1_c1;
+    Eigen::VectorXd m_Rt_l1_c2;
+    Eigen::VectorXd m_Rt_c1_c2;
+    // Eigen::Vector3d m_plane_normal_l1_c1, m_plane_normal_l1_c2;
+    // Eigen::Vector3d m_plane_centroid_l1_c1, m_plane_centroid_l1_c2;
+    // vector<Eigen::Vector3d> m_line_normal_l1_c1, m_line_normal_l1_c2;  
+};
 
 #endif

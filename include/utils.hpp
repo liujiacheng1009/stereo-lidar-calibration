@@ -20,6 +20,7 @@
 #include <opencv2/imgcodecs.hpp>
 #include <opencv2/highgui.hpp>
 #include <pcl/registration/icp.h>
+#include <Eigen/Dense>
 #include <string>
 #include <cmath>
 #include <unistd.h>
@@ -360,6 +361,27 @@ bool isDirExist(const std::string& path_name)
 //   file.close();
 //   return isFileExist(file_name);
 // }
+void  vector2Affine(Eigen::VectorXd& Rt, Eigen::Affine3d& affine_mat)
+{
+    affine_mat = Eigen::Affine3d::Identity();
+    affine_mat.rotate(Eigen::AngleAxis<double>(Rt(0), Eigen::Vector3d::UnitX()));
+    affine_mat.rotate(Eigen::AngleAxis<double>(Rt(1), Eigen::Vector3d::UnitY()));
+    affine_mat.rotate(Eigen::AngleAxis<double>(Rt(2), Eigen::Vector3d::UnitZ()));
+    affine_mat.translate ( Eigen::Vector3d(Rt(3) , Rt(4) , Rt(5)));
+    return;            
+}
 
+void  affine2Vector( Eigen::Affine3d& affine_mat,Eigen::VectorXd& Rt)
+{
+    Eigen::Matrix3d rot = affine_mat.matrix().block(0,0,3,3);
+    Eigen::Vector3d euler_angles = rot.eulerAngles(0, 1, 2);
+    Rt(0) = euler_angles(0);
+    Rt(1) = euler_angles(1);
+    Rt(2) = euler_angles(2);
+    Rt(3) = affine_mat.translation().x();
+    Rt(4) = affine_mat.translation().y();
+    Rt(5) = affine_mat.translation().z();
+    return;
+}
 
 #endif

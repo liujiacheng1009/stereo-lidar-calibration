@@ -3,6 +3,7 @@
 #include "extractLidarFeature.hpp"
 #include "optimization.hpp"
 #include "utils.hpp"
+#include <pcl/common/geometry.h>
 
 using namespace std;
 using namespace Eigen;
@@ -40,8 +41,8 @@ int main()
     ImageFeatureDetector image_feature_detector(camera_matrix, dist_coeffs, square_size);
     std::vector<int> valid_image_index;
     std::vector<std::vector<cv::Point3d>> image_3d_corners; // 图像3d角点
-    vector<VectorXd> image_planes; // 图像的平面方程
-    vector<vector<VectorXd>> image_lines; // 图像边缘直线方程
+    vector<Eigen::VectorXd> image_planes; // 图像的平面方程
+    vector<vector<Eigen::VectorXd>> image_lines; // 图像边缘直线方程
     for (int i = 0;i<images.size();++i)
     {
         cv::Mat img = cv::imread(images[i], cv::IMREAD_COLOR);
@@ -63,9 +64,9 @@ int main()
         std::vector<cv::Point3d> chessboard_3d_corners, reordered_image_3d_corners;
         image_feature_detector.calculate3DCorners(chessboard_3d_corners, rvec, tvec);
         // reorder_corners(chessboard_3d_corners, reordered_image_3d_corners);
-        VectorXd plane;
+        Eigen::VectorXd plane;
         image_feature_detector.calculatePlane1(chessboard_3d_corners, plane);
-        vector<VectorXd> lines;
+        vector<Eigen::VectorXd> lines;
         image_feature_detector.calculateLines(chessboard_3d_corners, lines);
         image_lines.push_back(lines);
         image_planes.push_back(plane);
@@ -259,8 +260,8 @@ int main()
     for(int i=0;i<plane_clouds.size();++i ){
         auto plane_cloud = plane_clouds[i].makeShared();
         auto& plane = image_planes[i];
-        Vector3d plane_centroid = plane.head<3>();
-        Vector3d plane_normal = plane.tail<3>();
+        Eigen::Vector3d plane_centroid = plane.head<3>();
+        Eigen::Vector3d plane_normal = plane.tail<3>();
         optimizer_lc.addPointToPlaneConstraints(problem, plane_cloud, plane_centroid, plane_normal);
     }
 
@@ -268,12 +269,12 @@ int main()
     for(int i=0;i<lines_pcds.size();++i){
         auto& lines_points = lines_pcds[i];
         auto& lines_params = image_lines[i];
-        vector<VectorXd> lines_normal;
+        vector<Eigen::VectorXd> lines_normal;
         for(int j=0;j<4;++j){
             auto& line_params = lines_params[j];
-            Vector3d a = line_params.head<3>();
-            Vector3d b = line_params.head<3>() + line_params.tail<3>();
-            Vector3d line_normal = a.cross(b);
+            Eigen::Vector3d a = line_params.head<3>();
+            Eigen::Vector3d b = line_params.head<3>() + line_params.tail<3>();
+            Eigen::Vector3d line_normal = a.cross(b);
             lines_normal.push_back(line_normal);
         }
         optimizer_lc.addPointToLineConstriants(problem, lines_points,lines_normal);
