@@ -25,6 +25,8 @@
 #include <cmath>
 #include <unistd.h>
 
+using namespace Eigen;
+using namespace std;
 
 void display_colored_by_depth(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud)
 {
@@ -361,6 +363,33 @@ bool isDirExist(const std::string& path_name)
 //   file.close();
 //   return isFileExist(file_name);
 // }
+
+
+void matrix2Vector(MatrixXd& m, VectorXd& v)
+{
+    v.resize(6);
+    Matrix3d rot = m.block(0,0,3,3);
+    Vector3d euler_angles = rot.eulerAngles(0,1,2);
+    v(0) = euler_angles(0);
+    v(1) = euler_angles(1);
+    v(2) = euler_angles(2);
+    v(3) = m(0,3);
+    v(4) = m(1,3);
+    v(5) = m(2,3);
+}
+
+void vector2Matrix(VectorXd& v, MatrixXd& m){
+    m = Matrix4d::Identity();
+    AngleAxisd rollAngle(v(0), Vector3d::UnitZ());
+    AngleAxisd yawAngle(v(1), Vector3d::UnitY());
+    AngleAxisd pitchAngle(v(2), Vector3d::UnitX());
+    Quaternion<double> q = rollAngle * yawAngle * pitchAngle;
+    m.block(0,0,3,3) = q.matrix();
+    m(0,3) = v(3);
+    m(1,3) = v(4);
+    m(2,3) = v(5);
+}
+
 void  vector2Affine(Eigen::VectorXd& Rt, Eigen::Affine3d& affine_mat)
 {
     affine_mat = Eigen::Affine3d::Identity();
@@ -383,5 +412,4 @@ void  affine2Vector( Eigen::Affine3d& affine_mat,Eigen::VectorXd& Rt)
     Rt(5) = affine_mat.translation().z();
     return;
 }
-
 #endif

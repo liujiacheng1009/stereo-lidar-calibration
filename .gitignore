@@ -35,3 +35,6 @@ exclude_dir/
 build/
 
 .vscode/
+
+*.txt
+*.csv
