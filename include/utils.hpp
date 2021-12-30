@@ -259,6 +259,7 @@ void get_data_by_path(std::vector<std::string>& data, std::string& path, std::st
             data.push_back(iter->path().string());
         }
     }
+    sort(data.begin(), data.end());
     return;
 }
 

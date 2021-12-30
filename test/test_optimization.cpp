@@ -279,7 +279,7 @@ void runs3()
         double z = x*y;
         P.push_back(Vector3d(x,y,z));
     }
-    Affine3d t = Affine3d::Identity();
+    Eigen::Affine3d t = Affine3d::Identity();
     t.rotate(Eigen::AngleAxis<double>(0.5, Eigen::Vector3d::UnitX()));
     t.rotate(Eigen::AngleAxis<double>(0.5, Eigen::Vector3d::UnitY()));
     t.rotate(Eigen::AngleAxis<double>(0.5, Eigen::Vector3d::UnitZ()));

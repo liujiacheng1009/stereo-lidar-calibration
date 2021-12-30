@@ -10,6 +10,7 @@
 #include <opencv2/imgproc.hpp>
 #include <opencv2/calib3d.hpp>
 #include <opencv2/videoio.hpp>
+#include "config.hpp"
 #include <memory>   
 #include <vector>
 #include <fstream>
@@ -22,8 +23,10 @@ using namespace std;
 
 class ImageFeatureDetector{
 public:
-    ImageFeatureDetector(cv::Mat& camera_matrix, cv::Mat& dist_coeffs, double& square_size ):
-        m_camera_matrix(camera_matrix), m_dist_coeffs(dist_coeffs), m_square_size(square_size){}
+    ImageFeatureDetector(Config &config) : m_camera_matrix(config.left_camera_matrix),
+                                           m_dist_coeffs(config.left_camera_dist_coeffs),
+                                           m_square_size(config.cheackerboard_square_size),
+                                           m_padding(config.cheackerboard_padding) {}
 
     bool detectImageCorner(cv::Mat& input_image, vector<cv::Point2f>& image_corners); // 从图像检测角点
     void undistort_corners(vector<cv::Point2f>& input_corners, cv::Mat &rectified_corners); // 角点畸变校正

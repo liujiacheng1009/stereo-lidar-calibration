@@ -1,3 +1,5 @@
+#ifndef STEREO_LIDAR_CALIBRATION_MATLAB_DATA_HPP
+#define STEREO_LIDAR_CALIBRATION_MATLAB_DATA_HPP
 #include<vector>
 #include<Eigen/Core>
 #include <iostream>
@@ -707,3 +709,5 @@ struct matlab_data1
 
 };
 
+
+#endif

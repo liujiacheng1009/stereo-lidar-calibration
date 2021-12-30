@@ -3,6 +3,7 @@
 #include "extractLidarFeature.hpp"
 #include "optimization.hpp"
 #include "utils.hpp"
+#include "config.hpp"
 #include <pcl/common/geometry.h>
 #include <sophus/so3.hpp>
 using namespace std;
@@ -11,35 +12,20 @@ using namespace cv;
 
 int main()
 {
-    cv::Mat camera_matrix = cv::Mat::eye(3, 3, CV_64F);
-    camera_matrix.at<double>(0,0) = 1.614546232069338e+03;
-    camera_matrix.at<double>(0,2) = 6.412276358621397e+02;
-    camera_matrix.at<double>(1,1) = 1.614669013419422e+03;
-    camera_matrix.at<double>(1,2) = 4.801410561665820e+02;
-    cv::Mat dist_coeffs = cv::Mat::zeros(5, 1, CV_64F);
-    dist_coeffs.at<double>(0,0) = -0.004497294509341;
-    dist_coeffs.at<double>(1,0) = 0.020426051162860;
-    double square_size = 0.2;
-
+    Config config;
     std::vector<std::string> images_paths, lidar_clouds_paths;
-    std::string dataset_path = "/home/jc/Documents/stereo-lidar-calibration/exclude_dir/lcc/HDL64";
-    std::string images_dir = dataset_path + "/images";
-    std::string lidar_clouds_dir = dataset_path + "/pointCloud";
+    std::string images_dir = config.left_images_dataset_path;
+    std::string clouds_dir = config.lidar_clouds_dataset_path;
     std::vector<std::string> images;
-    get_data_by_path(images, images_dir, ".png");
-    sort(images.begin(), images.end());
+    get_data_by_path(images, images_dir, config.image_format);
     std::vector<std::string> lidar_clouds;
-    get_data_by_path(lidar_clouds, lidar_clouds_dir, ".pcd");
-    sort(lidar_clouds.begin(), lidar_clouds.end());
-    if(!check_data_by_index(images, lidar_clouds)) return -1;
-    // for(auto& image:images){
-    //     std::cout<< image <<std::endl;
-    // }
-    // for(auto& lidar_cloud:lidar_clouds){
-    //     std::cout<< lidar_cloud <<std::endl;
-    // }
-    ImageFeatureDetector image_feature_detector(camera_matrix, dist_coeffs, square_size);
-    std::vector<int> valid_image_index;
+    get_data_by_path(lidar_clouds, clouds_dir, config.cloud_format);
+    if(!check_data_by_index(images, lidar_clouds)){
+        cerr <<"图像和点云文件应存在且文件名相同！！"<<endl;
+        exit(-1);
+    }
+    ImageFeatureDetector image_feature_detector(config);
+    vector<int> valid_image_index;
     std::vector<std::vector<cv::Point3d>> image_3d_corners; // 图像3d角点
     vector<Eigen::VectorXd> image_planes; // 图像的平面方程
     vector<vector<Eigen::VectorXd>> image_lines; // 图像边缘直线方程
@@ -60,10 +46,8 @@ int main()
         }
         cv::Mat rvec, tvec;
         image_feature_detector.estimatePose(image_corners, rvec, tvec);
-        // std::cout<<"tvec: " <<tvec<<std::endl;
-        std::vector<cv::Point3d> chessboard_3d_corners, reordered_image_3d_corners;
+        std::vector<Point3d> chessboard_3d_corners, reordered_image_3d_corners;
         image_feature_detector.calculate3DCorners(chessboard_3d_corners, rvec, tvec);
-        // reorder_corners(chessboard_3d_corners, reordered_image_3d_corners);
         Eigen::VectorXd plane;
         image_feature_detector.calculatePlane1(chessboard_3d_corners, plane);
         vector<Eigen::VectorXd> lines;
