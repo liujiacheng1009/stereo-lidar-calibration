@@ -64,3 +64,5 @@ target_link_libraries(calibration_lc ${OpenCV_LIBS} ${PCL_LIBRARIES}  ${CERES_LI
 
 # add_executable(refine_matlab_results experiment/refine_matlab_results.cpp ${SOURCE_FILES} ${HEADER_FILES})
 # target_link_libraries(refine_matlab_results ${OpenCV_LIBS} ${PCL_LIBRARIES}  ${CERES_LIBRARIES} ${Boost_LIBRARIES} ${Sophus_LIBRARIES} fmt)
+
+add_subdirectory(samples)
