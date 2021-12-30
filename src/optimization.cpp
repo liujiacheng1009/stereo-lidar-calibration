@@ -44,22 +44,18 @@ void OptimizationLC::addPointToLineConstriants(ceres::Problem &problem,
 }
 
 void OptimizationLC::addPointToPointConstriants(ceres::Problem &problem,
-                                                std::vector<Vector3d> &lidar_corners_3d,
-                                                std::vector<Vector3d> &image_corners_3d)
+                                                vector<Vector3d> &lidar_corners_3d,
+                                                vector<Vector3d> &image_corners_3d)
 {
     assert(image_corners_3d.size() == lidar_corners_3d.size());
-    if (image_corners_3d.size() != 4)
+    int n = image_corners_3d.size();
+    double w = 1 / sqrt((double)n);
+    for (int i = 0; i < n; ++i)
     {
-        std::cout<<"the points size must be 4 !!"<<std::endl;
-        return;
-    }
-    for (int i = 0; i < 4; ++i)
-    {
-        Eigen::Vector3d image_point = image_corners_3d[i];
         Eigen::Vector3d lidar_point = lidar_corners_3d[i];
+        Eigen::Vector3d image_point = image_corners_3d[i];
         ceres::LossFunction *loss_function = NULL;
-        double w = 1 / sqrt((double)image_corners_3d.size());
-        ceres::CostFunction *cost_function = new ceres::AutoDiffCostFunction<PointToPointError, 1, 6>(new PointToPointError(lidar_point,image_point, w));
+        ceres::CostFunction *cost_function = new ceres::AutoDiffCostFunction<PointToPointError1, 3, 6>(new PointToPointError1(lidar_point,image_point, w));
         problem.AddResidualBlock(cost_function, loss_function, m_R_t.data());
     }
     return;

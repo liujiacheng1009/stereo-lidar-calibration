@@ -206,13 +206,7 @@ int main()
     for(int i=0;i<image_3d_corners.size();++i){
         auto& image_corners = image_3d_corners[i];
         auto& cloud_corners = cloud_3d_corners[i];
-        p1.clear();
-        p2.clear();
-        for(int j=0;j<4;++j){
-            p1.push_back(image_corners[j]);
-            p2.push_back(cloud_corners[j]);
-        }
-        optimizer_lc.addPointToPointConstriants(problem, p1, p2);
+        optimizer_lc.addPointToPointConstriants(problem,cloud_corners,image_corners);
     }
 
     // 添加点到平面的约束
@@ -251,7 +245,6 @@ int main()
     Rt.block(0,0,3,3) = R;
     Rt.block(0,3,3,1) = optimizer_lc.get_R_t().tail(3);
     cout << Rt << std::endl;
-    cout<< Rt.inverse()<<endl;
     
     // cout<<"-----------------------------------------"<<endl;
     // for(int i=0;i<n_frames;++i){
