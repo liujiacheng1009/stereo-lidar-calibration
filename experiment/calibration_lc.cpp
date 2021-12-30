@@ -4,7 +4,7 @@
 #include "optimization.hpp"
 #include "utils.hpp"
 #include <pcl/common/geometry.h>
-
+#include <sophus/so3.hpp>
 using namespace std;
 using namespace Eigen;
 using namespace cv;
@@ -257,28 +257,28 @@ int main()
     }
 
     // 添加点到平面的约束
-    for(int i=0;i<plane_clouds.size();++i ){
-        auto plane_cloud = plane_clouds[i].makeShared();
-        auto& plane = image_planes[i];
-        Eigen::Vector3d plane_centroid = plane.head<3>();
-        Eigen::Vector3d plane_normal = plane.tail<3>();
-        optimizer_lc.addPointToPlaneConstraints(problem, plane_cloud, plane_centroid, plane_normal);
-    }
+    // for(int i=0;i<plane_clouds.size();++i ){
+    //     auto plane_cloud = plane_clouds[i].makeShared();
+    //     auto& plane = image_planes[i];
+    //     Eigen::Vector3d plane_centroid = plane.head<3>();
+    //     Eigen::Vector3d plane_normal = plane.tail<3>();
+    //     optimizer_lc.addPointToPlaneConstraints(problem, plane_cloud, plane_centroid, plane_normal);
+    // }
 
     // 添加点到直线的约束
-    for(int i=0;i<lines_pcds.size();++i){
-        auto& lines_points = lines_pcds[i];
-        auto& lines_params = image_lines[i];
-        vector<Eigen::VectorXd> lines_normal;
-        for(int j=0;j<4;++j){
-            auto& line_params = lines_params[j];
-            Eigen::Vector3d a = line_params.head<3>();
-            Eigen::Vector3d b = line_params.head<3>() + line_params.tail<3>();
-            Eigen::Vector3d line_normal = a.cross(b);
-            lines_normal.push_back(line_normal);
-        }
-        optimizer_lc.addPointToLineConstriants(problem, lines_points,lines_normal);
-    }
+    // for(int i=0;i<lines_pcds.size();++i){
+    //     auto& lines_points = lines_pcds[i];
+    //     auto& lines_params = image_lines[i];
+    //     vector<Eigen::VectorXd> lines_normal;
+    //     for(int j=0;j<4;++j){
+    //         auto& line_params = lines_params[j];
+    //         Eigen::Vector3d a = line_params.head<3>();
+    //         Eigen::Vector3d b = line_params.head<3>() + line_params.tail<3>();
+    //         Eigen::Vector3d line_normal = a.cross(b);
+    //         lines_normal.push_back(line_normal);
+    //     }
+    //     optimizer_lc.addPointToLineConstriants(problem, lines_points,lines_normal);
+    // }
 
     ceres::Solver::Options options;
     options.max_num_iterations = 500;
@@ -287,8 +287,31 @@ int main()
     ceres::Solver::Summary summary;
     ceres::Solve(options, &problem, &summary);
     std::cout << summary.BriefReport() << "\n";
-    cout << optimizer_lc.get_R_t() << std::endl;
+    MatrixXd Rt = Matrix<double,4,4>::Identity();
+    Eigen::Matrix3d R = Sophus::SO3d::exp(optimizer_lc.get_R_t().head(3)).matrix();
+    Rt.block(0,0,3,3) = R;
+    Rt.block(0,3,3,1) = optimizer_lc.get_R_t().tail(3);
+    cout << Rt << std::endl;
+    cout<< Rt.inverse()<<endl;
     
+    // cout<<"-----------------------------------------"<<endl;
+    // for(int i=0;i<n_frames;++i){
+    //     for(int j = 0;j<n_corners;++j){
+    //         auto& camera_point = right_camera_corners_3d[i][j];
+    //         auto& lidar_point = lidar_corners_3d[i][j];
+    //         Vector4d p1,p2;
+    //         p1.head(3) = camera_point;
+    //         p1(3) = 1;
+    //         p2.head(3) = lidar_point;
+    //         p2(3) = 1;
+    //         Vector4d p3 = p1 - refined_Rt_l1_c2*p2;
+    //         cout<< p1(0)<<" "<<p1(1)<<" "<<p1(2)<<endl<<
+    //             p2(0)<<" "<<p2(1)<<" "<<p2(2)<<endl<<
+    //             p3(0)<<" "<<p3(1)<<" "<<p3(2)<<endl;
+    //         cout<<endl;
+    //     }
+    // }
+
     // icp求解
     // pcl::PointCloud<pcl::PointXYZ>::Ptr source_cloud(new pcl::PointCloud<pcl::PointXYZ>);
     // pcl::PointCloud<pcl::PointXYZ>::Ptr target_cloud(new pcl::PointCloud<pcl::PointXYZ>);

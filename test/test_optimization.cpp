@@ -268,25 +268,89 @@ void runs2()
     std::cout<<aff3.matrix()<<std::endl;
 }
 
+// 验证point to point constraint
+void runs3()
+{
+    Vector3d dt(0, 0, 0.1);
+    vector<Vector3d> P,Q;
+    for(double i=0;i<1.4;i+=0.014){
+        double x = cos(i);
+        double y = sin(i);
+        double z = x*y;
+        P.push_back(Vector3d(x,y,z));
+    }
+    Affine3d t = Affine3d::Identity();
+    t.rotate(Eigen::AngleAxis<double>(0.5, Eigen::Vector3d::UnitX()));
+    t.rotate(Eigen::AngleAxis<double>(0.5, Eigen::Vector3d::UnitY()));
+    t.rotate(Eigen::AngleAxis<double>(0.5, Eigen::Vector3d::UnitZ()));
+    t.translate ( Eigen::Vector3d(0.5 , 0.5 , 0.5));
+    for(auto& pp:P){
+        Vector3d q = t*pp+dt;
+        Q.push_back(q);
+    }
+
+    int n = Q.size();
+    cout<<n <<endl;
+    double w = 1/ sqrt((double)n);
+    double err1=0.0;
+    for(int i=0;i<1;i++){
+        auto& p = P[i];
+        auto& q = Q[i];
+        err1 += (w*(t*p-q).norm())*(w*(t*p-q).norm());
+    }
+    cout<<"err1: "<< err1<<endl;
+    ceres::Problem problem;
+    VectorXd Rt(6);
+    Rt << 0.5,0.5,0.5,0.5,0.5,0.5;
+    for(int i=0;i<1;++i){
+        auto& p = P[i];
+        auto& q = Q[i];
+        ceres::LossFunction *loss_function = NULL;
+        ceres::CostFunction *cost_function = new ceres::AutoDiffCostFunction<PointToPointError1, 3, 6>(new PointToPointError1(p,q, w));
+        problem.AddResidualBlock(cost_function, loss_function, Rt.data());
+    }
+    ceres::Solver::Options options;
+    options.max_num_iterations = 200;
+    options.linear_solver_type = ceres::SPARSE_NORMAL_CHOLESKY;
+    options.minimizer_progress_to_stdout = false;
+    ceres::Solver::Summary summary;
+    ceres::Solve(options, &problem, &summary);
+    std::cout << summary.BriefReport() << "\n";
+    Affine3d t1 = Affine3d::Identity();
+    t1.rotate(Eigen::AngleAxis<double>(Rt(0), Eigen::Vector3d::UnitX()));
+    t1.rotate(Eigen::AngleAxis<double>(Rt(1), Eigen::Vector3d::UnitY()));
+    t1.rotate(Eigen::AngleAxis<double>(Rt(2), Eigen::Vector3d::UnitZ()));
+    t1.translate ( Eigen::Vector3d(Rt(3) , Rt(4) , Rt(5)));
+    double err=0.0;
+    for(int i=0;i<n;i++){
+        auto& p = P[i];
+        auto& q = Q[i];
+        err += (w*(t1*p-q).norm())*(w*(t1*p-q).norm());;
+    }
+    cout<<Rt<<endl;
+    cout<<err<<endl;
+    return;
+}
+
 int main()
 {
-    runs2();
+    // runs3();
     // // test_point_to_line_error();
-    // Eigen::VectorXd R_t(6);
-    // R_t << 0., 0., 0., 0., 0., 0.;
-    // OptimizationLC optimizer_lc(R_t);
-    // ceres::Problem problem;
-    // // problem.AddParameterBlock(R_t.data(), 6);
-    // // std::vector<Eigen::Vector3d> p1, p2;
-    // // generate_simulation_points(p1, p2, 4);
-    // Cloud source_cloud;
-    // Cloud target_cloud;
-    // get_sim_data(source_cloud,target_cloud);
-    // for(int i=0;i<8;i++){
-    //     auto& p1 = source_cloud[i];
-    //     auto& p2 = target_cloud[i];
-    //     optimizer_lc.addPointToPointConstriants(problem, p1, p2);
-    // }
+    Eigen::VectorXd R_t(6);
+    R_t << 0., 0., 0., 0., 0., 0.;
+    OptimizationLC optimizer_lc(R_t);
+    ceres::Problem problem;
+    // problem.AddParameterBlock(R_t.data(), 6);
+    // std::vector<Eigen::Vector3d> p1, p2;
+    // generate_simulation_points(p1, p2, 4);
+    Cloud source_cloud;
+    Cloud target_cloud;
+    get_sim_data(source_cloud,target_cloud);
+    for(int i=0;i<8;i++){
+        auto& p1 = source_cloud[i];
+        auto& p2 = target_cloud[i];
+        optimizer_lc.addPointToPointConstriants(problem, p1, p2);
+    }
 
     // // for(auto& p:p1){
     // //     std::cout<<p<<std::endl;
@@ -295,16 +359,15 @@ int main()
     // //     std::cout<<p<<std::endl;
     // // }
     // // optimizer_lc.addPointToPointConstriants(problem, p1, p2);
-    // ceres::Solver::Options options;
-    // options.max_num_iterations = 200;
-    // options.linear_solver_type = ceres::SPARSE_NORMAL_CHOLESKY;
-    // options.minimizer_progress_to_stdout = false;
-    // ceres::Solver::Summary summary;
-    // ceres::Solve(options, &problem, &summary);
-    // std::cout << summary.BriefReport() << "\n";
-    // R_t = optimizer_lc.get_R_t();
+    ceres::Solver::Options options;
+    options.max_num_iterations = 200;
+    options.linear_solver_type = ceres::SPARSE_NORMAL_CHOLESKY;
+    options.minimizer_progress_to_stdout = false;
+    ceres::Solver::Summary summary;
+    ceres::Solve(options, &problem, &summary);
+    std::cout << summary.BriefReport() << "\n";
 
-    // cout << optimizer_lc.get_R_t() << std::endl;
+    cout << optimizer_lc.get_R_t() << std::endl;
 
     // icp求解
     // pcl::PointCloud<pcl::PointXYZ>::Ptr source(new pcl::PointCloud<pcl::PointXYZ>);

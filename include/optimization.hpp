@@ -30,7 +30,70 @@
 #include <pcl/common/intersections.h>
 #include <pcl/registration/icp.h>
 #include <pcl/common/distances.h>
+#include <sophus/so3.hpp>
+using namespace std;
+using namespace Eigen;
 
+
+// closedup error
+
+class ClosedupError
+{
+public:
+    EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+    ClosedupError(const double& w):
+                    m_w(w){}
+    template<typename T>
+    bool operator()(const T* const Rt1, const T* const Rt2, const T* const Rt3,T* residual) const{
+        T rot1[3*3];
+        ceres::AngleAxisToRotationMatrix(Rt1, rot1);
+        Eigen::Matrix<T, 3, 3> R1 = Eigen::Matrix<T, 3, 3>::Identity();
+        for (int i = 0; i < 3; ++i) {
+            for (int j = 0; j < 3; ++j) {
+                R1(i, j) = rot1[i+j*3];
+            }
+        }
+        Eigen::Map<const Eigen::Matrix<T,3,1>> t1(Rt1+3);
+        Eigen::Matrix<T,4,4> trans1 = Eigen::Matrix<T,4,4>::Identity();
+        trans1.block(0,0,3,3) = R1;
+        trans1.block(0,3,3,1) = t1;
+
+        T rot2[3*3];
+        ceres::AngleAxisToRotationMatrix(Rt2, rot2);
+        Eigen::Matrix<T, 3, 3> R2 = Eigen::Matrix<T, 3, 3>::Identity();
+        for (int i = 0; i < 3; ++i) {
+            for (int j = 0; j < 3; ++j) {
+                R2(i, j) = rot2[i+j*3];
+            }
+        }
+        Eigen::Map<const Eigen::Matrix<T,3,1>> t2(Rt2+3);
+        Eigen::Matrix<T,4,4> trans2 = Eigen::Matrix<T,4,4>::Identity();
+        trans2.block(0,0,3,3) = R2;
+        trans2.block(0,3,3,1) = t2;
+
+        T rot3[3*3];
+        ceres::AngleAxisToRotationMatrix(Rt3, rot3);
+        Eigen::Matrix<T, 3, 3> R3 = Eigen::Matrix<T, 3, 3>::Identity();
+        for (int i = 0; i < 3; ++i) {
+            for (int j = 0; j < 3; ++j) {
+                R3(i, j) = rot3[i+j*3];
+            }
+        }
+        Eigen::Map<const Eigen::Matrix<T,3,1>> t3(Rt3+3);
+        Eigen::Matrix<T,4,4> trans3 = Eigen::Matrix<T,4,4>::Identity();
+        trans3.block(0,0,3,3) = R3;
+        trans3.block(0,3,3,1) = t3;
+
+        Eigen::Matrix<T,4,4> loop = trans1*trans3*(trans2.inverse().template cast<T>());
+        residual[0] = loop.block(0,3,3,1).norm();
+        residual[0] *= m_w;
+        residual[1] = (Matrix<T,3,3>::Identity()-loop.block(0,0,3,3)).trace();
+        residual[1] *= m_w;
+        return true;
+    }
+private:
+    const double m_w;
+};
 
 
 // 点到点的距离损失
@@ -52,7 +115,7 @@ public:
         Eigen::Matrix<T, 3, 3> R = Eigen::Matrix<T, 3, 3>::Identity();
         for (int i = 0; i < 3; ++i) {
             for (int j = 0; j < 3; ++j) {
-                R(i, j) = rot[i+3*j];
+                R(i, j) = rot[i+j*3];
             }
         }
         Eigen::Map<const Eigen::Matrix<T,3,1>> trans(R_t+3);
@@ -67,6 +130,45 @@ private:
     const double m_w;
 };
 
+class PointToPointError1
+{
+public:
+    EIGEN_MAKE_ALIGNED_OPERATOR_NEW 
+    PointToPointError1(const Eigen::Vector3d& point_lidar,
+                    const Eigen::Vector3d& point_cam,
+                    const double& w):
+                    m_point_lidar(point_lidar),
+                    m_point_cam(point_cam),
+                    m_w(w){}
+
+    template<typename T>
+    bool operator()(const T* const R_t,T*residual) const{
+        T p1[3] = {
+            T(m_point_lidar(0)),
+            T(m_point_lidar(1)),
+            T(m_point_lidar(2))
+        };
+        T p2[3];
+        ceres::AngleAxisRotatePoint(R_t, p1, p2);
+        p2[0] += R_t[3];
+        p2[1] += R_t[4];
+        p2[2] += R_t[5];
+        T p3[3] = {
+            T(m_point_cam(0)),
+            T(m_point_cam(1)),
+            T(m_point_cam(2))
+        };
+        residual[0] = m_w * (p3[0]-p2[0]);
+        residual[1] = m_w * (p3[1]-p2[1]);
+        residual[2] = m_w * (p3[2]-p2[2]);
+        return true;
+    }
+
+private:
+    const Eigen::Vector3d m_point_lidar;
+    const Eigen::Vector3d m_point_cam;
+    const double m_w;
+};
 
 // 计算点到直线的距离损失
 

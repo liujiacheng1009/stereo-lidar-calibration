@@ -3,6 +3,7 @@
 #include "extractLidarFeature.hpp"
 #include "optimization.hpp"
 #include "utils.hpp"
+#include <sophus/so3.hpp>
 
 using namespace std;
 using namespace Eigen;
@@ -250,7 +251,7 @@ int main()
     ceres::Solver::Summary summary1;
     ceres::Solve(options1, &problem1, &summary1);
     std::cout << summary1.BriefReport() << "\n";
-    Rt_l1_c1 = optimizer_lc1.get_R_t();
+    // Rt_l1_c1 = optimizer_lc1.get_R_t();
     cout << Rt_l1_c1 << std::endl;
     
     // 右目与lidar标定
@@ -303,7 +304,7 @@ int main()
     ceres::Solver::Summary summary2;
     ceres::Solve(options2, &problem2, &summary2);
     std::cout << summary2.BriefReport() << "\n";
-    Rt_l1_c2 = optimizer_lc2.get_R_t();
+    // Rt_l1_c2 = optimizer_lc2.get_R_t();
     cout << Rt_l1_c2 << std::endl;
 
     Eigen::VectorXd Rt_c1_c2(6);
