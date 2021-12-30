@@ -5,7 +5,6 @@
 #include <Eigen/Geometry>
 #include <opencv2/imgcodecs.hpp>
 #include <opencv2/highgui.hpp>
-
 #include <opencv2/core/utility.hpp>
 #include <opencv2/imgproc.hpp>
 #include <opencv2/calib3d.hpp>
@@ -19,7 +18,24 @@
 #include <ctime>
 #include <cstdio>
 #include <iostream>
+
 using namespace std;
+using namespace Eigen;
+using namespace cv;
+
+class ImageFeatureDetector;
+class ImageResults;
+
+class ImageResults{
+public:
+    vector<int> valid_index; // 有效的图像index
+    vector<vector<Vector3d>> corners_3d; // 图像3d角点
+    vector<VectorXd> planes_3d; // 图像的平面方程
+    vector<vector<VectorXd>> lines_3d; // 图像边缘直线方程
+};
+
+void processImage(Config& config, vector<string>& image_paths, ImageResults& images_features);
+
 
 class ImageFeatureDetector{
 public:

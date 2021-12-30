@@ -18,137 +18,100 @@ int main()
     std::string clouds_dir = config.lidar_clouds_dataset_path;
     std::vector<std::string> images;
     get_data_by_path(images, images_dir, config.image_format);
-    std::vector<std::string> lidar_clouds;
-    get_data_by_path(lidar_clouds, clouds_dir, config.cloud_format);
-    if(!check_data_by_index(images, lidar_clouds)){
+    std::vector<std::string> clouds;
+    get_data_by_path(clouds, clouds_dir, config.cloud_format);
+    if(!check_data_by_index(images, clouds)){
         cerr <<"图像和点云文件应存在且文件名相同！！"<<endl;
         exit(-1);
     }
-    ImageFeatureDetector image_feature_detector(config);
-    vector<int> valid_image_index;
-    std::vector<std::vector<cv::Point3d>> image_3d_corners; // 图像3d角点
-    vector<Eigen::VectorXd> image_planes; // 图像的平面方程
-    vector<vector<Eigen::VectorXd>> image_lines; // 图像边缘直线方程
-    for (int i = 0;i<images.size();++i)
-    {
-        cv::Mat img = cv::imread(images[i], cv::IMREAD_COLOR);
-        cv::Mat half_image;
-        //cv::resize(img, img , cv::Size(0.5, 0.5), cv::INTER_LINEAR);
-        cv::resize(img, half_image, cv::Size(), 0.45, 0.45); // cv::findChessboardCorners在高分辨率图像上有bug
-        std::vector<cv::Point2f> image_corners;
-        if (!image_feature_detector.detectImageCorner(half_image, image_corners)){
-            std::cout<< "can not detect corner from image: " << i<<std::endl;
-            continue;
-        }
-        for(auto& image_corner:image_corners){
-            image_corner.x *= (1.0/0.45);
-            image_corner.y *= (1.0/0.45);
-        }
-        cv::Mat rvec, tvec;
-        image_feature_detector.estimatePose(image_corners, rvec, tvec);
-        std::vector<Point3d> chessboard_3d_corners, reordered_image_3d_corners;
-        image_feature_detector.calculate3DCorners(chessboard_3d_corners, rvec, tvec);
-        Eigen::VectorXd plane;
-        image_feature_detector.calculatePlane1(chessboard_3d_corners, plane);
-        vector<Eigen::VectorXd> lines;
-        image_feature_detector.calculateLines(chessboard_3d_corners, lines);
-        image_lines.push_back(lines);
-        image_planes.push_back(plane);
-        image_3d_corners.push_back(chessboard_3d_corners);
-        valid_image_index.push_back(i);
-    }
 
-    // for (int i = 0; i < image_3d_corners.size(); i++)
+    ImageResults images_features;
+    processImage(config, images, images_features);
+    auto& valid_image_index = images_features.valid_index;
+    auto& image_3d_corners = images_features.corners_3d; // 图像3d角点
+    auto& image_planes = images_features.planes_3d; // 图像的平面方程
+    auto& image_lines = images_features.lines_3d ; // 图像边缘直线方程
+
+    CloudResults cloud_features;
+    processCloud(config, clouds, cloud_features );
+    auto& valid_cloud_index = cloud_features.valid_index;
+    auto& cloud_3d_corners = cloud_features.corners_3d;
+
+ 
+    // ChessboardExtractor extractor(config);
+    // std::vector<int> valid_cloud_index, valid_cloud_index1;
+    
+    // std::vector<pcl::PointCloud<pcl::PointXYZ>> plane_clouds;
+    // for(int i=0;i<lidar_clouds.size();++i)
     // {
-    //     // cv::Mat image = cv::imread(images[valid_image_index[i]], cv::IMREAD_COLOR);
-    //     std::vector<cv::Point3d> &corners = image_3d_corners[i];
-    //     for (auto &corner : corners)
-    //     {
-    //         // cv::Point2d p = project(corner, camera_matrix);
-    //         // cv::circle(image, p, 5, cv::Scalar(0, 255, 0), -1);
-    //         std::cout<<corner<<std::endl;
-    //     }
-    //     std::cout<<std::endl;
-    //     // cv::imwrite("/home/jc/Documents/stereo-lidar-calibration/exclude_dir/test_data/" 
-    //     //     + to_string(i) + ".png", image);
+    //     pcl::PointCloud<pcl::PointXYZ>::Ptr input_cloud(new pcl::PointCloud<pcl::PointXYZ>);
+    //     if (pcl::io::loadPCDFile<pcl::PointXYZ> (lidar_clouds[i], *input_cloud) == -1) continue;
+    //     extractor.pass_filter(input_cloud);
+    //     std::vector<pcl::PointIndices> indices_clusters;
+    //     extractor.pcd_clustering(input_cloud, indices_clusters);
+    //     auto& plane_pcd = input_cloud;
+    //     if(!extractor.fitPlane(plane_pcd, indices_clusters)) continue;
+    //     valid_cloud_index.push_back(i);
+    //     plane_clouds.push_back(*plane_pcd);
+    //    // display_colored_by_depth(plane_pcd);
     // }
+    // // std::cout<<plane_clouds.size()<<std::endl;
     
+    // LidarFeatureDetector lidar_feature_detector;
+    // std::vector<std::vector<pcl::PointXYZ>> cloud_3d_corners;
+    // std::vector<std::vector<pcl::PointCloud<pcl::PointXYZ>>> lines_pcds;
+    // for(int i=0;i<plane_clouds.size();++i){
+    //     auto input_cloud = plane_clouds[i].makeShared();
+    //     pcl::PointCloud<pcl::PointXYZ>::Ptr edge_pcd(new pcl::PointCloud<pcl::PointXYZ>);
+    //     lidar_feature_detector.extractEdgeCloud(input_cloud, edge_pcd);
+    //     std::vector<Eigen::VectorXf> lines_params;
+    //     std::vector<pcl::PointCloud<pcl::PointXYZ>> lines_points;
+    //     if (!lidar_feature_detector.extractFourLines(edge_pcd, lines_params, lines_points))
+    //     {
+    //         continue;
+    //     }
+    //     // // debug
+    //     // {
+    //     //     if(i==3){
+    //     //         for(auto& params:lines_params){
+    //     //             std::cout<<params<<std::endl;
+    //     //             std::cout<<std::endl;
+    //     //         }
+    //     //     }
+    //     // }
 
-    PassFilterParams pass_filter_params(std::vector<double>({-10,10,-10,10,-10,10}));
-    ChessboardExtractor extractor;
-    std::vector<int> valid_cloud_index, valid_cloud_index1;
-
-    std::vector<pcl::PointCloud<pcl::PointXYZ>> plane_clouds;
-    for(int i=0;i<lidar_clouds.size();++i)
-    {
-        pcl::PointCloud<pcl::PointXYZ>::Ptr input_cloud(new pcl::PointCloud<pcl::PointXYZ>);
-        if (pcl::io::loadPCDFile<pcl::PointXYZ> (lidar_clouds[i], *input_cloud) == -1) continue;
-        extractor.pass_filter(input_cloud, pass_filter_params);
-        std::vector<pcl::PointIndices> indices_clusters;
-        extractor.pcd_clustering(input_cloud, indices_clusters);
-        auto& plane_pcd = input_cloud;
-        if(!extractor.fitPlane(plane_pcd, indices_clusters)) continue;
-        valid_cloud_index.push_back(i);
-        plane_clouds.push_back(*plane_pcd);
-       // display_colored_by_depth(plane_pcd);
-    }
-    // std::cout<<plane_clouds.size()<<std::endl;
-    
-    LidarFeatureDetector lidar_feature_detector;
-    std::vector<std::vector<pcl::PointXYZ>> cloud_3d_corners;
-    std::vector<std::vector<pcl::PointCloud<pcl::PointXYZ>>> lines_pcds;
-    for(int i=0;i<plane_clouds.size();++i){
-        auto input_cloud = plane_clouds[i].makeShared();
-        pcl::PointCloud<pcl::PointXYZ>::Ptr edge_pcd(new pcl::PointCloud<pcl::PointXYZ>);
-        lidar_feature_detector.extractEdgeCloud(input_cloud, edge_pcd);
-        std::vector<Eigen::VectorXf> lines_params;
-        std::vector<pcl::PointCloud<pcl::PointXYZ>> lines_points;
-        if (!lidar_feature_detector.extractFourLines(edge_pcd, lines_params, lines_points))
-        {
-            continue;
-        }
-        // // debug
-        // {
-        //     if(i==3){
-        //         for(auto& params:lines_params){
-        //             std::cout<<params<<std::endl;
-        //             std::cout<<std::endl;
-        //         }
-        //     }
-        // }
-
-        std::vector<pcl::PointXYZ> corners, reordered_corners;
-        lidar_feature_detector.estimateFourCorners(lines_params,corners );
-        vector<pair<std::pair<pcl::PointXYZ, pcl::PointXYZ> , pcl::PointCloud<pcl::PointXYZ>>> line_corners_to_points;
-        for(int i=0;i<4;i++){
-            line_corners_to_points.push_back(make_pair(make_pair(corners[i], corners[(i+1)%4]), lines_points[(i+1)%4]));
-        }
-        reorder_corners(corners, reordered_corners);
-        lines_points.clear();
-        for(int i=0;i<4;++i){
-            auto p1 = make_pair(reordered_corners[i], reordered_corners[(i+1)%4]);
-            auto p2 = make_pair(reordered_corners[(i+1)%4], reordered_corners[i]);
-            for(int j=0;j<4;++j){
-                auto& corners_points = line_corners_to_points[j];
-                if(pcl::geometry::distance(corners_points.first.first, p1.first)< 1e-2 && pcl::geometry::distance(corners_points.first.second, p1.second)<1e-2){
-                    lines_points.push_back(corners_points.second);
-                }
-                if(pcl::geometry::distance(corners_points.first.first, p2.first)< 1e-2 && pcl::geometry::distance(corners_points.first.second, p2.second)<1e-2){
-                    lines_points.push_back(corners_points.second);
-                }
-            }
-        }
-        lines_pcds.push_back(lines_points);
-        cloud_3d_corners.push_back(reordered_corners);
-        valid_cloud_index1.push_back(valid_cloud_index[i]);
-        // for (auto &corner : reordered_corners)
-        // {
-        //     std::cout << corner.x << " "
-        //               << corner.y << " "
-        //               << corner.z << std::endl;
-        //     std::cout << std::endl;
-        // }
-    }
+    //     std::vector<pcl::PointXYZ> corners, reordered_corners;
+    //     lidar_feature_detector.estimateFourCorners(lines_params,corners );
+    //     vector<pair<std::pair<pcl::PointXYZ, pcl::PointXYZ> , pcl::PointCloud<pcl::PointXYZ>>> line_corners_to_points;
+    //     for(int i=0;i<4;i++){
+    //         line_corners_to_points.push_back(make_pair(make_pair(corners[i], corners[(i+1)%4]), lines_points[(i+1)%4]));
+    //     }
+    //     reorder_corners(corners, reordered_corners);
+    //     lines_points.clear();
+    //     for(int i=0;i<4;++i){
+    //         auto p1 = make_pair(reordered_corners[i], reordered_corners[(i+1)%4]);
+    //         auto p2 = make_pair(reordered_corners[(i+1)%4], reordered_corners[i]);
+    //         for(int j=0;j<4;++j){
+    //             auto& corners_points = line_corners_to_points[j];
+    //             if(pcl::geometry::distance(corners_points.first.first, p1.first)< 1e-2 && pcl::geometry::distance(corners_points.first.second, p1.second)<1e-2){
+    //                 lines_points.push_back(corners_points.second);
+    //             }
+    //             if(pcl::geometry::distance(corners_points.first.first, p2.first)< 1e-2 && pcl::geometry::distance(corners_points.first.second, p2.second)<1e-2){
+    //                 lines_points.push_back(corners_points.second);
+    //             }
+    //         }
+    //     }
+    //     lines_pcds.push_back(lines_points);
+    //     cloud_3d_corners.push_back(reordered_corners);
+    //     valid_cloud_index1.push_back(valid_cloud_index[i]);
+    //     // for (auto &corner : reordered_corners)
+    //     // {
+    //     //     std::cout << corner.x << " "
+    //     //               << corner.y << " "
+    //     //               << corner.z << std::endl;
+    //     //     std::cout << std::endl;
+    //     // }
+    // }
     // auto& lines_pcd = lines_pcds[2];
     // for(auto& line:lines_pcd){
     //     std::cout<<line.width*line.height<<std::endl;
@@ -222,19 +185,31 @@ int main()
     //     display_colored_by_depth(edge_pcd_ptr);
     // }
 
+    // for(auto& corners: image_3d_corners){
+    //     for(auto& corner:corners){
+    //         cout<< corner.transpose()<<endl;
+    //     }
+    // }
+    // cout<<"-----------------------------------------"<<endl;
+    // for(auto& corners: cloud_3d_corners){
+    //     for(auto& corner:corners){
+    //         cout<< corner.transpose()<<endl;
+    //     }
+    // }
+    // exit(0);
     Eigen::VectorXd R_t(6);
     R_t << 0., 0., 0., 0., 0., 0.;
     OptimizationLC optimizer_lc(R_t);
     ceres::Problem problem;
     // problem.AddParameterBlock(R_t.data(), 6);
-    std::vector<pcl::PointXYZ> p1, p2;
+    std::vector<Vector3d> p1, p2;
     for(int i=0;i<image_3d_corners.size();++i){
         auto& image_corners = image_3d_corners[i];
         auto& cloud_corners = cloud_3d_corners[i];
         p1.clear();
         p2.clear();
         for(int j=0;j<4;++j){
-            p1.push_back(pcl::PointXYZ(image_corners[j].x, image_corners[j].y, image_corners[j].z));
+            p1.push_back(image_corners[j]);
             p2.push_back(cloud_corners[j]);
         }
         optimizer_lc.addPointToPointConstriants(problem, p1, p2);

@@ -22,7 +22,11 @@
 #include <pcl/visualization/cloud_viewer.h>
 #include <pcl/io/pcd_io.h>
 #include <string>
+#include "config.hpp"
 
+using namespace cv;
+using namespace Eigen;
+using namespace std;
 
 struct PassFilterParams{
     double min_x,max_x;
@@ -41,29 +45,31 @@ struct PassFilterParams{
 
 class ChessboardExtractor{
 public:
-    ChessboardExtractor(){}
+    ChessboardExtractor(Config &config) : m_pass_filter_params(PassFilterParams(config.pass_filter_params)) {}
+
 public:
     // 主函数， 从环境点云中提取marker board 点云
-    bool extract(std::string& lidarPath, pcl::PointCloud<pcl::PointXYZ>::Ptr& plane_cloud);
+    // bool extract(std::string& lidarPath, pcl::PointCloud<pcl::PointXYZ>::Ptr& plane_cloud);
     // 点云聚类， 获取可能的点云簇
     void pcd_clustering(pcl::PointCloud<pcl::PointXYZ>::Ptr& input_pcd,
         std::vector<pcl::PointIndices>& pcd_clusters);
     // 对上面的点云簇进行平面拟合 
     bool fitPlane(pcl::PointCloud<pcl::PointXYZ>::Ptr& input_pcd,
-        std::vector<pcl::PointIndices>& indices_clusters);
+        std::vector<pcl::PointIndices>& indices_clusters, pcl::PointCloud<pcl::PointXYZ>::Ptr& plane_pcd);
 
     // 将原始点云投影到估计的平面上
     void projPlaneFilter(pcl::PointCloud<pcl::PointXYZ>::Ptr &cloud,
                          pcl::PointCloud<pcl::PointXYZ>::Ptr &proj_cloud,
                          pcl::ModelCoefficients::Ptr &coeff);
 
-    void pass_filter(pcl::PointCloud<pcl::PointXYZ>::Ptr& input_pcd, PassFilterParams& params);
+    void pass_filter(pcl::PointCloud<pcl::PointXYZ>::Ptr& input_pcd);
 
 private:
     // 预处理， 滤出固定范围外的点云
     void getPointCloudInROI();
     void extract_pcd_by_indices(pcl::PointIndices &indices, pcl::PointCloud<pcl::PointXYZ>::Ptr &input_pcd,
                                 pcl::PointCloud<pcl::PointXYZ>::Ptr &output_pcd);
+    PassFilterParams m_pass_filter_params;
 };
 
 #endif

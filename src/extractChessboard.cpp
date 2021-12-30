@@ -1,25 +1,27 @@
 #include "extractChessboard.hpp"
 
 using namespace std;
-
-bool ChessboardExtractor::extract(std::string& lidarPath, pcl::PointCloud<pcl::PointXYZ>::Ptr& plane_cloud)
-{
-    pcl::PointCloud<pcl::PointXYZ>::Ptr input_cloud (new pcl::PointCloud<pcl::PointXYZ>);
-    if (pcl::io::loadPCDFile<pcl::PointXYZ> (lidarPath, *input_cloud) == -1) 
-    {
-        PCL_ERROR ("Couldn't read file \n");
-        return false;
-    }
-    PassFilterParams pass_filter_params(std::vector<double>({-10,10,-10,10,-10,10}));
-    this->pass_filter(input_cloud, pass_filter_params);
-    std::vector<pcl::PointIndices> indices_clusters;
-    this->pcd_clustering(input_cloud, indices_clusters);
-    if(!this->fitPlane(input_cloud, indices_clusters)){
-        return false;
-    }
-    plane_cloud = input_cloud;
-    return true;
-}
+using namespace cv;
+using namespace Eigen;
+using namespace pcl;
+// bool ChessboardExtractor::extract(std::string& lidarPath, pcl::PointCloud<pcl::PointXYZ>::Ptr& plane_cloud)
+// {
+//     pcl::PointCloud<pcl::PointXYZ>::Ptr input_cloud (new pcl::PointCloud<pcl::PointXYZ>);
+//     if (pcl::io::loadPCDFile<pcl::PointXYZ> (lidarPath, *input_cloud) == -1) 
+//     {
+//         PCL_ERROR ("Couldn't read file \n");
+//         return false;
+//     }
+//     // PassFilterParams pass_filter_params(std::vector<double>({-10,10,-10,10,-10,10}));
+//     this->pass_filter(input_cloud);
+//     std::vector<pcl::PointIndices> indices_clusters;
+//     this->pcd_clustering(input_cloud, indices_clusters);
+//     if(!this->fitPlane(input_cloud, indices_clusters)){
+//         return false;
+//     }
+//     plane_cloud = input_cloud;
+//     return true;
+// }
 
 
 // void ChessboardExtractor::extract(pcl::PointCloud<pcl::PointXYZ>::Ptr input_lidar_pcd,
@@ -73,9 +75,10 @@ bool ChessboardExtractor::extract(std::string& lidarPath, pcl::PointCloud<pcl::P
 //     return;
 // }
 
-void ChessboardExtractor::pass_filter(pcl::PointCloud<pcl::PointXYZ>::Ptr& input_pcd, PassFilterParams& params)
+void ChessboardExtractor::pass_filter(pcl::PointCloud<pcl::PointXYZ>::Ptr& input_pcd)
 {
     auto &pcd_in_roi = input_pcd;
+    PassFilterParams& params = m_pass_filter_params;
     pcl::PassThrough<pcl::PointXYZ> filter;
     filter.setInputCloud(pcd_in_roi);
     filter.setFilterFieldName("z");
@@ -120,7 +123,8 @@ void ChessboardExtractor::pcd_clustering(pcl::PointCloud<pcl::PointXYZ>::Ptr& in
 }
 
 bool ChessboardExtractor::fitPlane(pcl::PointCloud<pcl::PointXYZ>::Ptr &input_pcd,
-              std::vector<pcl::PointIndices> &indices_clusters)
+                                   std::vector<pcl::PointIndices> &indices_clusters,
+                                       PointCloud<PointXYZ>::Ptr &plane_pcd)
 {
     pcl::ExtractIndices<pcl::PointXYZ> extract;
     extract.setInputCloud(input_pcd);
@@ -143,7 +147,7 @@ bool ChessboardExtractor::fitPlane(pcl::PointCloud<pcl::PointXYZ>::Ptr &input_pc
         double inliers_percentage = double(inliers->indices.size()) / pcd_cluster->points.size();
         if (inliers_percentage > 0.9)
         {
-            input_pcd = pcd_cluster;
+            plane_pcd = pcd_cluster;
             return true;
         }
     }

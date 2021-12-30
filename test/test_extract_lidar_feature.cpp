@@ -19,7 +19,6 @@ void run1()
     get_data_by_path(lidar_clouds, lidar_clouds_dir, ".pcd");
     sort(lidar_clouds.begin(), lidar_clouds.end());
 
-    PassFilterParams pass_filter_params(std::vector<double>({-10,10,-10,10,-10,10}));
     ChessboardExtractor extractor;
     std::vector<int> valid_cloud_index, valid_cloud_index1;
 
@@ -28,7 +27,7 @@ void run1()
     {
         pcl::PointCloud<pcl::PointXYZ>::Ptr input_cloud(new pcl::PointCloud<pcl::PointXYZ>);
         if (pcl::io::loadPCDFile<pcl::PointXYZ> (lidar_clouds[i], *input_cloud) == -1) continue;
-        extractor.pass_filter(input_cloud, pass_filter_params);
+        extractor.pass_filter(input_cloud);
         std::vector<pcl::PointIndices> indices_clusters;
         extractor.pcd_clustering(input_cloud, indices_clusters);
         auto& plane_pcd = input_cloud;

@@ -158,3 +158,46 @@ void ImageFeatureDetector::calculatePlane1(vector<Point3d>& corners, VectorXd& p
     plane.tail<3>() = Vector3d(centroid.x,centroid.y, centroid.z );
     return;
 }
+
+void processImage(Config& config, vector<string>& image_paths, ImageResults& images_features)
+{
+    ImageFeatureDetector image_feature_detector(config);
+    auto& valid_image_index = images_features.valid_index;
+    auto& image_3d_corners = images_features.corners_3d; // 图像3d角点
+    auto& image_planes = images_features.planes_3d; // 图像的平面方程
+    auto& image_lines = images_features.lines_3d; 
+
+    for (int i = 0;i<image_paths.size();++i)
+    {
+        cv::Mat img = cv::imread(image_paths[i], cv::IMREAD_COLOR);
+        cv::Mat half_image;
+        //cv::resize(img, img , cv::Size(0.5, 0.5), cv::INTER_LINEAR);
+        cv::resize(img, half_image, cv::Size(), 0.45, 0.45); // cv::findChessboardCorners在高分辨率图像上有bug
+        std::vector<cv::Point2f> image_corners;
+        if (!image_feature_detector.detectImageCorner(half_image, image_corners)){
+            std::cout<< "can not detect corner from image: " << i<<std::endl;
+            continue;
+        }
+        for(auto& image_corner:image_corners){
+            image_corner.x *= (1.0/0.45);
+            image_corner.y *= (1.0/0.45);
+        }
+        cv::Mat rvec, tvec;
+        image_feature_detector.estimatePose(image_corners, rvec, tvec);
+        std::vector<Point3d> chessboard_3d_corners, reordered_image_3d_corners;
+        image_feature_detector.calculate3DCorners(chessboard_3d_corners, rvec, tvec);
+        Eigen::VectorXd plane;
+        image_feature_detector.calculatePlane1(chessboard_3d_corners, plane);
+        vector<Eigen::VectorXd> lines;
+        image_feature_detector.calculateLines(chessboard_3d_corners, lines);
+        image_lines.push_back(lines);
+        image_planes.push_back(plane);
+        vector<Vector3d> corners_3d; //
+        for(auto& corners: chessboard_3d_corners){
+            corners_3d.push_back(Vector3d(corners.x, corners.y, corners.z));
+        }
+        image_3d_corners.push_back(corners_3d);
+        valid_image_index.push_back(i);
+    }
+    return;
+}

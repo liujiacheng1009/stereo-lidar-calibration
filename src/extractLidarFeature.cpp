@@ -1,5 +1,5 @@
 #include "extractLidarFeature.hpp"
-
+#include "utils.hpp"
 // void LidarFeatureDetector::getRings(std::vector<std::vector<pcl::PointXYZIr>>& rings)
 // {
 //     std::vector<std::vector<pcl::PointXYZIr> > rings(m_number_of_rings);
@@ -312,3 +312,55 @@ void LidarFeatureDetector::extractEdgeCloud(pcl::PointCloud<pcl::PointXYZ>::Ptr 
 //   }
 //   return true;
 // }
+
+bool LidarFeatureDetector::extractPlaneCloud(PointCloud<PointXYZ>::Ptr &input_cloud, PointCloud<PointXYZ>::Ptr &plane_pcd)
+{
+    m_chessboard_extractor.pass_filter(input_cloud); // 带通滤波
+    vector<PointIndices> indices_clusters;
+    m_chessboard_extractor.pcd_clustering(input_cloud, indices_clusters); // 聚类
+    if(m_chessboard_extractor.fitPlane(input_cloud, indices_clusters,plane_pcd)){
+        //Todo 保留平面上的点
+        return true;
+    }
+         // 查找平面
+    return false;
+}
+
+void processCloud(Config& config, vector<string>& cloud_paths, CloudResults& cloud_features)
+{
+    LidarFeatureDetector lidar_feature_detector(config);
+    
+    for(int i=0;i<cloud_paths.size();++i)
+    {
+        pcl::PointCloud<pcl::PointXYZ>::Ptr input_cloud(new pcl::PointCloud<pcl::PointXYZ>);
+        if (pcl::io::loadPCDFile<pcl::PointXYZ> (cloud_paths[i], *input_cloud) == -1) continue;
+        PointCloud<PointXYZ>::Ptr plane_cloud(new pcl::PointCloud<pcl::PointXYZ>);
+        if(!lidar_feature_detector.extractPlaneCloud(input_cloud,plane_cloud)) continue;
+        pcl::PointCloud<pcl::PointXYZ>::Ptr edge_cloud(new pcl::PointCloud<pcl::PointXYZ>);
+        lidar_feature_detector.extractEdgeCloud(plane_cloud, edge_cloud);// 提取边缘点云
+        std::vector<Eigen::VectorXf> lines_params;
+        std::vector<pcl::PointCloud<pcl::PointXYZ>> lines_points;
+        if (!lidar_feature_detector.extractFourLines(edge_cloud, lines_params, lines_points)) // 提取四条边界线
+        {
+            continue;
+        }
+        std::vector<pcl::PointXYZ> corners, reordered_corners;
+        lidar_feature_detector.estimateFourCorners(lines_params,corners); // 估计四个交点
+
+        vector<pair<std::pair<pcl::PointXYZ, pcl::PointXYZ> , pcl::PointCloud<pcl::PointXYZ>>> line_corners_to_points;
+        for(int i=0;i<4;i++){
+            line_corners_to_points.push_back(make_pair(make_pair(corners[i], corners[(i+1)%4]), lines_points[(i+1)%4]));
+        } // 建立角点和边缘直线上点云的对应关系
+        reorder_corners(corners, reordered_corners);// 角点重排序，与camera corner 保持对应关系
+        std::vector<pcl::PointCloud<pcl::PointXYZ>> reordered_lines_points;
+        reorder_line_points(reordered_corners,reordered_lines_points, line_corners_to_points );// 重排序边缘直线上的点
+        vector<Vector3d> corners_temp;
+        for(auto& corner:reordered_corners)
+        {
+            corners_temp.push_back(Vector3d(corner.x,corner.y, corner.z));
+        }
+        cloud_features.corners_3d.push_back(corners_temp);
+        cloud_features.valid_index.push_back(i);
+    }
+    return;
+}

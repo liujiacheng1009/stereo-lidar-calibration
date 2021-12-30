@@ -379,8 +379,8 @@ public:
                                    std::vector<Eigen::VectorXd> &line_normals);
     // ceres::Problem constructProblem();
     void addPointToPointConstriants(ceres::Problem &problem,
-                                    std::vector<pcl::PointXYZ> &image_corners_3d,
-                                    std::vector<pcl::PointXYZ> &lidar_corners_3d);
+                                    std::vector<Vector3d> &image_corners_3d,
+                                    std::vector<Vector3d> &lidar_corners_3d);
 
 
     Eigen::VectorXd get_R_t()
