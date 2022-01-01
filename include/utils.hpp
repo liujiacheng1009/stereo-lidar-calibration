@@ -21,14 +21,21 @@
 #include <opencv2/highgui.hpp>
 #include <pcl/registration/icp.h>
 #include <Eigen/Dense>
+#include <set>
 #include <string>
 #include <cmath>
 #include <unistd.h>
-
+#include <vector>
+#include <algorithm>
+#include "extractImageFeature.hpp"
+#include "extractLidarFeature.hpp"
 using namespace Eigen;
 using namespace std;
 using namespace pcl;
 using namespace cv;
+
+
+void getValidDataSet(ImageResults& images_features, CloudResults& cloud_features);
 
 void display_colored_by_depth(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud);
 
