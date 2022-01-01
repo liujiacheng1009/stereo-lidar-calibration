@@ -98,15 +98,9 @@ pcl::visualization::PCLVisualizer::Ptr show_multi_clouds_with_specified_colors(s
 //         return a.z>b.z;
 //     });
 // }
-// 调整lidar points 的顺序
-void reorder_corners(std::vector<pcl::PointXYZ>& ori_corners, std::vector<pcl::PointXYZ>& reordered_corners);
 
-// 调整边缘直线上的点云顺序
-void reorder_line_points(std::vector<pcl::PointXYZ>  &reordered_corners,
-                         vector<PointCloud<PointXYZ>> &reordered_lines_points,
-                         vector<pair<pair<PointXYZ, PointXYZ>, PointCloud<PointXYZ>>> &line_corners_to_points);
 
-void reorder_corners(std::vector<cv::Point3d>& ori_corners, std::vector<cv::Point3d>& reordered_corners);
+// void reorder_corners(std::vector<cv::Point3d>& ori_corners, std::vector<cv::Point3d>& reordered_corners);
 
 // pcl::visualization::PCLVisualizer::Ptr customColourVis (pcl::PointCloud<pcl::PointXYZ>::ConstPtr cloud)
 // {

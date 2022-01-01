@@ -12,7 +12,7 @@ using namespace cv;
 
 int main()
 {
-    Config config;
+    Config_vlp16 config;
     std::vector<std::string> images_paths, lidar_clouds_paths;
     std::string images_dir = config.left_images_dataset_path;
     std::string clouds_dir = config.lidar_clouds_dataset_path;
@@ -32,10 +32,13 @@ int main()
     auto& image_planes = images_features.planes_3d; // 图像的平面方程
     auto& image_lines = images_features.lines_3d ; // 图像边缘直线方程
 
+    cout<< valid_image_index.size()<<endl;
+
     CloudResults cloud_features;
     processCloud(config, clouds, cloud_features );
     auto& valid_cloud_index = cloud_features.valid_index;
     auto& cloud_3d_corners = cloud_features.corners_3d;
+    cout<< valid_cloud_index.size()<<endl;
 
     Eigen::VectorXd R_t(6);
     R_t << 0., 0., 0., 0., 0., 0.;
@@ -59,6 +62,6 @@ int main()
     Rt.block(0,0,3,3) = R;
     Rt.block(0,3,3,1) = optimizer_lc.get_R_t().tail(3);
     cout << Rt << std::endl;
-    cout << Rt-config.matlab_hdl64_tform<<endl;
+    cout << Rt-config.matlab_vlp16_tform<<endl;
     return 0;
 }

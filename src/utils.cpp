@@ -151,51 +151,6 @@ pcl::visualization::PCLVisualizer::Ptr show_multi_clouds_with_specified_colors(s
 //         return a.z>b.z;
 //     });
 // }
-// 调整lidar points 的顺序
-void reorder_corners(std::vector<pcl::PointXYZ>& ori_corners, std::vector<pcl::PointXYZ>& reordered_corners)
-{
-    reordered_corners.clear();
-    float d1 = pcl::geometry::distance(ori_corners[0], ori_corners[0]);
-    float d2 = pcl::geometry::distance(ori_corners[1], ori_corners[2]);
-    if(d1<d2){
-        std::reverse(ori_corners.begin()+1, ori_corners.end());
-    }
-    if(std::max(ori_corners[0].z, ori_corners[1].z)< std::max(ori_corners[2].z, ori_corners[3].z)){
-        reordered_corners.push_back(ori_corners[2]);
-        reordered_corners.push_back(ori_corners[3]);
-        reordered_corners.push_back(ori_corners[0]);
-        reordered_corners.push_back(ori_corners[1]);
-    }else{
-        reordered_corners = ori_corners;
-    }
-    if(reordered_corners[0].y<reordered_corners[1].y){
-        std::reverse(reordered_corners.begin(), reordered_corners.begin()+2);
-        std::reverse(reordered_corners.begin()+2, reordered_corners.end());
-    }
-    return;
-}
-
-// 调整边缘直线上的点云顺序
-void reorder_line_points(std::vector<pcl::PointXYZ>  &reordered_corners,
-                         vector<PointCloud<PointXYZ>> &reordered_lines_points,
-                         vector<pair<pair<PointXYZ, PointXYZ>, PointCloud<PointXYZ>>> &line_corners_to_points)
-{
-    reordered_lines_points.clear();
-    for(int i=0;i<4;++i){
-        auto p1 = make_pair(reordered_corners[i], reordered_corners[(i+1)%4]);
-        auto p2 = make_pair(reordered_corners[(i+1)%4], reordered_corners[i]);
-        for(int j=0;j<4;++j){
-            auto& corners_points = line_corners_to_points[j];
-            if(pcl::geometry::distance(corners_points.first.first, p1.first)< 1e-2 && pcl::geometry::distance(corners_points.first.second, p1.second)<1e-2){
-                reordered_lines_points.push_back(corners_points.second);
-            }
-            if(pcl::geometry::distance(corners_points.first.first, p2.first)< 1e-2 && pcl::geometry::distance(corners_points.first.second, p2.second)<1e-2){
-                reordered_lines_points.push_back(corners_points.second);
-            }
-        }
-    }
-    return;
-}
 
 // void reorder_corners(std::vector<cv::Point3d>& ori_corners, std::vector<cv::Point3d>& reordered_corners)
 // {
