@@ -25,20 +25,34 @@ int main()
         exit(-1);
     }
 
+    // ImageResults images_features;
+    // processImage(config, images, images_features);
+    // auto& valid_image_index = images_features.valid_index;
+    // auto& image_3d_corners = images_features.corners_3d; // 图像3d角点
+    // auto& image_planes = images_features.planes_3d; // 图像的平面方程
+    // auto& image_lines = images_features.lines_3d ; // 图像边缘直线方程
+
+    // cout<< valid_image_index.size()<<endl;
+
+    // CloudResults cloud_features;
+    // processCloud(config, clouds, cloud_features );
+    // auto& valid_cloud_index = cloud_features.valid_index;
+    // auto& cloud_3d_corners = cloud_features.corners_3d;
+    // cout<< valid_cloud_index.size()<<endl;
+
     ImageResults images_features;
     processImage(config, images, images_features);
-    auto& valid_image_index = images_features.valid_index;
-    auto& image_3d_corners = images_features.corners_3d; // 图像3d角点
-    auto& image_planes = images_features.planes_3d; // 图像的平面方程
-    auto& image_lines = images_features.lines_3d ; // 图像边缘直线方程
-
-    cout<< valid_image_index.size()<<endl;
 
     CloudResults cloud_features;
     processCloud(config, clouds, cloud_features );
-    auto& valid_cloud_index = cloud_features.valid_index;
-    auto& cloud_3d_corners = cloud_features.corners_3d;
-    cout<< valid_cloud_index.size()<<endl;
+
+    getValidDataSet(images_features, cloud_features);
+    auto& image_3d_corners = images_features.corners_3d; // 图像3d角点
+    auto& cloud_3d_corners = cloud_features.corners_3d; // 点云3d角点
+
+    cout<< images_features.valid_index.size()<<endl;
+    cout<< cloud_features.valid_index.size()<<endl;
+    cout<< image_3d_corners.size()<<endl;
 
     Eigen::VectorXd R_t(6);
     R_t << 0., 0., 0., 0., 0., 0.;

@@ -35,11 +35,20 @@
 #include <unordered_map>
 #include <map>
 #include "extractChessboard.hpp"
+#include "utils.hpp"
+
 
 using namespace Eigen;
 using namespace cv;
 using namespace std;
 using namespace pcl;
+
+class CloudResults;
+
+bool loadPointXYZ(string& path, PointCloud<PointXYZ>::Ptr& pcd);
+void getValidDataSet(ImageResults& images_features, CloudResults& cloud_features);
+
+
 
 class CloudResults{
 public:
@@ -440,7 +449,9 @@ void processCloud(T& config, vector<string>& cloud_paths, CloudResults& cloud_fe
     for(int i=0;i<cloud_paths.size();++i)
     {
         pcl::PointCloud<pcl::PointXYZ>::Ptr input_cloud(new pcl::PointCloud<pcl::PointXYZ>);
-        if (pcl::io::loadPCDFile<pcl::PointXYZ> (cloud_paths[i], *input_cloud) == -1) continue;
+        if (!loadPointXYZ(cloud_paths[i], input_cloud)) continue;
+        // cout<< input_cloud->points.size()<<endl;
+        // display_colored_by_depth(input_cloud);
         PointCloud<PointXYZ>::Ptr plane_cloud(new pcl::PointCloud<pcl::PointXYZ>);
         if(!lidar_feature_detector.extractPlaneCloud(input_cloud,plane_cloud)) continue;
         pcl::PointCloud<pcl::PointXYZ>::Ptr edge_cloud(new pcl::PointCloud<pcl::PointXYZ>);
@@ -471,6 +482,7 @@ void processCloud(T& config, vector<string>& cloud_paths, CloudResults& cloud_fe
     }
     return;
 }
+
 
 
 #endif

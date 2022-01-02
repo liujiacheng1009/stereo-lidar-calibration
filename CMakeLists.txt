@@ -66,3 +66,4 @@ set(
 # target_link_libraries(refine_matlab_results ${OpenCV_LIBS} ${PCL_LIBRARIES}  ${CERES_LIBRARIES} ${Boost_LIBRARIES} ${Sophus_LIBRARIES} fmt)
 
 add_subdirectory(samples)
+add_subdirectory(test)

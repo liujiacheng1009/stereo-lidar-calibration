@@ -27,10 +27,19 @@ int main()
 
     ImageResults images_features;
     processImage(config, images, images_features);
+    cout<< "有效的图像帧有： "<<endl;
+    for(auto& id:images_features.valid_index){
+        cout<< id<<" ";
+    }
+    cout<<endl;
 
     CloudResults cloud_features;
-    processCloud(config, clouds, cloud_features );
-
+    processCloud(config, clouds, cloud_features);
+    cout<< "有效的点云帧有： "<<endl;
+    for(auto& id:cloud_features.valid_index){
+        cout<< id<<" ";
+    }
+    cout<<endl;
     getValidDataSet(images_features, cloud_features);
     auto& image_3d_corners = images_features.corners_3d; // 图像3d角点
     auto& cloud_3d_corners = cloud_features.corners_3d; // 点云3d角点

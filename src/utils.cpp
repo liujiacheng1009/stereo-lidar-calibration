@@ -384,29 +384,18 @@ void  affine2Vector( Eigen::Affine3d& affine_mat,Eigen::VectorXd& Rt)
 //     //     + to_string(i) + ".png", image);
 // }
 
-void getValidDataSet(ImageResults& images_features, CloudResults& cloud_features)
-{
-    auto& valid_image_index = images_features.valid_index;
-    auto& valid_cloud_index = cloud_features.valid_index;
-    set<int> valid_index;
-    for(auto& id:valid_image_index){ // 取交集
-        if(find(valid_cloud_index.begin(),valid_cloud_index.end(), id)!= valid_cloud_index.end()){
-            valid_index.insert(id);
-        }
-    }
-    vector<vector<Vector3d>> valid_image_corners_3d;
-    vector<vector<Vector3d>> valid_cloud_corners_3d;
-    for(int i = 0;i<valid_image_index.size();++i){
-        if(valid_index.count(valid_image_index[i])){
-            valid_image_corners_3d.push_back(images_features.corners_3d[i]);
-        }
-    }
-    for(int i = 0;i<valid_cloud_index.size();++i){
-        if(valid_index.count(valid_cloud_index[i])){
-            valid_cloud_corners_3d.push_back(cloud_features.corners_3d[i]);
-        }
-    }
-    images_features.corners_3d = valid_image_corners_3d;
-    cloud_features.corners_3d = valid_cloud_corners_3d;
-    return;
-}
+
+// bool loadPointXYZ(string& path, PointCloud<PointXYZ>::Ptr& pcd)
+// {
+//     PCDReader reader;
+//     PointCloud<PointXYZI>::Ptr cloud_xyzi(new PointCloud<PointXYZI>);
+//     PointCloud<PointXYZ>::Ptr cloud_xyz(new PointCloud<PointXYZ>);
+//     if(reader.read(path, *cloud_xyz)!=0){
+//         if(reader.read(path, *cloud_xyzi)!=0){
+//             return false;
+//         }
+//         copyPointCloud(*cloud_xyzi,*cloud_xyz);
+//     }
+//     return true;
+// }
+

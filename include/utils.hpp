@@ -3,6 +3,7 @@
 #include <pcl/ModelCoefficients.h>
 #include <pcl/point_types.h>
 #include <pcl/io/pcd_io.h>
+#include <pcl/io/io.h>
 #include <pcl/filters/extract_indices.h>
 #include <pcl/filters/voxel_grid.h>
 #include <pcl/features/normal_3d.h>
@@ -14,6 +15,7 @@
 #include <pcl/visualization/pcl_visualizer.h>
 #include <pcl/visualization/cloud_viewer.h>
 #include <pcl/point_types.h>
+#include <pcl/conversions.h>
 #include <boost/filesystem.hpp>
 #include <pcl/common/geometry.h>
 #include <opencv2/core.hpp>
@@ -28,14 +30,12 @@
 #include <vector>
 #include <algorithm>
 #include "extractImageFeature.hpp"
-#include "extractLidarFeature.hpp"
+
 using namespace Eigen;
 using namespace std;
 using namespace pcl;
 using namespace cv;
 
-
-void getValidDataSet(ImageResults& images_features, CloudResults& cloud_features);
 
 void display_colored_by_depth(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud);
 

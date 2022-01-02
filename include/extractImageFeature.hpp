@@ -74,7 +74,7 @@ bool ImageFeatureDetector<T>::detectImageCorner(cv::Mat &input_image, vector<cv:
     cv::Mat gray_img;
     cv::cvtColor(input_image, gray_img, cv::COLOR_BGR2GRAY);
     std::vector<cv::Point2f> points;
-    const int chessBoardFlags = cv::CALIB_CB_ADAPTIVE_THRESH | cv::CALIB_CB_NORMALIZE_IMAGE;
+    const int chessBoardFlags = cv::CALIB_CB_ADAPTIVE_THRESH | cv::CALIB_CB_NORMALIZE_IMAGE | cv::CALIB_CB_FAST_CHECK;
     // cout<< m_board_size<<endl;
     // cv::imshow("debug", gray_img);
     // cv::waitKey(0);
@@ -242,16 +242,18 @@ void processImage(T& config, vector<string>& image_paths, ImageResults& images_f
     {
         cv::Mat img = cv::imread(image_paths[i], cv::IMREAD_COLOR);
         cv::Mat half_image;
-        //cv::resize(img, img , cv::Size(0.5, 0.5), cv::INTER_LINEAR);
-        cv::resize(img, half_image, cv::Size(), 0.45, 0.45); // cv::findChessboardCorners在高分辨率图像上有bug
+        double s1 = (double)640 / (double)img.size().width;
+        double s2 = (double)480 / (double)img.size().height;
+        cv::resize(img, half_image, cv::Size(), s1, s2); // cv::findChessboardCorners在高分辨率图像上有bug, 放缩dao
+
         std::vector<cv::Point2f> image_corners;
         if (!image_feature_detector.detectImageCorner(half_image, image_corners)){
-            std::cout<< "can not detect corner from image: " << i<<std::endl;
+            // std::cout<< "can not detect corner from image: " << i<<std::endl;
             continue;
         }
         for(auto& image_corner:image_corners){
-            image_corner.x *= (1.0/0.45);
-            image_corner.y *= (1.0/0.45);
+            image_corner.x *= (1.0/s1);
+            image_corner.y *= (1.0/s2);
         }
         cv::Mat rvec, tvec;
         image_feature_detector.estimatePose(image_corners, rvec, tvec);
