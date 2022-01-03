@@ -33,7 +33,8 @@
 #include <sophus/so3.hpp>
 using namespace std;
 using namespace Eigen;
-
+using namespace cv;
+using namespace pcl;
 
 // closedup error
 
@@ -410,8 +411,8 @@ public:
         :m_Rt_c1_c2(Rt_c1_c2) {}
 
     void addStereoMatchingConstraints(ceres::Problem &problem,
-                                    std::vector<cv::Point2f> &left_image_corners,
-                                    std::vector<cv::Point2f> &right_image_corners,
+                                    std::vector<Vector2d> &left_image_corners,
+                                    std::vector<Vector2d> &right_image_corners,
                                     cv::Mat& camera_matrix);
 
     void addPointToPlaneConstraints(ceres::Problem &problem,
@@ -425,9 +426,9 @@ public:
                                    Eigen::VectorXd &params);
     // ceres::Problem constructProblem();
     void addPointToPointConstriants(ceres::Problem &problem,
-                                    std::vector<pcl::PointXYZ> &image_corners_3d,
-                                    std::vector<pcl::PointXYZ> &lidar_corners_3d,
-                                    Eigen::VectorXd &params);
+                                    vector<Vector3d> &image_corners_3d,
+                                    vector<Vector3d> &lidar_corners_3d,
+                                    VectorXd &params);
 
     Eigen::VectorXd get_Rt_l1_c1()
     {

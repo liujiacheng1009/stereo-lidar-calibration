@@ -13,7 +13,6 @@ using namespace cv;
 int main()
 {
     Config_hdl64 config;
-    std::vector<std::string> images_paths, lidar_clouds_paths;
     std::string images_dir = config.left_images_dataset_path;
     std::string clouds_dir = config.lidar_clouds_dataset_path;
     std::vector<std::string> images;
@@ -62,10 +61,11 @@ int main()
     ceres::Solve(options, &problem, &summary);
     std::cout << summary.BriefReport() << "\n";
     MatrixXd Rt = Matrix<double,4,4>::Identity();
+    cout<< "Rt "<< optimizer_lc.get_R_t()<<endl; 
     Eigen::Matrix3d R = Sophus::SO3d::exp(optimizer_lc.get_R_t().head(3)).matrix();
     Rt.block(0,0,3,3) = R;
     Rt.block(0,3,3,1) = optimizer_lc.get_R_t().tail(3);
     cout << Rt << std::endl;
-    cout << Rt-config.matlab_hdl64_tform<<endl;
+    cout << Rt-config.matlab_tform<<endl;
     return 0;
 }

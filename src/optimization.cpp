@@ -204,22 +204,18 @@ void OptimizationLCC::addPointToLineConstriants(ceres::Problem &problem,
 }
 
 void OptimizationLCC::addPointToPointConstriants(ceres::Problem &problem,
-                                                std::vector<pcl::PointXYZ> &lidar_corners_3d,
-                                                std::vector<pcl::PointXYZ> &image_corners_3d,
-                                                Eigen::VectorXd &params)
+                                                vector<Vector3d> &lidar_corners_3d,
+                                                vector<Vector3d> &image_corners_3d,
+                                                VectorXd &params)
 {
     assert(image_corners_3d.size() == lidar_corners_3d.size());
-    if (image_corners_3d.size() != 4)
-    {
-        std::cout<<"the points size must be 4 !!"<<std::endl;
-        return;
-    }
+    int n = image_corners_3d.size();
+    double w = 1 / sqrt((double)n);
     for (int i = 0; i < 4; ++i)
     {
-        Eigen::Vector3d image_point(image_corners_3d[i].x,image_corners_3d[i].y,image_corners_3d[i].z);
-        Eigen::Vector3d lidar_point(lidar_corners_3d[i].x,lidar_corners_3d[i].y,lidar_corners_3d[i].z);
+        Vector3d& lidar_point = lidar_corners_3d[i];
+        Vector3d& image_point = image_corners_3d[i];
         ceres::LossFunction *loss_function = NULL;
-        double w = 1 / sqrt((double)image_corners_3d.size());
         ceres::CostFunction *cost_function = new ceres::AutoDiffCostFunction<PointToPointError, 1, 6>(new PointToPointError(lidar_point,image_point, w));
         problem.AddResidualBlock(cost_function, loss_function, params.data());
     }
@@ -228,8 +224,8 @@ void OptimizationLCC::addPointToPointConstriants(ceres::Problem &problem,
 
 
 void OptimizationLCC::addStereoMatchingConstraints(ceres::Problem &problem,
-                                std::vector<cv::Point2f> &left_image_corners,
-                                std::vector<cv::Point2f> &right_image_corners,
+                                std::vector<Vector2d> &left_image_corners,
+                                std::vector<Vector2d> &right_image_corners,
                                 cv::Mat& camera_matrix)
 {
     assert(left_image_corners.size() == right_image_corners.size());
@@ -238,12 +234,12 @@ void OptimizationLCC::addStereoMatchingConstraints(ceres::Problem &problem,
     camera_mat << camera_matrix.at<double>(0, 0), camera_matrix.at<double>(0, 1), camera_matrix.at<double>(0, 2),
         camera_matrix.at<double>(1, 0), camera_matrix.at<double>(1, 1), camera_matrix.at<double>(1, 2),
         camera_matrix.at<double>(2, 0), camera_matrix.at<double>(2, 1), camera_matrix.at<double>(2, 2);
+    double w = 1 / sqrt((double)left_image_corners.size());
     for (int i = 0; i < left_image_corners.size(); ++i)
     {
-        Eigen::Vector2d left_image_corner(left_image_corners[i].x,left_image_corners[i].y) ;
-        Eigen::Vector2d right_image_corner(right_image_corners[i].x, right_image_corners[i].y);
+        Eigen::Vector2d& left_image_corner = left_image_corners[i] ;
+        Eigen::Vector2d& right_image_corner = right_image_corners[i];
         ceres::LossFunction *loss_function = NULL;
-        double w = 1 / sqrt((double)left_image_corners.size());
         ceres::CostFunction *cost_function = new ceres::AutoDiffCostFunction<StereoMatchingError, 1, 6>(new StereoMatchingError(camera_mat,
             left_image_corner,right_image_corner, w));
         problem.AddResidualBlock(cost_function, loss_function, m_Rt_c1_c2.data());

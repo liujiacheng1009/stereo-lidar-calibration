@@ -47,7 +47,7 @@ class CloudResults;
 
 bool loadPointXYZ(string& path, PointCloud<PointXYZ>::Ptr& pcd);
 void getValidDataSet(ImageResults& images_features, CloudResults& cloud_features);
-
+void getValidDataSet(ImageResults& images_features1,ImageResults& images_features2, CloudResults& cloud_features);
 
 
 class CloudResults{

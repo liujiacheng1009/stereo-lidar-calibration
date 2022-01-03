@@ -39,6 +39,53 @@ void getValidDataSet(ImageResults& images_features, CloudResults& cloud_features
     return;
 }
 
+void getValidDataSet(ImageResults& images_features1,ImageResults& images_features2, CloudResults& cloud_features)
+{
+    auto& valid_image_index1 = images_features1.valid_index;
+    auto& valid_image_index2 = images_features2.valid_index;
+    auto& valid_cloud_index = cloud_features.valid_index;
+    set<int>valid_index, valid_index1,valid_index2 ;
+    for(auto& id:valid_image_index1){ // 取交集
+        if(find(valid_cloud_index.begin(),valid_cloud_index.end(), id)!= valid_cloud_index.end()){
+            valid_index1.insert(id);
+        }
+    }
+    for(auto& id:valid_image_index2){ // 取交集
+        if(find(valid_cloud_index.begin(),valid_cloud_index.end(), id)!= valid_cloud_index.end()){
+            valid_index2.insert(id);
+        }
+    }
+    set_intersection(valid_index1.begin(), valid_index1.end(), valid_index2.begin(), valid_index2.end(), inserter(valid_index, valid_index.begin()));
+    vector<vector<Vector3d>> valid_image_corners1_3d;
+    vector<vector<Vector2d>> valid_image_corners1_2d;
+    vector<vector<Vector3d>> valid_image_corners2_3d;
+    vector<vector<Vector2d>> valid_image_corners2_2d;
+    vector<vector<Vector3d>> valid_cloud_corners_3d;
+    for(int i = 0;i<valid_image_index1.size();++i){
+        if(valid_index.count(valid_image_index1[i])){
+            valid_image_corners1_3d.push_back(images_features1.corners_3d[i]);
+            valid_image_corners1_2d.push_back(images_features1.corners_2d[i]);
+        }
+    }
+    for(int i = 0;i<valid_image_index2.size();++i){
+        if(valid_index.count(valid_image_index2[i])){
+            valid_image_corners2_3d.push_back(images_features2.corners_3d[i]);
+            valid_image_corners2_2d.push_back(images_features2.corners_2d[i]);
+        }
+    }
+    for(int i = 0;i<valid_cloud_index.size();++i){
+        if(valid_index.count(valid_cloud_index[i])){
+            valid_cloud_corners_3d.push_back(cloud_features.corners_3d[i]);
+        }
+    }
+    images_features1.corners_3d = valid_image_corners1_3d;
+    images_features1.corners_2d = valid_image_corners1_2d;
+    images_features2.corners_3d = valid_image_corners2_3d;
+    images_features2.corners_2d = valid_image_corners2_2d;
+    cloud_features.corners_3d = valid_cloud_corners_3d;
+
+    return;
+}
 // void LidarFeatureDetector::getRings(std::vector<std::vector<pcl::PointXYZIr>>& rings)
 // {
 //     std::vector<std::vector<pcl::PointXYZIr> > rings(m_number_of_rings);

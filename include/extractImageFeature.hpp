@@ -28,6 +28,7 @@ class ImageResults{
 public:
     vector<int> valid_index; // 有效的图像index
     vector<vector<Vector3d>> corners_3d; // 图像3d角点
+    vector<vector<Vector2d>> corners_2d;
     vector<VectorXd> planes_3d; // 图像的平面方程
     vector<vector<VectorXd>> lines_3d; // 图像边缘直线方程
 };
@@ -235,6 +236,7 @@ void processImage(T& config, vector<string>& image_paths, ImageResults& images_f
     ImageFeatureDetector<T> image_feature_detector(config);
     auto& valid_image_index = images_features.valid_index;
     auto& image_3d_corners = images_features.corners_3d; // 图像3d角点
+    auto& image_2d_corners = images_features.corners_2d;
     auto& image_planes = images_features.planes_3d; // 图像的平面方程
     auto& image_lines = images_features.lines_3d;
 
@@ -269,6 +271,11 @@ void processImage(T& config, vector<string>& image_paths, ImageResults& images_f
         for(auto& corners: chessboard_3d_corners){
             corners_3d.push_back(Vector3d(corners.x, corners.y, corners.z));
         }
+        vector<Vector2d> corners_2d;
+        for(auto& corner: image_corners){
+            corners_2d.push_back(Vector2d(corner.x, corner.y));
+        }
+        image_2d_corners.push_back(corners_2d);
         image_3d_corners.push_back(corners_3d);
         valid_image_index.push_back(i);
     }
