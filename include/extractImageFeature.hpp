@@ -84,7 +84,8 @@ bool ImageFeatureDetector<T>::detectImageCorner(cv::Mat &input_image, vector<cv:
     if (found)
     {
         cv::cornerSubPix(gray_img, points, cv::Size(11, 11), cv::Size(-1, -1), cv::TermCriteria(cv::TermCriteria::EPS + cv::TermCriteria::COUNT, 30, 0.1));
-        image_corners = points;
+        // image_corners = points;
+        cv::undistortPoints(points, image_corners, m_camera_matrix, m_dist_coeffs, cv::noArray(), m_camera_matrix);
         // cv::drawChessboardCorners(input_image, m_board_size, image_corners, found);
         // cv::imshow("debug", input_image);
         // cv::waitKey(0);
@@ -133,8 +134,6 @@ bool ImageFeatureDetector<T>::detectImageCorner(cv::Mat &input_image, vector<cv:
 template<typename T>
 void ImageFeatureDetector<T>::estimatePose(vector<cv::Point2f> &chessboard_corners, cv::Mat &rvec, cv::Mat &tvec)
 {
-    std::vector<cv::Point2f> undistort_corners;
-    cv::undistortPoints(chessboard_corners, undistort_corners, m_camera_matrix, m_dist_coeffs, cv::noArray(), m_camera_matrix);
     int &board_width = m_board_size.width;
     int &board_height = m_board_size.height;
     std::vector<cv::Point3d> board_points;
