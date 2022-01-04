@@ -225,23 +225,22 @@ void OptimizationLCC::addPointToPointConstriants(ceres::Problem &problem,
 
 void OptimizationLCC::addStereoMatchingConstraints(ceres::Problem &problem,
                                 std::vector<Vector2d> &left_image_corners,
-                                std::vector<Vector2d> &right_image_corners,
-                                cv::Mat& camera_matrix)
+                                std::vector<Vector2d> &right_image_corners)
 {
     assert(left_image_corners.size() == right_image_corners.size());
-    Eigen::MatrixXd camera_mat;
-    camera_mat.resize(3,3);
-    camera_mat << camera_matrix.at<double>(0, 0), camera_matrix.at<double>(0, 1), camera_matrix.at<double>(0, 2),
-        camera_matrix.at<double>(1, 0), camera_matrix.at<double>(1, 1), camera_matrix.at<double>(1, 2),
-        camera_matrix.at<double>(2, 0), camera_matrix.at<double>(2, 1), camera_matrix.at<double>(2, 2);
+    // Eigen::MatrixXd camera_mat;
+    // camera_mat.resize(3,3);
+    // camera_mat << camera_matrix.at<double>(0, 0), camera_matrix.at<double>(0, 1), camera_matrix.at<double>(0, 2),
+    //     camera_matrix.at<double>(1, 0), camera_matrix.at<double>(1, 1), camera_matrix.at<double>(1, 2),
+    //     camera_matrix.at<double>(2, 0), camera_matrix.at<double>(2, 1), camera_matrix.at<double>(2, 2);
     double w = 1 / sqrt((double)left_image_corners.size());
     for (int i = 0; i < left_image_corners.size(); ++i)
     {
         Eigen::Vector2d& left_image_corner = left_image_corners[i] ;
         Eigen::Vector2d& right_image_corner = right_image_corners[i];
         ceres::LossFunction *loss_function = NULL;
-        ceres::CostFunction *cost_function = new ceres::AutoDiffCostFunction<StereoMatchingError, 1, 6>(new StereoMatchingError(camera_mat,
-            left_image_corner,right_image_corner, w));
+        ceres::CostFunction *cost_function = new ceres::AutoDiffCostFunction<StereoMatchingError, 1, 6>(
+            new StereoMatchingError(left_image_corner,right_image_corner, w));
         problem.AddResidualBlock(cost_function, loss_function, m_Rt_c1_c2.data());
     }
     return;

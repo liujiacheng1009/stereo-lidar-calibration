@@ -50,7 +50,7 @@ public:
     void calculateLines(std::vector<cv::Point3d>& corners, std::vector<Eigen::VectorXd>& lines); // 通过四个角点计算四条边的方程
     void calculatePlane(std::vector<cv::Point3d>& corners, Eigen::VectorXd& plane); // 通过四个角点计算平面的方程
     void calculatePlane1(std::vector<cv::Point3d>& corners, Eigen::VectorXd& plane); // 通过四个角点计算平面的方程
-    
+    void transform_to_normalized_plane(vector<Point2f>& corners1, vector<Vector2d>& corners2);
     const cv::Mat get_camera_matrix(){
         return m_camera_matrix;
     }
@@ -63,7 +63,8 @@ private:
     void calcBoardCornerPositions(); // 计算board corners 在世界坐标系的坐标
     cv::Size m_board_size;  // chessboard 规格大小
     double m_square_size; // 格子边长(m)
-    cv::Mat m_camera_matrix, m_dist_coeffs; // 相机的内参和畸变矩阵
+    cv::Mat m_camera_matrix = Mat(3, 3, CV_64F);
+    cv::Mat m_dist_coeffs = Mat(5,1, CV_64F); // 相机的内参和畸变矩阵
     //std::vector<cv::Point3f> m_3d_corners; // 世界坐标系下的角点坐标
     std::vector<double> m_padding;
 };
@@ -75,7 +76,7 @@ bool ImageFeatureDetector<T>::detectImageCorner(cv::Mat &input_image, vector<cv:
     cv::Mat gray_img;
     cv::cvtColor(input_image, gray_img, cv::COLOR_BGR2GRAY);
     std::vector<cv::Point2f> points;
-    const int chessBoardFlags = cv::CALIB_CB_ADAPTIVE_THRESH | cv::CALIB_CB_NORMALIZE_IMAGE | cv::CALIB_CB_FAST_CHECK;
+    const int chessBoardFlags = CALIB_CB_ADAPTIVE_THRESH | CALIB_CB_FILTER_QUADS;
     // cout<< m_board_size<<endl;
     // cv::imshow("debug", gray_img);
     // cv::waitKey(0);
@@ -228,6 +229,18 @@ void ImageFeatureDetector<T>::calculatePlane1(vector<Point3d>& corners, VectorXd
     return;
 }
 
+template<typename T>
+void ImageFeatureDetector<T>::transform_to_normalized_plane(vector<Point2f>& corners1, vector<Vector2d>& corners2)
+{
+    corners2.clear();
+    cv::Matx33d K((double*)m_camera_matrix.ptr());
+    for(auto& corner:corners1){
+        Point3d p(corner.x, corner.y, 1.0);
+        auto p1 = K.inv()*p;
+        corners2.push_back(Vector2d(p1.x,p1.y));
+    }
+    return;
+}
 
 template<typename T>
 void processImage(T& config, vector<string>& image_paths, ImageResults& images_features)
@@ -256,6 +269,8 @@ void processImage(T& config, vector<string>& image_paths, ImageResults& images_f
             image_corner.x *= (1.0/s1);
             image_corner.y *= (1.0/s2);
         }
+        vector<Vector2d> corners_2d;
+        image_feature_detector.transform_to_normalized_plane(image_corners, corners_2d);
         cv::Mat rvec, tvec;
         image_feature_detector.estimatePose(image_corners, rvec, tvec);
         std::vector<Point3d> chessboard_3d_corners, reordered_image_3d_corners;
@@ -270,10 +285,11 @@ void processImage(T& config, vector<string>& image_paths, ImageResults& images_f
         for(auto& corners: chessboard_3d_corners){
             corners_3d.push_back(Vector3d(corners.x, corners.y, corners.z));
         }
-        vector<Vector2d> corners_2d;
-        for(auto& corner: image_corners){
-            corners_2d.push_back(Vector2d(corner.x, corner.y));
-        }
+        // vector<Vector2d> corners_2d;
+        // image_feature_detector.transform_to_normalized_plane(image_corners, co)
+        // for(auto& corner: image_corners){
+        //     corners_2d.push_back(Vector2d(corner.x, corner.y));
+        // }
         image_2d_corners.push_back(corners_2d);
         image_3d_corners.push_back(corners_3d);
         valid_image_index.push_back(i);

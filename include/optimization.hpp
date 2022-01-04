@@ -321,43 +321,39 @@ class StereoMatchingError
 {
 public:
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-    StereoMatchingError(const Eigen::MatrixXd &camera_matrix,
-                        const Eigen::Vector2d &camera1_corner,
+    StereoMatchingError(const Eigen::Vector2d &camera1_corner,
                         const Eigen::Vector2d &camera2_corner,
-                        const double &w) : m_camera_matrix(camera_matrix),
-                                           m_camera1_corner(camera1_corner),
+                        const double &w) : m_camera1_corner(camera1_corner),
                                            m_camera2_corner(camera2_corner),
                                            m_w(w) {}
 
     template<typename T>
     bool operator() (const T* const R_t,
                      T* residual) const {
-        T rot[3*3];
-        ceres::AngleAxisToRotationMatrix(R_t, rot);
-        Eigen::Matrix<T, 3, 3> R = Eigen::Matrix<T, 3, 3>::Identity();
-        for (int i = 0; i < 3; ++i) {
-            for (int j = 0; j < 3; ++j) {
-                R(i, j) = rot[i+3*j];
-            }
-        }
-        Eigen::Map<const Eigen::Matrix<T,3,1>> t(R_t+3);
         // T rot[3*3];
         // ceres::AngleAxisToRotationMatrix(R_t, rot);
-        // Eigen::Map<const Eigen::Matrix<T,3,3>> R(rot);
+        // Eigen::Matrix<T, 3, 3> R = Eigen::Matrix<T, 3, 3>::Identity();
+        // for (int i = 0; i < 3; ++i) {
+        //     for (int j = 0; j < 3; ++j) {
+        //         R(i, j) = rot[i+3*j];
+        //     }
+        // }
         // Eigen::Map<const Eigen::Matrix<T,3,1>> t(R_t+3);
+        T rot[3*3];
+        ceres::AngleAxisToRotationMatrix(R_t, rot);
+        Eigen::Map<const Eigen::Matrix<T,3,3>> R(rot);
+        Eigen::Map<const Eigen::Matrix<T,3,1>> t(R_t+3);
         Eigen::Matrix<T, 3, 1> camera1_corner(T(m_camera1_corner(0)),T(m_camera1_corner(1)), T(1.0));
         Eigen::Matrix<T, 3, 1> camera2_corner(T(m_camera2_corner(0)),T(m_camera2_corner(1)), T(1.0));
-        Eigen::Matrix<T, 3, 3> camera_matrix_inv = m_camera_matrix.inverse().template cast<T>();
         Eigen::Matrix<T, 3, 3> skew_t;
         skew_t << T(0), T(t(0)), T(-t(1)), T(-t(0)), T(0), T(t(2)), T(t(1)), T(-t(2)), T(0);
-        Eigen::Matrix<T, 3, 3> F_matrix = camera_matrix_inv.transpose().template cast<T>()*skew_t*R*camera_matrix_inv;
-        residual[0] = camera1_corner.transpose().dot(F_matrix*camera2_corner);
+        Eigen::Matrix<T, 3, 3> E_matrix = skew_t*R;
+        residual[0] = camera1_corner.transpose().dot(E_matrix*camera2_corner);
         residual[0] = m_w* residual[0];
         return true;
     }
 
 private:
-    const Eigen::Matrix3d m_camera_matrix;
     const Eigen::Vector2d m_camera1_corner;
     const Eigen::Vector2d m_camera2_corner;
     const double m_w;
@@ -412,8 +408,7 @@ public:
 
     void addStereoMatchingConstraints(ceres::Problem &problem,
                                     std::vector<Vector2d> &left_image_corners,
-                                    std::vector<Vector2d> &right_image_corners,
-                                    cv::Mat& camera_matrix);
+                                    std::vector<Vector2d> &right_image_corners);
 
     void addPointToPlaneConstraints(ceres::Problem &problem,
                                     pcl::PointCloud<pcl::PointXYZ>::Ptr &plane_pcd,

@@ -89,7 +89,7 @@ int main()
     for(int i=0;i<left_image_2d_corners.size();i++){
         auto& left_corners = left_image_2d_corners[i];
         auto& right_corners = right_image_2d_corners[i];
-        optimizer.addStereoMatchingConstraints(problem, left_corners, right_corners, config_left.left_camera_matrix);
+        optimizer.addStereoMatchingConstraints(problem, left_corners, right_corners);
     }
 
     ceres::Solver::Options options;
