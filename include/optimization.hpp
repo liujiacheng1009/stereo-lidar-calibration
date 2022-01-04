@@ -359,7 +359,20 @@ private:
     const double m_w;
 };
 
-
+class Optimizer
+{
+public:
+    Optimizer() {}
+    ~Optimizer() {}
+    void addPointToPointConstriants(ceres::Problem &problem,
+                                    std::vector<Vector3d> &image_corners_3d,
+                                    std::vector<Vector3d> &lidar_corners_3d,
+                                    VectorXd &params);
+    void addStereoMatchingConstraints(ceres::Problem &problem,
+                                      std::vector<Vector2d> &left_image_corners,
+                                      std::vector<Vector2d> &right_image_corners,
+                                      VectorXd &params);
+};
 
 class OptimizationLC
 {

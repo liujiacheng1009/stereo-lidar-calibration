@@ -246,3 +246,46 @@ void OptimizationLCC::addStereoMatchingConstraints(ceres::Problem &problem,
     return;
 
 }
+
+void Optimizer::addStereoMatchingConstraints(ceres::Problem &problem,
+                                std::vector<Vector2d> &left_image_corners,
+                                std::vector<Vector2d> &right_image_corners,
+                                VectorXd& params)
+{
+    assert(left_image_corners.size() == right_image_corners.size());
+    // Eigen::MatrixXd camera_mat;
+    // camera_mat.resize(3,3);
+    // camera_mat << camera_matrix.at<double>(0, 0), camera_matrix.at<double>(0, 1), camera_matrix.at<double>(0, 2),
+    //     camera_matrix.at<double>(1, 0), camera_matrix.at<double>(1, 1), camera_matrix.at<double>(1, 2),
+    //     camera_matrix.at<double>(2, 0), camera_matrix.at<double>(2, 1), camera_matrix.at<double>(2, 2);
+    double w = 1 / sqrt((double)left_image_corners.size());
+    for (int i = 0; i < left_image_corners.size(); ++i)
+    {
+        Eigen::Vector2d& left_image_corner = left_image_corners[i] ;
+        Eigen::Vector2d& right_image_corner = right_image_corners[i];
+        ceres::LossFunction *loss_function = NULL;
+        ceres::CostFunction *cost_function = new ceres::AutoDiffCostFunction<StereoMatchingError, 1, 6>(
+            new StereoMatchingError(left_image_corner,right_image_corner, w));
+        problem.AddResidualBlock(cost_function, loss_function, params.data());
+    }
+    return;
+}
+
+void Optimizer::addPointToPointConstriants(ceres::Problem &problem,
+                                                vector<Vector3d> &lidar_corners_3d,
+                                                vector<Vector3d> &image_corners_3d,
+                                                VectorXd &params)
+{
+    assert(image_corners_3d.size() == lidar_corners_3d.size());
+    int n = image_corners_3d.size();
+    double w = 1 / sqrt((double)n);
+    for (int i = 0; i < 4; ++i)
+    {
+        Vector3d& lidar_point = lidar_corners_3d[i];
+        Vector3d& image_point = image_corners_3d[i];
+        ceres::LossFunction *loss_function = NULL;
+        ceres::CostFunction *cost_function = new ceres::AutoDiffCostFunction<PointToPointError, 1, 6>(new PointToPointError(lidar_point,image_point, w));
+        problem.AddResidualBlock(cost_function, loss_function, params.data());
+    }
+    return;
+}

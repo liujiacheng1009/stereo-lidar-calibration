@@ -45,13 +45,13 @@ int main()
 
     Eigen::VectorXd R_t(6);
     R_t << 0., 0., 0., 0., 0., 0.;
-    OptimizationLC optimizer_lc(R_t);
+    Optimizer optimizer_lc;
     ceres::Problem problem;
     std::vector<Vector3d> p1, p2;
     for(int i=0;i<image_3d_corners.size();++i){
         auto& image_corners = image_3d_corners[i];
         auto& cloud_corners = cloud_3d_corners[i];
-        optimizer_lc.addPointToPointConstriants(problem,cloud_corners,image_corners);
+        optimizer_lc.addPointToPointConstriants(problem,cloud_corners,image_corners,R_t);
     }
     ceres::Solver::Options options;
     options.max_num_iterations = 500;
@@ -61,10 +61,10 @@ int main()
     ceres::Solve(options, &problem, &summary);
     std::cout << summary.BriefReport() << "\n";
     MatrixXd Rt = Matrix<double,4,4>::Identity();
-    cout<< "Rt "<< optimizer_lc.get_R_t()<<endl; 
-    Eigen::Matrix3d R = Sophus::SO3d::exp(optimizer_lc.get_R_t().head(3)).matrix();
+    cout<< "Rt "<< R_t<<endl; 
+    Eigen::Matrix3d R = Sophus::SO3d::exp(R_t.head(3)).matrix();
     Rt.block(0,0,3,3) = R;
-    Rt.block(0,3,3,1) = optimizer_lc.get_R_t().tail(3);
+    Rt.block(0,3,3,1) = R_t.tail(3);
     cout << Rt << std::endl;
     cout << Rt-config.matlab_tform<<endl;
     return 0;

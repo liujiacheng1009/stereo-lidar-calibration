@@ -71,7 +71,7 @@ int main()
     Rt_l1_c2<<  1.54296,-1.3,1.06319,-0.5,0.303772,-0.131603;
     Rt_c1_c2 << 0.0,0.0,0.0,-0.12,0.0,0.0;
 
-    OptimizationLCC optimizer(Rt_l1_c1, Rt_l1_c2, Rt_c1_c2);
+    Optimizer optimizer;
     ceres::Problem problem;
 
     for(int i=0;i<left_image_3d_corners.size();++i){
@@ -89,7 +89,7 @@ int main()
     for(int i=0;i<left_image_2d_corners.size();i++){
         auto& left_corners = left_image_2d_corners[i];
         auto& right_corners = right_image_2d_corners[i];
-        optimizer.addStereoMatchingConstraints(problem, left_corners, right_corners);
+        optimizer.addStereoMatchingConstraints(problem, left_corners, right_corners, Rt_c1_c2);
     }
 
     ceres::Solver::Options options;
@@ -101,21 +101,21 @@ int main()
     std::cout << summary.BriefReport() << "\n";
 
     MatrixXd M_Rt_l1_c1 = Matrix<double,4,4>::Identity();
-    Eigen::Matrix3d R1 = Sophus::SO3d::exp(optimizer.get_Rt_l1_c1().head(3)).matrix();
+    Eigen::Matrix3d R1 = Sophus::SO3d::exp(Rt_l1_c1.head(3)).matrix();
     M_Rt_l1_c1.block(0,0,3,3) = R1;
-    M_Rt_l1_c1.block(0,3,3,1) = optimizer.get_Rt_l1_c1().tail(3);
+    M_Rt_l1_c1.block(0,3,3,1) = Rt_l1_c1.tail(3);
     cout << M_Rt_l1_c1 << std::endl;
     cout << M_Rt_l1_c1-config_left.matlab_tform<<endl;
     cout<<"--------------------------"<<endl;
     MatrixXd M_Rt_l1_c2 = Matrix<double,4,4>::Identity();
-    Eigen::Matrix3d R2 = Sophus::SO3d::exp(optimizer.get_Rt_l1_c2().head(3)).matrix();
+    Eigen::Matrix3d R2 = Sophus::SO3d::exp(Rt_l1_c2.head(3)).matrix();
     M_Rt_l1_c2.block(0,0,3,3) = R2;
-    M_Rt_l1_c2.block(0,3,3,1) = optimizer.get_Rt_l1_c2().tail(3);
+    M_Rt_l1_c2.block(0,3,3,1) = Rt_l1_c2.tail(3);
     cout << M_Rt_l1_c2 << std::endl;
     cout << M_Rt_l1_c2-config_right.matlab_tform<<endl;
     cout<<"--------------------------"<<endl;
 
-    VectorXd V_Rt_c1_c2 = optimizer.get_Rt_c1_c2();
+    VectorXd V_Rt_c1_c2 = Rt_c1_c2;
     VectorXd Rt_c1_c2_gt(6);
     Rt_c1_c2_gt<<0.0,0.0,0.0,-0.12,0.0,0.0;
     cout << V_Rt_c1_c2 << std::endl;
