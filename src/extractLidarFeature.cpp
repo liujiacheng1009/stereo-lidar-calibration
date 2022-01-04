@@ -57,20 +57,24 @@ void getValidDataSet(ImageResults& images_features1,ImageResults& images_feature
     }
     set_intersection(valid_index1.begin(), valid_index1.end(), valid_index2.begin(), valid_index2.end(), inserter(valid_index, valid_index.begin()));
     vector<vector<Vector3d>> valid_image_corners1_3d;
-    vector<vector<Vector2d>> valid_image_corners1_2d;
+    vector<vector<Vector2d>> valid_chessboard_corners1_2d;
+    vector<vector<Vector3d>> valid_chessboard_corners1_3d;
     vector<vector<Vector3d>> valid_image_corners2_3d;
-    vector<vector<Vector2d>> valid_image_corners2_2d;
+    vector<vector<Vector2d>> valid_chessboard_corners2_2d;
+    vector<vector<Vector3d>> valid_chessboard_corners2_3d;
     vector<vector<Vector3d>> valid_cloud_corners_3d;
     for(int i = 0;i<valid_image_index1.size();++i){
         if(valid_index.count(valid_image_index1[i])){
             valid_image_corners1_3d.push_back(images_features1.corners_3d[i]);
-            valid_image_corners1_2d.push_back(images_features1.corners_2d[i]);
+            valid_chessboard_corners1_2d.push_back(images_features1.chessboard_points_2d[i]);
+            valid_chessboard_corners1_3d.push_back(images_features1.chessboard_points_3d[i]);
         }
     }
     for(int i = 0;i<valid_image_index2.size();++i){
         if(valid_index.count(valid_image_index2[i])){
             valid_image_corners2_3d.push_back(images_features2.corners_3d[i]);
-            valid_image_corners2_2d.push_back(images_features2.corners_2d[i]);
+            valid_chessboard_corners2_2d.push_back(images_features2.chessboard_points_2d[i]);
+            valid_chessboard_corners2_3d.push_back(images_features2.chessboard_points_3d[i]);
         }
     }
     for(int i = 0;i<valid_cloud_index.size();++i){
@@ -79,9 +83,11 @@ void getValidDataSet(ImageResults& images_features1,ImageResults& images_feature
         }
     }
     images_features1.corners_3d = valid_image_corners1_3d;
-    images_features1.corners_2d = valid_image_corners1_2d;
+    images_features1.chessboard_points_2d = valid_chessboard_corners1_2d;
+    images_features1.chessboard_points_3d = valid_chessboard_corners1_3d;
     images_features2.corners_3d = valid_image_corners2_3d;
-    images_features2.corners_2d = valid_image_corners2_2d;
+    images_features2.chessboard_points_2d = valid_chessboard_corners2_2d;
+    images_features2.chessboard_points_3d = valid_chessboard_corners2_3d;
     cloud_features.corners_3d = valid_cloud_corners_3d;
 
     return;

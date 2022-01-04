@@ -365,6 +365,60 @@ private:
     const double m_w;
 };
 
+class StereoReprojectionError
+{
+public:
+    EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+    StereoReprojectionError(const Vector3d &P1,
+                            const Vector2d &p1,
+                            const Vector3d &P2,
+                            const Vector2d &p2,
+                            const double &w) : m_P1(P1),
+                                               m_p1(p1),
+                                               m_P2(P2),
+                                               m_p2(p2),
+                                               m_w(w) {}
+
+    template <typename T>
+    bool operator()(const T* const Rt,
+                    T* residuals) const
+    {
+        T P1[3] = {T(m_P1(0)),
+                   T(m_P1(1)),
+                   T(m_P1(2))};
+        T P12[3];
+        ceres::AngleAxisRotatePoint(Rt, P1, P12);
+        P12[0] += Rt[3];
+        P12[1] += Rt[4];
+        P12[2] += Rt[5];
+        Eigen::Map<const Eigen::Matrix<T,3,1>> p2(P12);
+        residuals[0] = m_w*(T(m_p2(0))-p2(0)/p2(2));
+        residuals[1] = m_w*(T(m_p2(1))-p2(1)/p2(2));
+
+        T rot[3*3];
+        ceres::AngleAxisToRotationMatrix(Rt, rot);
+        Eigen::Map<const Eigen::Matrix<T,3,3>> R(rot);
+        Eigen::Map<const Eigen::Matrix<T,3,1>> t(Rt+3);
+        Eigen::Matrix<T,4,4> trans = Eigen::Matrix<T,4,4>::Identity();
+        trans.block(0,0,3,3) = R;
+        trans.block(0,3,3,1) = t;
+        Eigen::Matrix<T,4,4> trans_inv = trans.inverse();
+        Eigen::Matrix<T,3,3> R_inv = trans_inv.block(0,0,3,3);
+        Eigen::Matrix<T,3,1> t_inv = trans_inv.block(0,3,3,1);
+        Eigen::Matrix<T,3,1> p1 = R_inv * m_P2 + t_inv;
+        residuals[2] = m_w*(T(m_p1(0))-p1(0)/p1(2));
+        residuals[3] = m_w*(T(m_p1(1))-p1(1)/p1(2));
+        return true;
+    }
+
+private:
+    const Vector3d m_P1, m_P2;
+    const Vector2d m_p1, m_p2;
+    const MatrixXd m_K1, m_K2;
+    const double m_w;
+};
+
+
 class Optimizer
 {
 public:
@@ -384,6 +438,12 @@ public:
                                     VectorXd& params2,
                                     VectorXd& params3);
 
+    void addStereoMatchingConstraints(ceres::Problem &problem,
+                                      vector<Vector3d> &P1,
+                                      vector<Vector2d> &p1,
+                                      vector<Vector3d> &P2,
+                                      vector<Vector2d> &p2,
+                                      VectorXd &params);
 };
 
 class OptimizationLC

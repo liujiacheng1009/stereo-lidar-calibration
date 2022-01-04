@@ -271,6 +271,31 @@ void Optimizer::addStereoMatchingConstraints(ceres::Problem &problem,
     return;
 }
 
+void Optimizer::addStereoMatchingConstraints(ceres::Problem &problem,
+                                             vector<Vector3d> &P1,
+                                             vector<Vector2d> &p1,
+                                             vector<Vector3d> &P2,
+                                             vector<Vector2d> &p2,
+                                             VectorXd &params)
+{
+    assert(P1.size() == P2.size());
+    assert(p1.size() == p2.size());
+    double w = 1 / sqrt((double)P1.size());
+    for (int i = 0; i < P1.size(); ++i)
+    {
+        Vector3d &observed_3d_points_in_cam1 = P1[i];
+        Vector2d &observed_2d_points_in_cam1 = p1[i];
+        Vector3d &observed_3d_points_in_cam2 = P2[i];
+        Vector2d &observed_2d_points_in_cam2 = p2[i];
+        ceres::LossFunction *loss_function = NULL;
+        ceres::CostFunction *cost_function = new ceres::AutoDiffCostFunction<StereoReprojectionError, 4, 6>(
+            new StereoReprojectionError(observed_3d_points_in_cam1, observed_2d_points_in_cam1,
+                                    observed_3d_points_in_cam2, observed_2d_points_in_cam2, w));
+        problem.AddResidualBlock(cost_function, loss_function, params.data());
+    }
+    return;
+}
+
 void Optimizer::addPointToPointConstriants(ceres::Problem &problem,
                                                 vector<Vector3d> &lidar_corners_3d,
                                                 vector<Vector3d> &image_corners_3d,

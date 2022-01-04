@@ -28,7 +28,8 @@ class ImageResults{
 public:
     vector<int> valid_index; // 有效的图像index
     vector<vector<Vector3d>> corners_3d; // 图像3d角点
-    vector<vector<Vector2d>> corners_2d;
+    vector<vector<Vector2d>> chessboard_points_2d;
+    vector<vector<Vector3d>> chessboard_points_3d;
     vector<VectorXd> planes_3d; // 图像的平面方程
     vector<vector<VectorXd>> lines_3d; // 图像边缘直线方程
 };
@@ -45,7 +46,7 @@ public:
 
     bool detectImageCorner(cv::Mat& input_image, vector<cv::Point2f>& image_corners); // 从图像检测角点
     void undistort_corners(vector<cv::Point2f>& input_corners, cv::Mat &rectified_corners); // 角点畸变校正
-    void estimatePose(vector<cv::Point2f>& chessboard_corners, cv::Mat& rvec, cv::Mat&tvec); // 从角点pnp恢复位姿
+    void estimatePose(vector<cv::Point2f>& chessboard_corners,vector<Vector3d>& chessboard_points_3d, cv::Mat& rvec, cv::Mat&tvec); // 从角点pnp恢复位姿
     void calculate3DCorners(vector<cv::Point3d>& chessboard_3d_corners, cv::Mat& rvec, cv::Mat& tvec); // 计算marker板的3D角点位置，需考虑偏移
     void calculateLines(std::vector<cv::Point3d>& corners, std::vector<Eigen::VectorXd>& lines); // 通过四个角点计算四条边的方程
     void calculatePlane(std::vector<cv::Point3d>& corners, Eigen::VectorXd& plane); // 通过四个角点计算平面的方程
@@ -133,7 +134,7 @@ bool ImageFeatureDetector<T>::detectImageCorner(cv::Mat &input_image, vector<cv:
 //   }
 // }
 template<typename T>
-void ImageFeatureDetector<T>::estimatePose(vector<cv::Point2f> &chessboard_corners, cv::Mat &rvec, cv::Mat &tvec)
+void ImageFeatureDetector<T>::estimatePose(vector<cv::Point2f> &chessboard_corners,vector<Vector3d>& chessboard_points_3d, cv::Mat &rvec, cv::Mat &tvec)
 {
     int &board_width = m_board_size.width;
     int &board_height = m_board_size.height;
@@ -146,7 +147,15 @@ void ImageFeatureDetector<T>::estimatePose(vector<cv::Point2f> &chessboard_corne
                 cv::Point3d(double(i) * m_square_size, double(j) * m_square_size, 0.0));
         }
     }
+
     cv::solvePnP(cv::Mat(board_points), cv::Mat(chessboard_corners), m_camera_matrix, m_dist_coeffs, rvec, tvec);
+    chessboard_points_3d.clear();
+    cv::Matx33d rot_matrix;
+    cv::Rodrigues(rvec, rot_matrix);
+    for(auto& point:board_points){
+        auto p = rot_matrix*point + cv::Point3d(tvec);
+        chessboard_points_3d.push_back(Vector3d(p.x,p.y,p.z));
+    }
     return;
 }
 
@@ -248,7 +257,8 @@ void processImage(T& config, vector<string>& image_paths, ImageResults& images_f
     ImageFeatureDetector<T> image_feature_detector(config);
     auto& valid_image_index = images_features.valid_index;
     auto& image_3d_corners = images_features.corners_3d; // 图像3d角点
-    auto& image_2d_corners = images_features.corners_2d;
+    auto& chessboard_2d_points = images_features.chessboard_points_2d;
+    auto& chessboard_3d_points = images_features.chessboard_points_3d;
     auto& image_planes = images_features.planes_3d; // 图像的平面方程
     auto& image_lines = images_features.lines_3d;
 
@@ -269,10 +279,11 @@ void processImage(T& config, vector<string>& image_paths, ImageResults& images_f
             image_corner.x *= (1.0/s1);
             image_corner.y *= (1.0/s2);
         }
-        vector<Vector2d> corners_2d;
-        image_feature_detector.transform_to_normalized_plane(image_corners, corners_2d);
+        vector<Vector2d> chessboard_points_2d;
+        image_feature_detector.transform_to_normalized_plane(image_corners, chessboard_points_2d);
         cv::Mat rvec, tvec;
-        image_feature_detector.estimatePose(image_corners, rvec, tvec);
+        vector<Vector3d> chessboard_points_3d;
+        image_feature_detector.estimatePose(image_corners,chessboard_points_3d, rvec, tvec);
         std::vector<Point3d> chessboard_3d_corners, reordered_image_3d_corners;
         image_feature_detector.calculate3DCorners(chessboard_3d_corners, rvec, tvec);
         Eigen::VectorXd plane;
@@ -285,12 +296,13 @@ void processImage(T& config, vector<string>& image_paths, ImageResults& images_f
         for(auto& corners: chessboard_3d_corners){
             corners_3d.push_back(Vector3d(corners.x, corners.y, corners.z));
         }
-        // vector<Vector2d> corners_2d;
+        // vector<Vector2d> chessboard_points_2d;
         // image_feature_detector.transform_to_normalized_plane(image_corners, co)
         // for(auto& corner: image_corners){
-        //     corners_2d.push_back(Vector2d(corner.x, corner.y));
+        //     chessboard_points_2d.push_back(Vector2d(corner.x, corner.y));
         // }
-        image_2d_corners.push_back(corners_2d);
+        chessboard_3d_points.push_back(chessboard_points_3d);
+        chessboard_2d_points.push_back(chessboard_points_2d);
         image_3d_corners.push_back(corners_3d);
         valid_image_index.push_back(i);
     }
