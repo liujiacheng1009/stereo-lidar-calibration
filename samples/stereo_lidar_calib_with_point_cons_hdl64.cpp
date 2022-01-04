@@ -69,7 +69,7 @@ int main()
 
     VectorXd Rt_l1_c1(6), Rt_l1_c2(6), Rt_c1_c2(6);
 
-    Rt_l1_c1<< 0.0,-1.31589,1.06346,-0.401976,0.301422,-0.130281;
+    Rt_l1_c1<< 1.46485,-1.31589,1.06346,-0.401976,0.301422,-0.130281;
     Rt_l1_c2<<  1.54296,-1.3,1.06319,-0.5,0.303772,-0.131603;
     Rt_c1_c2 << 0.0,0.0,0.0,-0.12,0.0,0.0;
 
@@ -90,12 +90,6 @@ int main()
         optimizer.addPointToPointConstriants(problem,cloud_corners,image_corners,Rt_l1_c2);
     }
 
-    // for(int i=0;i<left_image_2d_corners.size();i++){
-    //     auto& left_corners = left_image_2d_corners[i];
-    //     auto& right_corners = right_image_2d_corners[i];
-    //     optimizer.addStereoMatchingConstraints(problem, left_corners, right_corners, Rt_c1_c2);
-    // }
-
     for(int i=0;i<n_samples;i++){
         auto& P1 = left_chessboard_points_3d[i];
         auto& p1  = left_chessboard_points_2d[i];
@@ -104,13 +98,14 @@ int main()
         optimizer.addStereoMatchingConstraints(problem, P1,p1,P2,p2,Rt_c1_c2);
     }
 
-    for(int i = 0;i<left_image_3d_corners.size();++i){
-        optimizer.addClosedLoopConstraints(problem,Rt_l1_c1, Rt_l1_c2, Rt_c1_c2);
-    }
+    // for(int i = 0;i<left_image_3d_corners.size();++i){
+    //     optimizer.addClosedLoopConstraints(problem,Rt_l1_c1, Rt_l1_c2, Rt_c1_c2);
+    // }
 
     ceres::Solver::Options options;
     options.max_num_iterations = 500;
-    options.linear_solver_type = ceres::SPARSE_NORMAL_CHOLESKY;
+    options.linear_solver_type           = ceres::SPARSE_NORMAL_CHOLESKY;
+    // options.trust_region_strategy_type   = ceres::DOGLEG;
     options.minimizer_progress_to_stdout = false;
     ceres::Solver::Summary summary;
     ceres::Solve(options, &problem, &summary);

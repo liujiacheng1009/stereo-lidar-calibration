@@ -47,30 +47,15 @@ public:
     template<typename T>
     bool operator()(const T* const Rt1, const T* const Rt2, const T* const Rt3,T* residual) const{
         T rot1[3*3];
-        // ceres::AngleAxisToRotationMatrix(Rt1, rot1);
-        //         T rot[3*3];
         ceres::AngleAxisToRotationMatrix(Rt1, rot1);
         Eigen::Map<const Eigen::Matrix<T,3,3>> R1(rot1);
         Eigen::Map<const Eigen::Matrix<T,3,1>> t1(Rt1+3);
-        // Eigen::Matrix<T, 3, 3> R1 = Eigen::Matrix<T, 3, 3>::Identity();
-        // for (int i = 0; i < 3; ++i) {
-        //     for (int j = 0; j < 3; ++j) {
-        //         R1(i, j) = rot1[i+j*3];
-        //     }
-        // }
-        // Eigen::Map<const Eigen::Matrix<T,3,1>> t1(Rt1+3);
         Eigen::Matrix<T,4,4> trans1 = Eigen::Matrix<T,4,4>::Identity();
         trans1.block(0,0,3,3) = R1;
         trans1.block(0,3,3,1) = t1;
 
         T rot2[3*3];
         ceres::AngleAxisToRotationMatrix(Rt2, rot2);
-        // Eigen::Matrix<T, 3, 3> R2 = Eigen::Matrix<T, 3, 3>::Identity();
-        // for (int i = 0; i < 3; ++i) {
-        //     for (int j = 0; j < 3; ++j) {
-        //         R2(i, j) = rot2[i+j*3];
-        //     }
-        // }
         Eigen::Map<const Eigen::Matrix<T,3,3>> R2(rot2);
         Eigen::Map<const Eigen::Matrix<T,3,1>> t2(Rt2+3);
         Eigen::Matrix<T,4,4> trans2 = Eigen::Matrix<T,4,4>::Identity();
@@ -79,12 +64,6 @@ public:
 
         T rot3[3*3];
         ceres::AngleAxisToRotationMatrix(Rt3, rot3);
-        // Eigen::Matrix<T, 3, 3> R3 = Eigen::Matrix<T, 3, 3>::Identity();
-        // for (int i = 0; i < 3; ++i) {
-        //     for (int j = 0; j < 3; ++j) {
-        //         R3(i, j) = rot3[i+j*3];
-        //     }
-        // }
         Eigen::Map<const Eigen::Matrix<T,3,3>> R3(rot3);
         Eigen::Map<const Eigen::Matrix<T,3,1>> t3(Rt3+3);
         Eigen::Matrix<T,4,4> trans3 = Eigen::Matrix<T,4,4>::Identity();
