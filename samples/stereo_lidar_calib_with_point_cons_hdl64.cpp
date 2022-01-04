@@ -69,9 +69,9 @@ int main()
 
     VectorXd Rt_l1_c1(6), Rt_l1_c2(6), Rt_c1_c2(6);
 
-    Rt_l1_c1<< 1.5,-1.31589,1.06346,-0.401976,0.301422,-0.130281;
+    Rt_l1_c1<< 0.0,-1.31589,1.06346,-0.401976,0.301422,-0.130281;
     Rt_l1_c2<<  1.54296,-1.3,1.06319,-0.5,0.303772,-0.131603;
-    Rt_c1_c2 << 0.0,0.0,0.0,-0.22,0.0,0.0;
+    Rt_c1_c2 << 0.0,0.0,0.0,-0.12,0.0,0.0;
 
     Optimizer optimizer;
     ceres::Problem problem;
@@ -116,12 +116,14 @@ int main()
     ceres::Solve(options, &problem, &summary);
     std::cout << summary.BriefReport() << "\n";
 
+    double sum_error = 0.0;
     MatrixXd M_Rt_l1_c1 = Matrix<double,4,4>::Identity();
     Eigen::Matrix3d R1 = Sophus::SO3d::exp(Rt_l1_c1.head(3)).matrix();
     M_Rt_l1_c1.block(0,0,3,3) = R1;
     M_Rt_l1_c1.block(0,3,3,1) = Rt_l1_c1.tail(3);
     cout << M_Rt_l1_c1 << std::endl;
     cout << M_Rt_l1_c1-config_left.matlab_tform<<endl;
+    sum_error += (M_Rt_l1_c1-config_left.matlab_tform).norm();
     cout<<"--------------------------"<<endl;
     MatrixXd M_Rt_l1_c2 = Matrix<double,4,4>::Identity();
     Eigen::Matrix3d R2 = Sophus::SO3d::exp(Rt_l1_c2.head(3)).matrix();
@@ -130,12 +132,23 @@ int main()
     cout << M_Rt_l1_c2 << std::endl;
     cout << M_Rt_l1_c2-config_right.matlab_tform<<endl;
     cout<<"--------------------------"<<endl;
+    sum_error += (M_Rt_l1_c2-config_right.matlab_tform).norm();
 
-    VectorXd V_Rt_c1_c2 = Rt_c1_c2;
-    VectorXd Rt_c1_c2_gt(6);
-    Rt_c1_c2_gt<<0.0,0.0,0.0,-0.12,0.0,0.0;
-    cout << V_Rt_c1_c2 << std::endl;
-    cout << V_Rt_c1_c2-Rt_c1_c2_gt<<endl;
+    MatrixXd M_Rt_c1_c2 = Matrix<double,4,4>::Identity();
+    Eigen::Matrix3d R3 = Sophus::SO3d::exp(Rt_c1_c2.head(3)).matrix();
+    M_Rt_c1_c2.block(0,0,3,3) = R3;
+    M_Rt_c1_c2.block(0,3,3,1) = Rt_c1_c2.tail(3);
+    MatrixXd Rt_c1_c2_gt(4,4);
+    Rt_c1_c2_gt << 1.0, 0.0, 0.0, -0.12,
+        0.0, 1.0, 0.0, 0.0,
+        0.0, 0.0, 1.0, 0.0,
+        0.0, 0.0, 0.0, 1.0;
+
+    cout << M_Rt_c1_c2 << std::endl;
+    cout << M_Rt_c1_c2-Rt_c1_c2_gt<<endl;
+    sum_error += (M_Rt_c1_c2-Rt_c1_c2_gt).norm();
     cout<<"--------------------------"<<endl;
+
+    cout<<sum_error<<endl;
     return 0;
 }
