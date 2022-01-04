@@ -289,3 +289,14 @@ void Optimizer::addPointToPointConstriants(ceres::Problem &problem,
     }
     return;
 }
+
+void Optimizer::addClosedLoopConstraints(ceres::Problem &problem,
+                                    VectorXd& params1,
+                                    VectorXd& params2,
+                                    VectorXd& params3)
+{
+    double w = 1.0;
+    ceres::LossFunction *loss_function = NULL;
+    ceres::CostFunction *cost_function = new ceres::AutoDiffCostFunction<ClosedupError,2,6,6,6>(new ClosedupError(w));
+    problem.AddResidualBlock(cost_function, loss_function, params1.data(),params2.data(), params3.data());
+}

@@ -92,6 +92,10 @@ int main()
         optimizer.addStereoMatchingConstraints(problem, left_corners, right_corners, Rt_c1_c2);
     }
 
+    for(int i = 0;i<left_image_3d_corners.size();++i){
+        optimizer.addClosedLoopConstraints(problem,Rt_l1_c1, Rt_l1_c2, Rt_c1_c2);
+    }
+    
     ceres::Solver::Options options;
     options.max_num_iterations = 500;
     options.linear_solver_type = ceres::SPARSE_NORMAL_CHOLESKY;
