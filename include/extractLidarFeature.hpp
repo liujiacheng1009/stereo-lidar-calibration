@@ -385,7 +385,7 @@ bool LidarFeatureDetector<T>::extractPlaneCloud(PointCloud<PointXYZ>::Ptr &input
     m_chessboard_extractor.pass_filter(input_cloud); // 带通滤波
     vector<PointIndices> indices_clusters;
     m_chessboard_extractor.pcd_clustering(input_cloud, indices_clusters); // 聚类
-    if(m_chessboard_extractor.fitPlane(input_cloud, indices_clusters,plane_pcd)){
+    if(m_chessboard_extractor.extractChessboard(input_cloud, indices_clusters,plane_pcd)){
         //Todo 保留平面上的点
         return true;
     }

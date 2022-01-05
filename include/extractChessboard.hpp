@@ -23,6 +23,7 @@
 #include <pcl/io/pcd_io.h>
 #include <string>
 #include "config.hpp"
+#include "utils.hpp"
 
 using namespace cv;
 using namespace Eigen;
@@ -57,6 +58,9 @@ public:
     // 对上面的点云簇进行平面拟合 
     bool fitPlane(pcl::PointCloud<pcl::PointXYZ>::Ptr& input_pcd,
         std::vector<pcl::PointIndices>& indices_clusters, pcl::PointCloud<pcl::PointXYZ>::Ptr& plane_pcd);
+
+    bool extractChessboard(pcl::PointCloud<pcl::PointXYZ>::Ptr& input_pcd,
+        std::vector<pcl::PointIndices>& indices_clusters, pcl::PointCloud<pcl::PointXYZ>::Ptr& chessboard_pcd);
 
     // 将原始点云投影到估计的平面上
     void projPlaneFilter(pcl::PointCloud<pcl::PointXYZ>::Ptr &cloud,
@@ -110,7 +114,7 @@ void ChessboardExtractor<T>::pcd_clustering(pcl::PointCloud<pcl::PointXYZ>::Ptr&
 
     pcl::RegionGrowing<pcl::PointXYZ, pcl::Normal> reg;
     reg.setMinClusterSize(400);
-    reg.setMaxClusterSize(3500);
+    reg.setMaxClusterSize(4000);
     reg.setSearchMethod(tree);
     reg.setNumberOfNeighbours(60);
     reg.setInputCloud(input_pcd);
@@ -119,6 +123,18 @@ void ChessboardExtractor<T>::pcd_clustering(pcl::PointCloud<pcl::PointXYZ>::Ptr&
     reg.setCurvatureThreshold(0.3);
 
     reg.extract(pcd_clusters);
+    // dubug
+    // pcl::ExtractIndices<pcl::PointXYZ> extract;
+    // extract.setInputCloud(input_pcd);
+    // for(auto& cluster:pcd_clusters){
+    //     pcl::PointCloud<pcl::PointXYZ>::Ptr pcd_cluster(new pcl::PointCloud<pcl::PointXYZ>);
+    //     extract.setIndices(boost::shared_ptr<pcl::PointIndices>(new pcl::PointIndices(cluster)));
+    //     extract.setNegative(false);
+    //     extract.filter(*pcd_cluster);
+    //     display_colored_by_depth(pcd_cluster);
+    //     //cout<< cluster.size()<<endl;
+    // }
+    // exit(17);
     return;
 }
 
@@ -135,7 +151,6 @@ bool ChessboardExtractor<T>::fitPlane(pcl::PointCloud<pcl::PointXYZ>::Ptr &input
         extract.setIndices(boost::shared_ptr<pcl::PointIndices>(new pcl::PointIndices(cluster)));
         extract.setNegative(false);
         extract.filter(*pcd_cluster);
-
         pcl::ModelCoefficients::Ptr coefficients(new pcl::ModelCoefficients);
         pcl::PointIndices::Ptr inliers(new pcl::PointIndices);
         pcl::SACSegmentation<pcl::PointXYZ> seg;
@@ -152,7 +167,45 @@ bool ChessboardExtractor<T>::fitPlane(pcl::PointCloud<pcl::PointXYZ>::Ptr &input
             return true;
         }
     }
+    
     return false;
 }
+
+template<typename T>
+bool ChessboardExtractor<T>::extractChessboard(pcl::PointCloud<pcl::PointXYZ>::Ptr &input_pcd,
+                                   std::vector<pcl::PointIndices> &indices_clusters,
+                                       PointCloud<PointXYZ>::Ptr &chessboard_pcd)
+{
+    pcl::ExtractIndices<pcl::PointXYZ> extract;
+    extract.setInputCloud(input_pcd);
+    for (auto &cluster : indices_clusters)
+    {
+        pcl::PointCloud<pcl::PointXYZ>::Ptr pcd_cluster(new pcl::PointCloud<pcl::PointXYZ>);
+        extract.setIndices(boost::shared_ptr<pcl::PointIndices>(new pcl::PointIndices(cluster)));
+        extract.setNegative(false);
+        extract.filter(*pcd_cluster);
+
+        pcl::SampleConsensusModelPlane<pcl::PointXYZ>::Ptr plane_model(
+            new pcl::SampleConsensusModelPlane<pcl::PointXYZ>(pcd_cluster));
+        pcl::RandomSampleConsensus<pcl::PointXYZ> ransac(plane_model);
+        ransac.setDistanceThreshold(0.04);
+        ransac.setMaxIterations(100);
+        if (!ransac.computeModel()) continue;
+        vector<int> inliers;
+        ransac.getInliers(inliers);
+        double inliers_percentage = double(inliers.size()) / pcd_cluster->points.size();
+        if (inliers_percentage > 0.9)
+        {
+            // debug
+            display_colored_by_depth(pcd_cluster);
+            exit(17);
+            pcl::copyPointCloud(*input_pcd, inliers, *chessboard_pcd);
+            return true;
+        }
+    }
+    return false;
+}
+
+
 
 #endif
