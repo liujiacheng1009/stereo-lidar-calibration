@@ -387,6 +387,8 @@ bool LidarFeatureDetector<T>::extractPlaneCloud(PointCloud<PointXYZ>::Ptr &input
     m_chessboard_extractor.pcd_clustering(input_cloud, indices_clusters); // 聚类
     if(m_chessboard_extractor.extractChessboard(input_cloud, indices_clusters,plane_pcd)){
         //Todo 保留平面上的点
+        // debug 
+        // display_colored_by_depth(plane_pcd);
         return true;
     }
          // 查找平面
@@ -464,6 +466,8 @@ void processCloud(T& config, vector<string>& cloud_paths, CloudResults& cloud_fe
         }
         std::vector<pcl::PointXYZ> corners, reordered_corners;
         lidar_feature_detector.estimateFourCorners(lines_params,corners); // 估计四个交点
+        // debug
+        // display_four_corners(corners);
 
         vector<pair<std::pair<pcl::PointXYZ, pcl::PointXYZ> , pcl::PointCloud<pcl::PointXYZ>>> line_corners_to_points;
         for(int i=0;i<4;i++){

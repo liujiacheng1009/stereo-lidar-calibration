@@ -19,51 +19,5 @@ INCLUDE_DIRECTORIES( ${Boost_INCLUDE_DIR})
 find_package(Sophus REQUIRED)
 include_directories(${Sophus_INCLUDE_DIRS})
 
-# Set header files 
-set(
-	HEADER_FILES
-	include/utils.hpp
-    include/extractChessboard.hpp
-	include/extractImageFeature.hpp
-	include/extractLidarFeature.hpp
-	include/optimization.hpp
-	include/matlab_data.hpp
-	include/config.hpp
-	)
-
-# Set source files
-set(
-	SOURCE_FILES 
-    src/extractChessboard.cpp
-	src/extractImageFeature.cpp
-	src/extractLidarFeature.cpp 
-	src/optimization.cpp
-	src/utils.cpp
-    )
-# executable files
-# add_executable(test_extract_chessboard test/test_extract_chessboard.cpp ${SOURCE_FILES} ${HEADER_FILES})
-# target_link_libraries(test_extract_chessboard ${PCL_LIBRARIES} ${OpenCV_LIBS} ${CERES_LIBRARIES} ${Boost_LIBRARIES})
-
-# add_executable(test_extract_image_feature test/test_extract_image_feature.cpp ${SOURCE_FILES} ${HEADER_FILES})
-# target_link_libraries(test_extract_image_feature ${OpenCV_LIBS} ${PCL_LIBRARIES} ${CERES_LIBRARIES} ${Boost_LIBRARIES})
-
-# add_executable(test_extract_lidar_feature test/test_extract_lidar_feature.cpp ${SOURCE_FILES} ${HEADER_FILES})
-# target_link_libraries(test_extract_lidar_feature ${OpenCV_LIBS} ${PCL_LIBRARIES} ${CERES_LIBRARIES} ${Boost_LIBRARIES})
-
-# add_executable(test_optimization test/test_optimization.cpp ${SOURCE_FILES} ${HEADER_FILES})
-# target_link_libraries(test_optimization ${OpenCV_LIBS} ${PCL_LIBRARIES}  ${CERES_LIBRARIES} ${Boost_LIBRARIES} ${Sophus_LIBRARIES} fmt)
-
-# add_executable(calibration_lc experiment/calibration_lc.cpp ${SOURCE_FILES} ${HEADER_FILES})
-# target_link_libraries(calibration_lc ${OpenCV_LIBS} ${PCL_LIBRARIES}  ${CERES_LIBRARIES} ${Boost_LIBRARIES} ${Sophus_LIBRARIES} fmt)
-
-# add_executable(calibration_lcc experiment/calibration_lcc.cpp ${SOURCE_FILES} ${HEADER_FILES})
-# target_link_libraries(calibration_lcc ${OpenCV_LIBS} ${PCL_LIBRARIES}  ${CERES_LIBRARIES} ${Boost_LIBRARIES} ${Sophus_LIBRARIES} fmt)
-
-# add_executable(test_matlab_data test/test_matlab_data.cpp ${SOURCE_FILES} ${HEADER_FILES})
-# target_link_libraries(test_matlab_data ${OpenCV_LIBS} ${PCL_LIBRARIES}  ${CERES_LIBRARIES} ${Boost_LIBRARIES})
-
-# add_executable(refine_matlab_results experiment/refine_matlab_results.cpp ${SOURCE_FILES} ${HEADER_FILES})
-# target_link_libraries(refine_matlab_results ${OpenCV_LIBS} ${PCL_LIBRARIES}  ${CERES_LIBRARIES} ${Boost_LIBRARIES} ${Sophus_LIBRARIES} fmt)
-
 add_subdirectory(samples)
 add_subdirectory(test)

@@ -29,6 +29,7 @@
 #include <unistd.h>
 #include <vector>
 #include <algorithm>
+#include <pcl/visualization/cloud_viewer.h>
 #include "extractImageFeature.hpp"
 
 using namespace Eigen;
@@ -38,6 +39,7 @@ using namespace cv;
 
 
 void display_colored_by_depth(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud);
+void display_four_corners(vector<PointXYZ>& corners);
 
 // void show_cloud(pcl::PointCloud<pcl::PointXYZ>& cloud, std::string viewer_name="debug"){
 //     pcl::visualization::CloudViewer viewer(viewer_name);

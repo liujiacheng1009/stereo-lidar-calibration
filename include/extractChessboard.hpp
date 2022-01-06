@@ -24,6 +24,7 @@
 #include <string>
 #include "config.hpp"
 #include "utils.hpp"
+#include "box_fitting.hpp"
 
 using namespace cv;
 using namespace Eigen;
@@ -47,7 +48,10 @@ struct PassFilterParams{
 template<typename T>
 class ChessboardExtractor{
 public:
-    ChessboardExtractor(T &config) : m_pass_filter_params(PassFilterParams(config.pass_filter_params)) {}
+    ChessboardExtractor(T &config) : m_pass_filter_params(PassFilterParams(config.pass_filter_params)),
+                                     m_checkerboard_grid_size(config.checkerboard_grid_size),
+                                     m_checkerboard_square_size(config.checkerboard_square_size),
+                                     m_checkerboard_padding(config.checkerboard_padding) {}
 
 public:
     // 主函数， 从环境点云中提取marker board 点云
@@ -74,8 +78,67 @@ private:
     void getPointCloudInROI();
     void extract_pcd_by_indices(pcl::PointIndices &indices, pcl::PointCloud<pcl::PointXYZ>::Ptr &input_pcd,
                                 pcl::PointCloud<pcl::PointXYZ>::Ptr &output_pcd);
+    bool check_board_size(pcl::PointCloud<pcl::PointXYZ>::Ptr board_pcd);
+    bool check_board_size(pcl::PointCloud<pcl::PointXYZ>::Ptr board_pcd, Eigen::VectorXf& coeff);
     PassFilterParams m_pass_filter_params;
+    double m_checkerboard_square_size;        // 单位是m
+    Size m_checkerboard_grid_size;     // 标定板的内部方格数，注意水平方向为7
+    vector<double> m_checkerboard_padding; // 标定板相对靶纸边缘的padding,方向？
 };
+
+
+template<typename T>
+bool ChessboardExtractor<T>::check_board_size(pcl::PointCloud<pcl::PointXYZ>::Ptr board_pcd)
+{
+    double max_padding = *max_element(m_checkerboard_padding.begin(), m_checkerboard_padding.end());
+    max_padding *= 2.0;
+    double max_len = sqrt(((m_checkerboard_grid_size.width+1)*m_checkerboard_square_size+max_padding)*
+            ((m_checkerboard_grid_size.width+1)*m_checkerboard_square_size+max_padding) + 
+            ((m_checkerboard_grid_size.width+1)*m_checkerboard_square_size+max_padding)*
+            ((m_checkerboard_grid_size.width+1)*m_checkerboard_square_size+max_padding)); // 对角线长
+    max_len *= 1.2; // 裕度
+    pcl::PointXYZ minPt, maxPt;
+    pcl::getMinMax3D (*board_pcd, minPt, maxPt);
+
+    // cout<< max_len<<endl;
+    // cout<< maxPt.x-minPt.x<<endl;
+    // cout<< maxPt.y-minPt.y<<endl;
+    // cout<< maxPt.z-minPt.z<<endl;
+    // cout<<"------------------------"<<endl;
+    if(maxPt.x-minPt.x>max_len) return false;
+    if(maxPt.y-minPt.y>max_len) return false;
+    if(maxPt.z-minPt.z>max_len) return false;
+    return true;
+}
+
+template<typename T>
+bool ChessboardExtractor<T>::check_board_size(pcl::PointCloud<pcl::PointXYZ>::Ptr board_pcd, Eigen::VectorXf& coeff)
+{
+    double max_padding = *max_element(m_checkerboard_padding.begin(), m_checkerboard_padding.end());
+    max_padding *= 2.0;
+    double len_x = (m_checkerboard_grid_size.width+1)*m_checkerboard_square_size+max_padding;
+    double len_y = (m_checkerboard_grid_size.height+1)*m_checkerboard_square_size+max_padding;
+    double len_z = 0.03;
+    vector<double> lens = {len_x, len_y, len_z};
+    sort(lens.begin(), lens.end());
+    Eigen::Affine3f pose;
+    Eigen::Vector3f size;
+    fitMaximumContactBoundingBoxConstrained<PointXYZ>(board_pcd,coeff,pose, size, (float)0.1);
+    vector<double> lens2 = {(double)size(0), (double)size(1), (double)size(2)};
+    sort(lens2.begin(), lens2.end());
+    // debug
+    // cout<< board_pcd->points.size()<<endl;
+    // cout<< coeff <<endl;
+    // cout<< "----------------------------"<<endl;
+    // cout<< lens[0]<<" "<<lens[1]<<" "<<lens[2]<<endl;
+    // cout<< size<<endl;
+    // cout<< pose.matrix()<<endl;
+    // cout<< "----------------------------"<<endl;
+    if(abs(lens2[0]-lens[0])>m_checkerboard_square_size) return false;
+    if(abs(lens2[1]-lens[1])>m_checkerboard_square_size) return false;
+    if(abs(lens2[2]-lens[2])>0.03) return false;
+    return true;
+}
 
 template<typename T>
 void ChessboardExtractor<T>::pass_filter(pcl::PointCloud<pcl::PointXYZ>::Ptr& input_pcd)
@@ -113,7 +176,7 @@ void ChessboardExtractor<T>::pcd_clustering(pcl::PointCloud<pcl::PointXYZ>::Ptr&
     normal_estimator.compute(*normals);
 
     pcl::RegionGrowing<pcl::PointXYZ, pcl::Normal> reg;
-    reg.setMinClusterSize(400);
+    reg.setMinClusterSize(150);
     reg.setMaxClusterSize(4000);
     reg.setSearchMethod(tree);
     reg.setNumberOfNeighbours(60);
@@ -131,8 +194,9 @@ void ChessboardExtractor<T>::pcd_clustering(pcl::PointCloud<pcl::PointXYZ>::Ptr&
     //     extract.setIndices(boost::shared_ptr<pcl::PointIndices>(new pcl::PointIndices(cluster)));
     //     extract.setNegative(false);
     //     extract.filter(*pcd_cluster);
+    //     // check_board_size(pcd_cluster);
     //     display_colored_by_depth(pcd_cluster);
-    //     //cout<< cluster.size()<<endl;
+    //     cout<< pcd_cluster->points.size() <<endl;
     // }
     // exit(17);
     return;
@@ -184,6 +248,9 @@ bool ChessboardExtractor<T>::extractChessboard(pcl::PointCloud<pcl::PointXYZ>::P
         extract.setIndices(boost::shared_ptr<pcl::PointIndices>(new pcl::PointIndices(cluster)));
         extract.setNegative(false);
         extract.filter(*pcd_cluster);
+        //debug
+        // if(pcd_cluster->points.size()!=368) continue;
+        // pcl::io::savePCDFileASCII ("/home/jc/Documents/stereo-lidar-calibration/exclude_dir/debug_data/chessboard_plane_0001.pcd", *pcd_cluster);
 
         pcl::SampleConsensusModelPlane<pcl::PointXYZ>::Ptr plane_model(
             new pcl::SampleConsensusModelPlane<pcl::PointXYZ>(pcd_cluster));
@@ -193,16 +260,22 @@ bool ChessboardExtractor<T>::extractChessboard(pcl::PointCloud<pcl::PointXYZ>::P
         if (!ransac.computeModel()) continue;
         vector<int> inliers;
         ransac.getInliers(inliers);
+        Eigen::VectorXf coeff(4);
+        ransac.getModelCoefficients(coeff);
         double inliers_percentage = double(inliers.size()) / pcd_cluster->points.size();
         if (inliers_percentage > 0.9)
         {
+            pcl::copyPointCloud(*pcd_cluster, inliers, *chessboard_pcd);
+            
+            if(!check_board_size(chessboard_pcd, coeff)) continue;
             // debug
-            display_colored_by_depth(pcd_cluster);
-            exit(17);
-            pcl::copyPointCloud(*input_pcd, inliers, *chessboard_pcd);
+            // display_colored_by_depth(chessboard_pcd);
+            // exit(17);
             return true;
         }
     }
+    // debug
+    // exit(17);
     return false;
 }
 
