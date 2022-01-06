@@ -178,11 +178,14 @@ void ChessboardExtractor<T>::pcd_clustering(pcl::PointCloud<pcl::PointXYZ>::Ptr&
     pcl::RegionGrowing<pcl::PointXYZ, pcl::Normal> reg;
     reg.setMinClusterSize(150);
     reg.setMaxClusterSize(4000);
+    // reg.setMinClusterSize(280);
+    // reg.setMaxClusterSize(520);
     reg.setSearchMethod(tree);
     reg.setNumberOfNeighbours(60);
     reg.setInputCloud(input_pcd);
     reg.setInputNormals(normals);
-    reg.setSmoothnessThreshold(3.0 / 180.0 * M_PI);
+    //reg.setSmoothnessThreshold(3.0 / 180.0 * M_PI);
+    reg.setSmoothnessThreshold(8.0 / 180.0 * M_PI);
     reg.setCurvatureThreshold(0.3);
 
     reg.extract(pcd_clusters);
@@ -195,10 +198,11 @@ void ChessboardExtractor<T>::pcd_clustering(pcl::PointCloud<pcl::PointXYZ>::Ptr&
     //     extract.setNegative(false);
     //     extract.filter(*pcd_cluster);
     //     // check_board_size(pcd_cluster);
-    //     display_colored_by_depth(pcd_cluster);
     //     cout<< pcd_cluster->points.size() <<endl;
+    //     // display_colored_by_depth(pcd_cluster);
     // }
     // exit(17);
+    // cout<< "-------------------------"<<endl;
     return;
 }
 

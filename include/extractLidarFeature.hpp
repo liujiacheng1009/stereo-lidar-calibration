@@ -115,6 +115,9 @@ bool LidarFeatureDetector<T>::extractFourLines(pcl::PointCloud<pcl::PointXYZ>::P
                                             std::vector<Eigen::VectorXf> &lines_params,
                                             std::vector<pcl::PointCloud<pcl::PointXYZ>> &lines_points)
 {
+    // debug
+    // display_colored_by_depth(edge_pcd);
+
     lines_params.clear();
     lines_points.clear();
     for (int i = 0; i < 4; i++)
@@ -308,15 +311,17 @@ void LidarFeatureDetector<T>::extractEdgeCloud(pcl::PointCloud<pcl::PointXYZ>::P
     pcl::search::KdTree<pcl::PointXYZ>::Ptr tree(new pcl::search::KdTree<pcl::PointXYZ>);
     n.setInputCloud(input_cloud);
     n.setSearchMethod(tree);
-    n.setRadiusSearch(1);
+    //n.setRadiusSearch(1);
+    n.setKSearch(50); 
     pcl::PointCloud<pcl::Normal>::Ptr normals(new pcl::PointCloud<pcl::Normal>);
     n.compute(*normals);
 
     pcl::BoundaryEstimation<pcl::PointXYZ, pcl::Normal, pcl::Boundary> boundEst; 
     boundEst.setInputCloud(input_cloud);
     boundEst.setInputNormals(normals);
-    boundEst.setRadiusSearch(1);
-    boundEst.setAngleThreshold(M_PI / 4); 
+    //boundEst.setRadiusSearch(1.0);
+    boundEst.setKSearch(50);
+    boundEst.setAngleThreshold(M_PI / 2); 
 
     boundEst.setSearchMethod(tree);
     pcl::PointCloud<pcl::Boundary> boundaries;
@@ -329,7 +334,10 @@ void LidarFeatureDetector<T>::extractEdgeCloud(pcl::PointCloud<pcl::PointXYZ>::P
             edge_pcd->push_back(input_cloud->points[i]);
         }
     }
-    return;
+    //debug
+    // display_colored_by_depth(edge_pcd);
+    // exit(17);
+    // return;
 }
 
 // 判断四个角点是否有效
@@ -456,6 +464,7 @@ void processCloud(T& config, vector<string>& cloud_paths, CloudResults& cloud_fe
         // display_colored_by_depth(input_cloud);
         PointCloud<PointXYZ>::Ptr plane_cloud(new pcl::PointCloud<pcl::PointXYZ>);
         if(!lidar_feature_detector.extractPlaneCloud(input_cloud,plane_cloud)) continue;
+
         pcl::PointCloud<pcl::PointXYZ>::Ptr edge_cloud(new pcl::PointCloud<pcl::PointXYZ>);
         lidar_feature_detector.extractEdgeCloud(plane_cloud, edge_cloud);// 提取边缘点云
         std::vector<Eigen::VectorXf> lines_params;
