@@ -165,10 +165,10 @@ void ImageFeatureDetector<T>::calculate3DCorners(vector<cv::Point3d>& chessboard
     int col = m_board_size.width + 1;
     int row = m_board_size.height + 1;
     // 添加padding
-    chessboard_3d_corners.push_back(cv::Point3d((row-1) * m_square_size + m_padding[0], (col-1) * m_square_size + m_padding[2], 0));
-    chessboard_3d_corners.push_back(cv::Point3d((row-1) * m_square_size - m_padding[2], -m_square_size + m_padding[1], 0));
-    chessboard_3d_corners.push_back(cv::Point3d(-m_square_size - m_padding[2], -m_square_size - m_padding[3], 0));
-    chessboard_3d_corners.push_back(cv::Point3d(-m_square_size + m_padding[0], (col-1) * m_square_size - m_padding[3], 0));
+    chessboard_3d_corners.push_back(cv::Point3d((row-1) * m_square_size + m_padding[0], (col-1) * m_square_size + m_padding[3], 0));
+    chessboard_3d_corners.push_back(cv::Point3d((row-1) * m_square_size + m_padding[0], -m_square_size - m_padding[1], 0));
+    chessboard_3d_corners.push_back(cv::Point3d(-m_square_size - m_padding[2], -m_square_size - m_padding[1], 0));
+    chessboard_3d_corners.push_back(cv::Point3d(-m_square_size - m_padding[2], (col-1) * m_square_size + m_padding[3], 0));
 
     cv::Matx33d rot_matrix;
     cv::Rodrigues(rvec, rot_matrix);

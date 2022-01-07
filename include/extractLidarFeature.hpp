@@ -65,7 +65,10 @@ public:
 template<typename T>
 class LidarFeatureDetector{
 public:
-    LidarFeatureDetector(T &config) : m_chessboard_extractor(ChessboardExtractor<T>(config)) {}
+    LidarFeatureDetector(T &config) : m_chessboard_extractor(ChessboardExtractor<T>(config)),
+                                    m_checkerboard_grid_size(config.checkerboard_grid_size),
+                                     m_checkerboard_square_size(config.checkerboard_square_size),
+                                     m_checkerboard_padding(config.checkerboard_padding) {}
     // void getCorners(std::vector<Eigen::VectorXf> &line_params, std::vector<pcl::PointXYZ>& chessboard_corners); // 从直线方程中获取四个角点
 
     // void getEdgePointCloud(std::vector<std::vector<pcl::PointXYZ>>& rings,pcl::PointCloud<pcl::PointXYZ>::Ptr& edge_pcd);// 从rings中提取边缘点云
@@ -81,7 +84,7 @@ public:
     bool extractFourLines(pcl::PointCloud<pcl::PointXYZ>::Ptr &edge_pcd,
                           std::vector<Eigen::VectorXf> &lines_params,
                           std::vector<pcl::PointCloud<pcl::PointXYZ>> &lines_points);
-    void estimateFourCorners(std::vector<Eigen::VectorXf> &line_params, std::vector<pcl::PointXYZ>& corners); // 从直线方程中获取四个角点
+    bool estimateFourCorners(std::vector<Eigen::VectorXf> &line_params, std::vector<pcl::PointXYZ>& corners); // 从直线方程中获取四个角点
 
     // 调整lidar points 的顺序
     void reorder_corners(std::vector<pcl::PointXYZ>& ori_corners, std::vector<pcl::PointXYZ>& reordered_corners);
@@ -103,12 +106,66 @@ private:
     void reorder_lines1(std::vector<Eigen::VectorXf> &lines_params,
                         std::vector<pcl::PointCloud<pcl::PointXYZ>> &lines_points);
 
+    bool isValidCorners(vector<PointXYZ>& corners);
+
     pcl::PointCloud<pcl::PointXYZ>::Ptr m_marker_board_pcd;
     int m_number_of_rings;
 
 private:
     ChessboardExtractor<T> m_chessboard_extractor;
+    const double m_checkerboard_square_size;
+    const Size m_checkerboard_grid_size;    
+    const vector<double> m_checkerboard_padding; 
 };
+
+
+template<typename T>
+bool LidarFeatureDetector<T>::isValidCorners(vector<PointXYZ>& corners)
+{
+    int corner_num = corners.size();
+    if (corner_num != 4)
+    {
+        return false;
+    }
+    double len_x = (m_checkerboard_grid_size.width+1)*m_checkerboard_square_size + m_checkerboard_padding[1] + m_checkerboard_padding[3];
+    double len_y = (m_checkerboard_grid_size.height+1)*m_checkerboard_square_size+m_checkerboard_padding[0] + m_checkerboard_padding[2];
+    vector<double> board_length = {len_x, len_x, len_y, len_y};
+    sort(board_length.begin(), board_length.end());
+    const double board_angle = M_PI / 2.0;
+
+    // 计算距离评分和角度评分
+    pcl::PointXYZ pre_corner, cur_corner, next_corner;
+    double length_diff = 0.0, angle_diff = 0.0;
+    vector<double> distances;
+    for (size_t i = 0; i < corner_num; ++i)
+    {
+        pre_corner = corners[(i + 3) % 4];
+        cur_corner = corners[i];
+        next_corner = corners[(i + 1) % 4];
+        double dist = pcl::euclideanDistance(cur_corner, next_corner);
+        distances.push_back(dist);
+        Eigen::Vector3f a, b;
+        a << (cur_corner.x - pre_corner.x), (cur_corner.y - pre_corner.y), (cur_corner.z - pre_corner.z);
+        b << (cur_corner.x - next_corner.x), (cur_corner.y - next_corner.y), (cur_corner.z - next_corner.z);
+        double angle = std::acos(a.dot(b) / (a.norm() * b.norm()));
+        angle_diff += std::abs(angle - board_angle);
+    }
+    double angle_score = 1 - angle_diff / board_angle;
+    
+    sort(distances.begin(), distances.end());
+    for(int i=0;i<corner_num;++i){
+        length_diff += abs(board_length[i]-distances[i]);
+    }
+    length_diff /= corner_num;
+    double length_core = 1 - length_diff / board_length[0];
+    // debug
+    // cout<< angle_score<<endl;
+    // cout<< length_core <<endl;
+    // cout<< "------------------"<<endl;
+    if(angle_score<0.9) return false;
+    if(length_core<0.9) return false;
+    return true;
+}
 
 template<typename T>
 bool LidarFeatureDetector<T>::extractFourLines(pcl::PointCloud<pcl::PointXYZ>::Ptr &edge_pcd,
@@ -289,7 +346,7 @@ void LidarFeatureDetector<T>::remove_inliers(const pcl::PointCloud<pcl::PointXYZ
 //     return;
 // }
 template<typename T>
-void LidarFeatureDetector<T>::estimateFourCorners(std::vector<Eigen::VectorXf> &line_params, std::vector<pcl::PointXYZ> &corners)
+bool LidarFeatureDetector<T>::estimateFourCorners(std::vector<Eigen::VectorXf> &line_params, std::vector<pcl::PointXYZ> &corners)
 {
     Eigen::Vector4f p1, p2, p_intersect;
     for (int i = 0; i < 4; ++i)
@@ -301,8 +358,11 @@ void LidarFeatureDetector<T>::estimateFourCorners(std::vector<Eigen::VectorXf> &
         }
         corners.push_back(pcl::PointXYZ(p_intersect(0), p_intersect(1), p_intersect(2)));
     }
-    return;
+    if(!isValidCorners(corners)) return false;
+    return true;
 }
+
+
 template<typename T>
 void LidarFeatureDetector<T>::extractEdgeCloud(pcl::PointCloud<pcl::PointXYZ>::Ptr &input_cloud, pcl::PointCloud<pcl::PointXYZ>::Ptr &edge_pcd)
 {
@@ -474,7 +534,7 @@ void processCloud(T& config, vector<string>& cloud_paths, CloudResults& cloud_fe
             continue;
         }
         std::vector<pcl::PointXYZ> corners, reordered_corners;
-        lidar_feature_detector.estimateFourCorners(lines_params,corners); // 估计四个交点
+        if(!lidar_feature_detector.estimateFourCorners(lines_params,corners)) continue; // 估计四个交点
         // debug
         // display_four_corners(corners);
 
