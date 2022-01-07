@@ -40,6 +40,7 @@ using namespace cv;
 
 void display_colored_by_depth(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud);
 void display_four_corners(vector<PointXYZ>& corners);
+void display_multi_clouds(vector<PointCloud<PointXYZ>>& clouds);
 
 // void show_cloud(pcl::PointCloud<pcl::PointXYZ>& cloud, std::string viewer_name="debug"){
 //     pcl::visualization::CloudViewer viewer(viewer_name);

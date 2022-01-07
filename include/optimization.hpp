@@ -36,8 +36,76 @@ using namespace Eigen;
 using namespace cv;
 using namespace pcl;
 
-// closedup error
+// corners refinement error
+class BoardCornersError
+{
+public:
+    EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+    BoardCornersError(const pcl::PointCloud<pcl::PointXYZ> &edge_cloud, const int line_index, const vector<double>& board_length)
+        : m_cloud(edge_cloud), m_index(line_index), m_length(board_length)
+    {
+    }
+    template <typename T>
+    bool operator()(const T *const corner_v, T *residual) const
+    {
+        if (m_cloud.empty())
+        {
+            return false;
+        }
+        T dist_sum_1 = T(0.0);
+        for (size_t i = 0; i < m_cloud.size(); ++i)
+        {
+            pcl::PointXYZ point = m_cloud.points[i];
+            T point_c[3];
+            point_c[0] = T(point.x);
+            point_c[1] = T(point.y);
+            point_c[2] = T(point.z);
+            T a[3], b[3];
+            a[0] = corner_v[((m_index + 1) % 4) * 3] - corner_v[m_index * 3];
+            a[1] = corner_v[((m_index + 1) % 4) * 3 + 1] - corner_v[m_index * 3 + 1];
+            a[2] = corner_v[((m_index + 1) % 4) * 3 + 2] - corner_v[m_index * 3 + 2];
+            b[0] = corner_v[m_index * 3] - point_c[0];
+            b[1] = corner_v[m_index * 3 + 1] - point_c[1];
+            b[2] = corner_v[m_index * 3 + 2] - point_c[2];
+            T a_norm = ceres::sqrt(a[0] * a[0] + a[1] * a[1] + a[2] * a[2]);
+            T b_norm = ceres::sqrt(b[0] * b[0] + b[1] * b[1] + b[2] * b[2]);
+            T a_dot_b = a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
+            T dist = b_norm * ceres::sin(ceres::acos(a_dot_b / (a_norm * b_norm)));
+            dist_sum_1 += ceres::abs(dist);
+        }
+        dist_sum_1 /= T(m_cloud.size());
 
+        T dist_sum_2 = T(0.0);
+        T length_diagonal = ceres::sqrt(T(m_length[0])*T(m_length[0]) + T(m_length[1])*T(m_length[1]));
+        for (size_t i = 0; i < 4; ++i)
+        {
+            T a[3], b[3];
+            a[0] = corner_v[((i + 1) % 4) * 3] - corner_v[i * 3];
+            a[1] = corner_v[((i + 1) % 4) * 3 + 1] - corner_v[i * 3 + 1];
+            a[2] = corner_v[((i + 1) % 4) * 3 + 2] - corner_v[i * 3 + 2];
+            T a_norm = ceres::sqrt(a[0] * a[0] + a[1] * a[1] + a[2] * a[2]);
+            dist_sum_2 += ceres::abs(a_norm - T(m_length[i]));
+            if (i < 2)
+            {
+                b[0] = corner_v[(i + 2) * 3] - corner_v[i * 3];
+                b[1] = corner_v[(i + 2) * 3 + 1] - corner_v[i * 3 + 1];
+                b[2] = corner_v[(i + 2) * 3 + 2] - corner_v[i * 3 + 2];
+                T b_norm = ceres::sqrt(b[0] * b[0] + b[1] * b[1] + b[2] * b[2]);
+                dist_sum_2 += ceres::abs(b_norm - length_diagonal);
+            }
+        }
+        dist_sum_2 /= T(6.0);
+
+        residual[0] = dist_sum_1 + dist_sum_2;
+        return true;
+    }
+
+    const pcl::PointCloud<pcl::PointXYZ> m_cloud;
+    const int m_index;
+    const vector<double> m_length;
+};
+
+// closedup error
 class ClosedupError
 {
 public:

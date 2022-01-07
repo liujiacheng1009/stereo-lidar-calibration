@@ -35,6 +35,7 @@
 #include <unordered_map>
 #include <map>
 #include "extractChessboard.hpp"
+#include "optimization.hpp"
 #include "utils.hpp"
 
 
@@ -57,7 +58,7 @@ public:
     vector<VectorXd> planes_3d; // 点云的平面方程
     vector<vector<Vector3d>> plane_points_3d; // 平面包含的点云
     vector<vector<VectorXd>> lines_3d; // 点云边缘直线方程
-    vector<vector<vector<Vector3d>>> lines_points_3d ;//直线包含的点云
+    vector<vector<PointCloud<PointXYZ>>> lines_points_3d ;//直线包含的点云
 };
 
 
@@ -93,6 +94,8 @@ public:
     void reorder_line_points(std::vector<pcl::PointXYZ>  &reordered_corners,
                             vector<PointCloud<PointXYZ>> &reordered_lines_points,
                             vector<pair<pair<PointXYZ, PointXYZ>, PointCloud<PointXYZ>>> &line_corners_to_points);
+    // 利用边界线点云优化角点
+    void refineCorners(vector<Vector3d>& corners_3d, vector<PointCloud<PointXYZ>>& lines_points_3d);
 
 private:
     // void getRings(std::vector<std::vector<pcl::PointXYZ>>& rings); // 将marker board点云按照线束id存储
@@ -108,6 +111,8 @@ private:
 
     bool isValidCorners(vector<PointXYZ>& corners);
 
+
+
     pcl::PointCloud<pcl::PointXYZ>::Ptr m_marker_board_pcd;
     int m_number_of_rings;
 
@@ -118,6 +123,47 @@ private:
     const vector<double> m_checkerboard_padding; 
 };
 
+
+template<typename T>
+void LidarFeatureDetector<T>::refineCorners(vector<Vector3d>& corners_3d, vector<PointCloud<PointXYZ>>& line_points_3d)
+{
+    assert(line_points_3d.size()== corners_3d.size());
+    assert(line_points_3d.size()==4);
+
+    double corners[12] = {corners_3d[0](0), corners_3d[0](1), corners_3d[0](2),
+                          corners_3d[1](0), corners_3d[1](1), corners_3d[1](2),
+                          corners_3d[2](0), corners_3d[2](1), corners_3d[2](2),
+                          corners_3d[3](0), corners_3d[3](1), corners_3d[3](2)};
+    ceres::Problem problem;
+    vector<double> boad_lengths;
+    for(int i=0;i<4;++i){
+        double board_length;
+        if(i%2==0){
+            board_length = (m_checkerboard_grid_size.width + 1)*m_checkerboard_square_size + m_checkerboard_padding[i];
+        }else{
+            board_length = (m_checkerboard_grid_size.height + 1)*m_checkerboard_square_size + m_checkerboard_padding[i];
+        }
+        boad_lengths.push_back(board_length);
+    }
+    for (std::size_t i = 0; i < line_points_3d.size(); ++i)
+    {
+
+        ceres::CostFunction* cost_function =
+                new ceres::AutoDiffCostFunction<BoardCornersError, 1, 12>(new BoardCornersError(line_points_3d[i], i, boad_lengths));
+        problem.AddResidualBlock(cost_function, nullptr, corners);
+    }
+
+    ceres::Solver::Options option;
+    option.linear_solver_type = ceres::DENSE_QR;
+    ceres::Solver::Summary summary;
+    ceres::Solve(option, &problem, &summary);
+    vector<Vector3d> corners_temp;
+    for(int i=0;i<4;++i){
+        corners_temp.push_back(Vector3d(corners[i*3], corners[i*3+1], corners[i*3+2]));
+    }
+    corners_3d = corners_temp;
+    return;
+}
 
 template<typename T>
 bool LidarFeatureDetector<T>::isValidCorners(vector<PointXYZ>& corners)
@@ -400,52 +446,6 @@ void LidarFeatureDetector<T>::extractEdgeCloud(pcl::PointCloud<pcl::PointXYZ>::P
     // return;
 }
 
-// 判断四个角点是否有效
-// bool ArucoCalib::isValidCorners(const pcl::PointCloud<pcl::PointXYZ>::Ptr corners_ptr)
-// {
-//   int corner_num = corners_ptr->size();
-//   if (corner_num != 4)
-//   {
-//     return false;
-//   }
-
-//   const float board_length = laser_proc_ptr_->board_length_;  // meter
-//   const float board_angle = M_PI / 2.0;
-
-//   // 计算距离评分和角度评分
-//   pcl::PointXYZ pre_corner, cur_corner, next_corner;
-//   float length_diff = 0.0, angle_diff = 0.0;
-//   for (size_t i = 0; i < corner_num; ++i)
-//   {
-//     pre_corner = corners_ptr->points[(i + 3) % 4];
-//     cur_corner = corners_ptr->points[i];
-//     next_corner = corners_ptr->points[(i + 1) % 4];
-//     float dist = pcl::euclideanDistance(cur_corner, next_corner);
-//     length_diff += std::abs(dist - board_length);
-
-//     Eigen::Vector3f a, b;
-//     a << (cur_corner.x - pre_corner.x), (cur_corner.y - pre_corner.y), (cur_corner.z - pre_corner.z);
-//     b << (cur_corner.x - next_corner.x), (cur_corner.y - next_corner.y), (cur_corner.z - next_corner.z);
-//     float angle = std::acos(a.dot(b) / (a.norm() * b.norm()));
-//     angle_diff += std::abs(angle - board_angle);
-//   }
-//   length_diff /= corner_num;
-//   angle_diff /= corner_num;
-
-//   float length_core = 1 - length_diff / board_length;
-//   float angle_core = 1 - angle_diff / board_angle;
-
-// #if LCDEBUG
-//   INFO << "length core is: " << length_core * 100 << REND;
-//   INFO << "angle core is: " << angle_core * 100 << REND;
-// #endif
-
-//   if (length_core < 0.95 || angle_core < 0.95)
-//   {
-//     return false;
-//   }
-//   return true;
-// }
 
 template<typename T>
 bool LidarFeatureDetector<T>::extractPlaneCloud(PointCloud<PointXYZ>::Ptr &input_cloud, PointCloud<PointXYZ>::Ptr &plane_pcd)
@@ -529,10 +529,7 @@ void processCloud(T& config, vector<string>& cloud_paths, CloudResults& cloud_fe
         lidar_feature_detector.extractEdgeCloud(plane_cloud, edge_cloud);// 提取边缘点云
         std::vector<Eigen::VectorXf> lines_params;
         std::vector<pcl::PointCloud<pcl::PointXYZ>> lines_points;
-        if (!lidar_feature_detector.extractFourLines(edge_cloud, lines_params, lines_points)) // 提取四条边界线
-        {
-            continue;
-        }
+        if (!lidar_feature_detector.extractFourLines(edge_cloud, lines_params, lines_points)) continue;// 提取四条边界线
         std::vector<pcl::PointXYZ> corners, reordered_corners;
         if(!lidar_feature_detector.estimateFourCorners(lines_params,corners)) continue; // 估计四个交点
         // debug
@@ -545,12 +542,17 @@ void processCloud(T& config, vector<string>& cloud_paths, CloudResults& cloud_fe
         lidar_feature_detector.reorder_corners(corners, reordered_corners);// 角点重排序，与camera corner 保持对应关系
         std::vector<pcl::PointCloud<pcl::PointXYZ>> reordered_lines_points;
         lidar_feature_detector.reorder_line_points(reordered_corners,reordered_lines_points, line_corners_to_points );// 重排序边缘直线上的点
+        // debug
+        // display_multi_clouds(reordered_lines_points);
         vector<Vector3d> corners_temp;
         for(auto& corner:reordered_corners)
         {
             corners_temp.push_back(Vector3d(corner.x,corner.y, corner.z));
         }
+        lidar_feature_detector.refineCorners(corners_temp, reordered_lines_points);
+
         cloud_features.corners_3d.push_back(corners_temp);
+        cloud_features.lines_points_3d.push_back(reordered_lines_points);
         cloud_features.valid_index.push_back(i);
     }
     return;

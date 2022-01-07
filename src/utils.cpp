@@ -39,6 +39,33 @@ void display_four_corners(vector<PointXYZ>& corners)
     }
     return;
 }
+
+void display_multi_clouds(vector<PointCloud<PointXYZ>>& clouds)
+{
+    pcl::visualization::PCLVisualizer::Ptr viewer(new pcl::visualization::PCLVisualizer ("debug"));
+    viewer->setBackgroundColor(0,0,0);
+    std::stringstream cloud_name;
+    int counter = 0;
+    for(auto& cloud:clouds){
+        counter ++;
+        cloud_name.str("");
+        cloud_name << "Cloud " << counter;
+        pcl::RGB rgb;
+        pcl::visualization::getRandomColors(rgb);
+        auto cloud_ptr = cloud.makeShared();
+        pcl::visualization::PointCloudColorHandlerCustom<pcl::PointXYZ> single_color(cloud_ptr, rgb.r, rgb.g, rgb.b);
+        viewer->addPointCloud<pcl::PointXYZ>(cloud_ptr, single_color, cloud_name.str());
+        viewer->setPointCloudRenderingProperties (pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 3, cloud_name.str());
+    }
+    viewer->addCoordinateSystem (1.0);
+    viewer->initCameraParameters();
+    while (!viewer->wasStopped())
+    {
+        viewer->spinOnce(100);
+        //boost::this_thread::sleep(boost::posix_time::microseconds(100000));
+    }
+    return;
+}
 // void show_cloud(pcl::PointCloud<pcl::PointXYZ>& cloud, std::string viewer_name="debug"){
 //     pcl::visualization::CloudViewer viewer(viewer_name);
 //     viewer.showCloud(cloud);
