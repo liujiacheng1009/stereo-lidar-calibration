@@ -24,6 +24,8 @@ void getValidDataSet(ImageResults& images_features, CloudResults& cloud_features
     }
     vector<vector<Vector3d>> valid_image_corners_3d;
     vector<vector<Vector3d>> valid_cloud_corners_3d;
+    vector<VectorXd> valid_image_plane_3d;
+    vector<PointCloud<PointXYZ>> valid_plane_cloud_3d;
     for(int i = 0;i<valid_image_index.size();++i){
         if(valid_index.count(valid_image_index[i])){
             valid_image_corners_3d.push_back(images_features.corners_3d[i]);
@@ -34,8 +36,22 @@ void getValidDataSet(ImageResults& images_features, CloudResults& cloud_features
             valid_cloud_corners_3d.push_back(cloud_features.corners_3d[i]);
         }
     }
+    for(int i = 0;i<valid_image_index.size();++i){
+        if(valid_index.count(valid_image_index[i])){
+            valid_image_plane_3d.push_back(images_features.planes_3d[i]);
+        }
+    }
+    for(int i = 0;i<valid_cloud_index.size();++i){
+        if(valid_index.count(valid_cloud_index[i])){
+            valid_plane_cloud_3d.push_back(cloud_features.plane_points_3d[i]);
+        }
+    }
+
     images_features.corners_3d = valid_image_corners_3d;
+    images_features.planes_3d = valid_image_plane_3d;
     cloud_features.corners_3d = valid_cloud_corners_3d;
+    cloud_features.plane_points_3d = valid_plane_cloud_3d;
+
     return;
 }
 

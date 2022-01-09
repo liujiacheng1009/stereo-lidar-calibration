@@ -325,3 +325,20 @@ void Optimizer::addClosedLoopConstraints(ceres::Problem &problem,
     ceres::CostFunction *cost_function = new ceres::AutoDiffCostFunction<ClosedupError,2,6,6,6>(new ClosedupError(w));
     problem.AddResidualBlock(cost_function, loss_function, params1.data(),params2.data(), params3.data());
 }
+
+void Optimizer::addPointToPlaneConstriants(ceres::Problem &problem,
+                                           PointCloud<PointXYZ> &plane_cloud,
+                                           VectorXd &image_plane,
+                                           VectorXd &params)
+{
+    double w = 1 / sqrt((double)plane_cloud.size());
+    ceres::LossFunction *loss_function = NULL;
+    for(auto& point:plane_cloud.points){
+        Vector3d p(point.x,point.y,point.z);
+        Vector3d normal = image_plane.head(3);
+        Vector3d centroid = image_plane.tail(3);
+        ceres::CostFunction *cost_function = new ceres::AutoDiffCostFunction<PointToPlaneError,1,6>(new PointToPlaneError(p,normal,centroid,w));
+        problem.AddResidualBlock(cost_function, loss_function, params.data());
+    }
+    return;
+}

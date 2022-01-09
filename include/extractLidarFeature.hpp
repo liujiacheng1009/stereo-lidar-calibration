@@ -55,8 +55,8 @@ class CloudResults{
 public:
     vector<int> valid_index; // 有效的点云index
     vector<vector<Vector3d>> corners_3d; // 点云3d角点
-    vector<VectorXd> planes_3d; // 点云的平面方程
-    vector<vector<Vector3d>> plane_points_3d; // 平面包含的点云
+    vector<PointCloud<PointXYZ>> plane_points_3d; 
+    //vector<vector<Vector3d>> plane_points_3d;
     vector<vector<VectorXd>> lines_3d; // 点云边缘直线方程
     vector<vector<PointCloud<PointXYZ>>> lines_points_3d ;//直线包含的点云
 };
@@ -613,6 +613,7 @@ void processCloud(T& config, vector<string>& cloud_paths, CloudResults& cloud_fe
         }
         // debug
         // display_four_corners(corners);
+        cloud_features.plane_points_3d.push_back(*plane_cloud);
         cloud_features.valid_index.push_back(i);
     }
     return;

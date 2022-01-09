@@ -41,18 +41,33 @@ int main()
     cout<<endl;
     getValidDataSet(images_features, cloud_features);
     auto& image_3d_corners = images_features.corners_3d; // 图像3d角点
+    auto& image_planes_3d = images_features.planes_3d;
     auto& cloud_3d_corners = cloud_features.corners_3d; // 点云3d角点
+    auto& plane_clouds_3d  = cloud_features.plane_points_3d;
 
     Eigen::VectorXd R_t(6);
     R_t << 0., 0., 0., 0., 0., 0.;
     Optimizer optimizer_lc;
     ceres::Problem problem;
     std::vector<Vector3d> p1, p2;
+    assert(image_3d_corners.size()==cloud_3d_corners.size());
     for(int i=0;i<image_3d_corners.size();++i){
         auto& image_corners = image_3d_corners[i];
         auto& cloud_corners = cloud_3d_corners[i];
         optimizer_lc.addPointToPointConstriants(problem,cloud_corners,image_corners,R_t);
     }
+
+    assert(image_planes_3d.size()==plane_clouds_3d.size());
+    cout<< "use " << image_planes_3d.size() << " planes"<<endl;
+    for(int i=0;i<plane_clouds_3d.size();++i){
+        auto& image_plane = image_planes_3d[i];
+        auto& plane_cloud = plane_clouds_3d[i];
+        // cout<< image_plane <<endl;
+        // cout<< plane_cloud.size() <<endl;
+        // display_colored_by_depth(plane_cloud.makeShared());
+        optimizer_lc.addPointToPlaneConstriants(problem,plane_cloud, image_plane,R_t );
+    }
+    
     ceres::Solver::Options options;
     options.max_num_iterations = 500;
     options.linear_solver_type = ceres::SPARSE_NORMAL_CHOLESKY;

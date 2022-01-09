@@ -491,6 +491,11 @@ public:
                                       vector<Vector3d> &P2,
                                       vector<Vector2d> &p2,
                                       VectorXd &params);
+
+    void addPointToPlaneConstriants(ceres::Problem &problem,
+                                    PointCloud<PointXYZ> &plane_cloud,
+                                    VectorXd &image_plane,
+                                    VectorXd &params);
 };
 
 class OptimizationLC
