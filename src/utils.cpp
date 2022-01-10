@@ -443,3 +443,52 @@ void  affine2Vector( Eigen::Affine3d& affine_mat,Eigen::VectorXd& Rt)
 //     return true;
 // }
 
+void calculateInitialRt(vector<vector<Vector3d>>& cloud_3d_corners, vector<vector<Vector3d>>& image_3d_corners, VectorXd& R_t)
+{
+    assert(cloud_3d_corners.size()== image_3d_corners.size());
+    int n = cloud_3d_corners.size() * 4;
+    MatrixXd cloud_corners, image_corners;
+    cloud_corners.resize(3,n);
+    image_corners.resize(3,n);
+    for(int i=0;i<cloud_3d_corners.size();++i){
+        for(int j=0;j<4;++j){
+            cloud_corners.col(i*4+j) = cloud_3d_corners[i][j].transpose();
+        }
+    }
+
+    for(int i=0;i<image_3d_corners.size();++i){
+        for(int j=0;j<4;++j){
+            image_corners.col(i*4+j) = image_3d_corners[i][j].transpose();
+        }
+    }
+    
+    Vector3d mu_cloud_points, mu_image_points;
+    mu_cloud_points = Vector3d::Zero();
+    mu_image_points = Vector3d::Zero();
+    for(int i = 0;i<n;++i){
+        mu_cloud_points += cloud_corners.col(i);
+        mu_image_points += image_corners.col(i);
+    }
+    mu_cloud_points /= n;
+    mu_image_points /= n;
+
+    cloud_corners = cloud_corners.colwise() - mu_cloud_points;
+    image_corners = image_corners.colwise() - mu_image_points;
+
+    Matrix3d cov = image_corners * cloud_corners.transpose();
+    JacobiSVD <MatrixXd> svd(cov, ComputeFullU | ComputeFullV);
+    Matrix3d rotation = svd.matrixU() * svd.matrixV().transpose();
+    if(rotation.determinant() < 0){
+        Vector3d diag;
+        diag << 1.0, 1.0, -1.0;
+        rotation = svd.matrixU() * diag.asDiagonal() * svd.matrixV().transpose();
+    }
+
+    Vector3d translation = mu_image_points - rotation * mu_cloud_points;
+    AngleAxisd affine;
+    affine.fromRotationMatrix(rotation);
+    R_t.resize(6);
+    R_t.head(3) = affine.angle() * affine.axis();
+    R_t.tail(3) = translation;
+    return;
+}

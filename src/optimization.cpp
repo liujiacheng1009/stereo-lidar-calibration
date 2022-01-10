@@ -309,7 +309,7 @@ void Optimizer::addPointToPointConstriants(ceres::Problem &problem,
         Vector3d& lidar_point = lidar_corners_3d[i];
         Vector3d& image_point = image_corners_3d[i];
         ceres::LossFunction *loss_function = NULL;
-        ceres::CostFunction *cost_function = new ceres::AutoDiffCostFunction<PointToPointError, 1, 6>(new PointToPointError(lidar_point,image_point, w));
+        ceres::CostFunction *cost_function = new ceres::AutoDiffCostFunction<PointToPointError1, 3, 6>(new PointToPointError1(lidar_point,image_point, w));
         problem.AddResidualBlock(cost_function, loss_function, params.data());
     }
     return;

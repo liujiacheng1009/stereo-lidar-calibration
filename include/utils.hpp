@@ -23,6 +23,10 @@
 #include <opencv2/highgui.hpp>
 #include <pcl/registration/icp.h>
 #include <Eigen/Dense>
+#include <Eigen/Dense>
+#include <Eigen/SVD>
+#include <Eigen/Geometry>
+#include <unsupported/Eigen/MatrixFunctions>
 #include <set>
 #include <string>
 #include <cmath>
@@ -53,6 +57,8 @@ void display_multi_clouds(vector<PointCloud<PointXYZ>>& clouds);
 // }
 bool computeTransICP(const pcl::PointCloud<pcl::PointXYZ>::Ptr source_cloud,
                      const pcl::PointCloud<pcl::PointXYZ>::Ptr target_cloud, Eigen::Matrix4d &trans);
+
+void calculateInitialRt(vector<vector<Vector3d>>& cloud_3d_corners, vector<vector<Vector3d>>& image_3d_corners, VectorXd& R_t);
 
 pcl::visualization::PCLVisualizer::Ptr show_multi_clouds(std::vector<pcl::PointCloud<pcl::PointXYZ>>& clouds);
 

@@ -46,7 +46,9 @@ int main()
     auto& plane_clouds_3d  = cloud_features.plane_points_3d;
 
     Eigen::VectorXd R_t(6);
-    R_t << 0., 0., 0., 0., 0., 0.;
+    calculateInitialRt(cloud_3d_corners, image_3d_corners, R_t);
+    cout<< "initial Rt \n"<< R_t<<endl; 
+    // R_t << 0., 0., 0., 0., 0., 0.;
     Optimizer optimizer_lc;
     ceres::Problem problem;
     std::vector<Vector3d> p1, p2;
@@ -76,7 +78,7 @@ int main()
     ceres::Solve(options, &problem, &summary);
     std::cout << summary.BriefReport() << "\n";
     MatrixXd Rt = Matrix<double,4,4>::Identity();
-    cout<< "Rt "<< R_t<<endl; 
+    cout<< "Rt \n"<< R_t<<endl; 
     Eigen::Matrix3d R = Sophus::SO3d::exp(R_t.head(3)).matrix();
     Rt.block(0,0,3,3) = R;
     Rt.block(0,3,3,1) = R_t.tail(3);
