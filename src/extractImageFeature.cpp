@@ -4,6 +4,95 @@ using namespace std;
 using namespace Eigen;
 using namespace cv;
 
+
+bool fitBoard(vector<vector<int>> &board, vector<Point2d>& corners, Size &size)
+{
+	vector<int> invalid_x_index, invalid_y_index;
+	int m = board.size(), n = board[0].size();
+	int i = 0;
+	while (i<m)
+	{
+		int cnt = 0;
+		for(int j = 0;j<n;++j){
+			if (board[i][j] < 0)
+				cnt++;
+		}
+		if (cnt > 3 || cnt > n / 3)
+		{
+			invalid_x_index.push_back(i);
+			i++;
+		}
+		else break;
+	}
+	i = m -1;
+	while (i>=0)
+	{
+		int cnt = 0;
+		for(int j = 0;j<n;++j){
+			if (board[i][j] < 0)
+				cnt++;
+		}
+		if (cnt > 3 || cnt > n / 3)
+		{
+			invalid_x_index.push_back(i);
+			i--;
+		}
+		else break;
+	}
+	i=0;
+	while (i<n)
+	{
+		int cnt = 0;
+		for(int j = 0;j<m;++j){
+			if (board[j][i] < 0)
+				cnt++;
+		}
+		if (cnt > 3 || cnt > m / 3)
+		{
+			invalid_y_index.push_back(i);
+			i++;
+		}
+		else break;
+	}
+	i = n -1;
+	while (i>=0)
+	{
+		int cnt = 0;
+		for(int j = 0;j<m;++j){
+			if (board[j][i] < 0)
+				cnt++;
+		}
+		if (cnt > 3 || cnt > m / 3)
+		{
+			invalid_y_index.push_back(i);
+			i--;
+		}
+		else break;
+	}
+	int new_m = m - invalid_x_index.size();
+	int new_n = n  - invalid_y_index.size();
+	if(new_m!=size.width && new_n!=size.height){
+		if(new_m!=size.height&& new_n!=size.width){
+			return false;
+		}
+	}
+	vector<Point2d> board_corners;
+	for(int i=0;i<m;++i){
+		if(find(invalid_x_index.begin(), invalid_x_index.end(), i)!= invalid_x_index.end()) continue;
+		for(int j=0;j<n;++j){
+			if(find(invalid_y_index.begin(), invalid_y_index.end(), j)!= invalid_y_index.end()) continue;
+			if(board[i][j]<0){
+				board_corners.push_back(Point2d(0.0,0.0));
+			}else{
+				board_corners.push_back(corners[board[i][j]]);
+			}
+		}
+	}
+	reverse(board_corners.begin(), board_corners.end());
+	corners = board_corners;
+	return true;
+}
+
 // template<typename T>
 // bool ImageFeatureDetector<T>::detectImageCorner(cv::Mat &input_image, vector<cv::Point2f> &image_corners)
 // {
