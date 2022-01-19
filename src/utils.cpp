@@ -253,7 +253,7 @@ void get_data_by_path(std::vector<std::string>& data, std::string& path, std::st
     {
         if(boost::filesystem::is_directory( *iter )) continue;
         boost::filesystem::path file_path(iter->path().string());
-        if(file_path.extension()==ext){
+        if(file_path.extension()=="." + ext){
             data.push_back(iter->path().string());
         }
     }

@@ -61,16 +61,15 @@ public:
     vector<vector<PointCloud<PointXYZ>>> lines_points_3d ;//直线包含的点云
 };
 
-
+void processCloud(vector<string>& cloud_paths, CloudResults& cloud_features);
 
 
 class LidarFeatureDetector{
 public:
-    template<typename T>
-    LidarFeatureDetector(T &config) : m_chessboard_extractor(ChessboardExtractor(config)),
-                                    m_checkerboard_grid_size(config.checkerboard_grid_size),
-                                     m_checkerboard_square_size(config.checkerboard_square_size),
-                                     m_checkerboard_padding(config.checkerboard_padding) {}
+    LidarFeatureDetector() : m_chessboard_extractor(ChessboardExtractor()),
+                                    m_checkerboard_grid_size(Config::checkerboardGridSize()),
+                                     m_checkerboard_square_size(Config::checkerboardSquareSize()),
+                                     m_checkerboard_padding(Config::checkerboardPadding()) {}
     // void getCorners(std::vector<Eigen::VectorXf> &line_params, std::vector<pcl::PointXYZ>& chessboard_corners); // 从直线方程中获取四个角点
 
     // void getEdgePointCloud(std::vector<std::vector<pcl::PointXYZ>>& rings,pcl::PointCloud<pcl::PointXYZ>::Ptr& edge_pcd);// 从rings中提取边缘点云
@@ -132,69 +131,6 @@ private:
 
 
 
-
-template<typename T>
-void processCloud(T& config, vector<string>& cloud_paths, CloudResults& cloud_features)
-{
-    LidarFeatureDetector lidar_feature_detector(config);
-    
-    for(int i=0;i<cloud_paths.size();++i)
-    {
-        pcl::PointCloud<pcl::PointXYZ>::Ptr input_cloud(new pcl::PointCloud<pcl::PointXYZ>);
-        if (!loadPointXYZ(cloud_paths[i], input_cloud)) continue;
-        // cout<< input_cloud->points.size()<<endl;
-        // display_colored_by_depth(input_cloud);
-        PointCloud<PointXYZ>::Ptr plane_cloud(new pcl::PointCloud<pcl::PointXYZ>);
-        Eigen::Affine3f board_pose;
-        Eigen::Vector3f board_size;
-        //if(!lidar_feature_detector.extractPlaneCloud(input_cloud,plane_cloud)) continue;
-        if(!lidar_feature_detector.extractPlaneCloud1(input_cloud, plane_cloud, board_pose, board_size)) continue;
-        pcl::PointCloud<pcl::PointXYZ>::Ptr edge_cloud(new pcl::PointCloud<pcl::PointXYZ>);
-        lidar_feature_detector.extractEdgeCloud(plane_cloud, edge_cloud);// 提取边缘点云
-        std::vector<Eigen::VectorXf> lines_params;
-        std::vector<pcl::PointCloud<pcl::PointXYZ>> lines_points;
-        if (!lidar_feature_detector.extractFourLines(edge_cloud, lines_params, lines_points)) continue;// 提取四条边界线
-        std::vector<pcl::PointXYZ> corners, reordered_corners;
-        if (lidar_feature_detector.estimateFourCorners(lines_params, corners))
-        {
-            
-            vector<pair<std::pair<pcl::PointXYZ, pcl::PointXYZ>, pcl::PointCloud<pcl::PointXYZ>>> line_corners_to_points;
-            for (int i = 0; i < 4; i++)
-            {
-                line_corners_to_points.push_back(make_pair(make_pair(corners[i], corners[(i + 1) % 4]), lines_points[(i + 1) % 4]));
-            }                                                                   // 建立角点和边缘直线上点云的对应关系
-            lidar_feature_detector.reorder_corners(corners, reordered_corners); // 角点重排序，与camera corner 保持对应关系
-            std::vector<pcl::PointCloud<pcl::PointXYZ>> reordered_lines_points;
-            lidar_feature_detector.reorder_line_points(reordered_corners, reordered_lines_points, line_corners_to_points); // 重排序边缘直线上的点
-            // debug
-            // display_multi_clouds(reordered_lines_points);
-            vector<Vector3d> corners_temp;
-            for (auto &corner : reordered_corners)
-            {
-                corners_temp.push_back(Vector3d(corner.x, corner.y, corner.z));
-            }
-            lidar_feature_detector.refineCorners(corners_temp, reordered_lines_points);
-            cloud_features.lines_points_3d.push_back(reordered_lines_points);
-            cloud_features.corners_3d.push_back(corners_temp);
-        }
-        else
-        {
-            lidar_feature_detector.estimateCornersFromBoardParams(board_pose, board_size, corners);
-            lidar_feature_detector.reorder_corners(corners, reordered_corners); 
-            vector<Vector3d> corners_temp;
-            for (auto &corner : reordered_corners)
-            {
-                corners_temp.push_back(Vector3d(corner.x, corner.y, corner.z));
-            }
-            cloud_features.corners_3d.push_back(corners_temp);
-        }
-        // debug
-        // display_four_corners(corners);
-        cloud_features.plane_points_3d.push_back(*plane_cloud);
-        cloud_features.valid_index.push_back(i);
-    }
-    return;
-}
 
 
 

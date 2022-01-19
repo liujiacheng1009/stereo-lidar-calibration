@@ -15,112 +15,107 @@ inline T loadSafe(const YAML::Node &config, std::string param, T default_value =
         return default_value;
 }
 
-static string& getLeftImageDatasetPath(const YAML::Node& config)
+static string getLeftImageDatasetPath(const YAML::Node& config)
 {
     auto& cam0 = config["cam0"];
     return loadSafe(cam0, "image_path", Config::leftImageDatasetPath());
 }
 
-static string& getLidarCloudDatasetPath(const YAML::Node& config)
+static string getLidarCloudDatasetPath(const YAML::Node& config)
 {
     auto& lidar0 = config["lidar0"];
     return loadSafe(lidar0, "cloud_path", Config::lidarCloudDatasetPath());
 }
 
-static string& getImageFormat(const YAML::Node& config)
+static string getImageFormat(const YAML::Node& config)
 {
     auto& cam0 = config["cam0"];
     return loadSafe(cam0, "image_format", Config::imageFormat());
 }
 
-static string& getCloudFormat(const YAML::Node& config)
+static string getCloudFormat(const YAML::Node& config)
 {
     auto& lidar0 = config["lidar0"];
     return loadSafe(lidar0, "cloud_format", Config::cloudFormat());
 }
 
-static string& getCloudFormat(const YAML::Node& config)
-{
-    auto& lidar0 = config["lidar0"];
-    return loadSafe(lidar0, "cloud_format", Config::cloudFormat());
-}
 
-static cv::Mat& getLeftCameraMatrix(const YAML::Node& config)
+static cv::Mat getLeftCameraMatrix(const YAML::Node& config)
 {
     cv::Mat left_camera_matrix = cv::Mat::eye(3, 3, CV_64F);
     auto& cam0 = config["cam0"];
-    left_camera_matrix.at<double>(0, 0) = loadSafe(cam0, "cam_fx");
-    left_camera_matrix.at<double>(0, 2) = loadSafe(cam0, "cam_cx");
-    left_camera_matrix.at<double>(1, 1) = loadSafe(cam0, "cam_fy");
-    left_camera_matrix.at<double>(1, 2) = loadSafe(cam0, "cam_cy");
+    left_camera_matrix.at<double>(0, 0) = loadSafe(cam0, "cam_fx",0.0);
+    left_camera_matrix.at<double>(0, 2) = loadSafe(cam0, "cam_cx",0.0);
+    left_camera_matrix.at<double>(1, 1) = loadSafe(cam0, "cam_fy",0.0);
+    left_camera_matrix.at<double>(1, 2) = loadSafe(cam0, "cam_cy",0.0);
     return left_camera_matrix;
 }
 
-static cv::Mat& getLeftCameraDistCoeffs(const YAML::Node& config)
+static cv::Mat getLeftCameraDistCoeffs(const YAML::Node& config)
 {
     cv::Mat left_camera_dist_coeffs = cv::Mat::zeros(5, 1, CV_64F);
     auto& cam0 = config["cam0"];
-    left_camera_matrix.at<double>(0, 0) = loadSafe(cam0, "cam_d1");
-    left_camera_matrix.at<double>(1, 0) = loadSafe(cam0, "cam_d2");
-    left_camera_matrix.at<double>(2, 0) = loadSafe(cam0, "cam_d3");
+    left_camera_dist_coeffs.at<double>(0, 0) = loadSafe(cam0, "cam_d1",0.0);
+    left_camera_dist_coeffs.at<double>(1, 0) = loadSafe(cam0, "cam_d2",0.0);
+    left_camera_dist_coeffs.at<double>(2, 0) = loadSafe(cam0, "cam_d3",0.0);
     return left_camera_dist_coeffs;
 }
 
-static double& getCheckerboardSquareSize(const YAML::Node& config)
+static double getCheckerboardSquareSize(const YAML::Node& config)
 {
     auto& checkerboard = config["checkerboard"];
-    return loadSafe(checkerboard, "square_size");
+    return loadSafe(checkerboard, "square_size", 0.0);
 }
 
-static cv::Size& getCheckerboardGridSize(const YAML::Node& config)
+static cv::Size getCheckerboardGridSize(const YAML::Node& config)
 {
     cv::Size checkerboard_grid_size;
     auto& checkerboard = config["checkerboard"];
-    checkerboard_grid_size.width = loadSafe(checkerboard, "width");
-    checkerboard_grid_size.height = loadSafe(checkerboard, "height");
+    checkerboard_grid_size.width = loadSafe(checkerboard, "width",0.0);
+    checkerboard_grid_size.height = loadSafe(checkerboard, "height",0.0);
     return checkerboard_grid_size;
 }
 
-static vector<double>& getCheckerboardPadding(const YAML::Node& config)
+static vector<double> getCheckerboardPadding(const YAML::Node& config)
 {
     vector<double> checkerboard_padding(4);
     auto& padding = config["checkerboard"]["padding"];
-    checkerboard_padding[0] = loadSafe(padding, "p1");
-    checkerboard_padding[1] = loadSafe(padding, "p2");
-    checkerboard_padding[2] = loadSafe(padding, "p3");
-    checkerboard_padding[3] = loadSafe(padding, "p4");
+    checkerboard_padding[0] = loadSafe(padding, "p1",0.0);
+    checkerboard_padding[1] = loadSafe(padding, "p2",0.0);
+    checkerboard_padding[2] = loadSafe(padding, "p3",0.0);
+    checkerboard_padding[3] = loadSafe(padding, "p4",0.0);
     return checkerboard_padding;
 }
 
-static Eigen::Matrix4d& getMatlabTform(const YAML::Node& config)
+static Eigen::Matrix4d getMatlabTform(const YAML::Node& config)
 {
     Eigen::Matrix4d matlab_tform = Eigen::Matrix4d::Identity();
     auto& matlab_result = config["matlab_result"];
-    matlab_tform(0, 0) = loadSafe(matlab_result, "m00");
-    matlab_tform(0, 1) = loadSafe(matlab_result, "m01");
-    matlab_tform(0, 2) = loadSafe(matlab_result, "m02");
-    matlab_tform(0, 3) = loadSafe(matlab_result, "m03");
-    matlab_tform(1, 0) = loadSafe(matlab_result, "m10");
-    matlab_tform(1, 1) = loadSafe(matlab_result, "m11");
-    matlab_tform(1, 2) = loadSafe(matlab_result, "m12");
-    matlab_tform(1, 3) = loadSafe(matlab_result, "m13");
-    matlab_tform(2, 0) = loadSafe(matlab_result, "m20");
-    matlab_tform(2, 1) = loadSafe(matlab_result, "m21");
-    matlab_tform(2, 2) = loadSafe(matlab_result, "m22");
-    matlab_tform(2, 3) = loadSafe(matlab_result, "m23");
+    matlab_tform(0, 0) = loadSafe(matlab_result, "m00",0.0);
+    matlab_tform(0, 1) = loadSafe(matlab_result, "m01",0.0);
+    matlab_tform(0, 2) = loadSafe(matlab_result, "m02",0.0);
+    matlab_tform(0, 3) = loadSafe(matlab_result, "m03",0.0);
+    matlab_tform(1, 0) = loadSafe(matlab_result, "m10",0.0);
+    matlab_tform(1, 1) = loadSafe(matlab_result, "m11",0.0);
+    matlab_tform(1, 2) = loadSafe(matlab_result, "m12",0.0);
+    matlab_tform(1, 3) = loadSafe(matlab_result, "m13",0.0);
+    matlab_tform(2, 0) = loadSafe(matlab_result, "m20",0.0);
+    matlab_tform(2, 1) = loadSafe(matlab_result, "m21",0.0);
+    matlab_tform(2, 2) = loadSafe(matlab_result, "m22",0.0);
+    matlab_tform(2, 3) = loadSafe(matlab_result, "m23",0.0);
     return matlab_tform;
 }
 
-static vector<double>& getCheckerboardPadding(const YAML::Node& config)
+static vector<double> getPassFilterParams(const YAML::Node& config)
 {
     vector<double> pass_filter_params(6);
     auto& RoI = config["RoI"];
-    pass_filter_params[0] = loadSafe(RoI, "min_x");
-    pass_filter_params[1] = loadSafe(RoI, "max_x");
-    pass_filter_params[2] = loadSafe(RoI, "min_y");
-    pass_filter_params[3] = loadSafe(RoI, "max_y");
-    pass_filter_params[4] = loadSafe(RoI, "min_z");
-    pass_filter_params[5] = loadSafe(RoI, "max_z");
+    pass_filter_params[0] = loadSafe(RoI, "min_x",0.0);
+    pass_filter_params[1] = loadSafe(RoI, "max_x",0.0);
+    pass_filter_params[2] = loadSafe(RoI, "min_y",0.0);
+    pass_filter_params[3] = loadSafe(RoI, "max_y",0.0);
+    pass_filter_params[4] = loadSafe(RoI, "min_z",0.0);
+    pass_filter_params[5] = loadSafe(RoI, "max_z",0.0);
     return pass_filter_params;
 }
 

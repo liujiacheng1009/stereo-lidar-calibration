@@ -5,6 +5,65 @@ using namespace std;
 using namespace Eigen;
 using namespace cv;
 
+void processImage(vector<string>& image_paths, ImageResults& images_features)
+{
+    ImageFeatureDetector image_feature_detector;
+    auto& valid_image_index = images_features.valid_index;
+    auto& image_3d_corners = images_features.corners_3d; // 图像3d角点
+    auto& chessboard_2d_points = images_features.chessboard_points_2d;
+    auto& chessboard_3d_points = images_features.chessboard_points_3d;
+    auto& image_planes = images_features.planes_3d; // 图像的平面方程
+    auto& image_lines = images_features.lines_3d;
+
+    for (int i = 0;i<image_paths.size();++i)
+    {
+        cv::Mat img = cv::imread(image_paths[i], cv::IMREAD_COLOR);
+        // cv::Mat half_image;
+        // double s1 = (double)640 / (double)img.size().width;
+        // double s2 = (double)480 / (double)img.size().height;
+        // cv::resize(img, half_image, cv::Size(), s1, s2); // cv::findChessboardCorners在高分辨率图像上有bug, 放缩dao
+
+        std::vector<cv::Point2f> image_corners;
+        // if (!image_feature_detector.detectImageCorner(half_image, image_corners)){
+        //     // std::cout<< "can not detect corner from image: " << i<<std::endl;
+        //     continue;
+        // }
+        // for(auto& image_corner:image_corners){
+        //     image_corner.x *= (1.0/s1);
+        //     image_corner.y *= (1.0/s2);
+        // }
+
+        if (!image_feature_detector.detectImageCorner1(img, image_corners)) continue;
+        cv::Mat rvec, tvec;
+        vector<Vector3d> chessboard_points_3d;
+        image_feature_detector.estimatePose1(image_corners,chessboard_points_3d, rvec, tvec);
+        vector<Vector2d> chessboard_points_2d;
+        image_feature_detector.transform_to_normalized_plane(image_corners, chessboard_points_2d);
+        std::vector<Point3d> chessboard_3d_corners, reordered_image_3d_corners;
+        image_feature_detector.calculate3DCorners(chessboard_3d_corners, rvec, tvec);
+        
+        Eigen::VectorXd plane;
+        image_feature_detector.calculatePlane1(chessboard_3d_corners, plane);
+        vector<Eigen::VectorXd> lines;
+        image_feature_detector.calculateLines(chessboard_3d_corners, lines);
+        image_lines.push_back(lines);
+        image_planes.push_back(plane);
+        vector<Vector3d> corners_3d; //
+        for(auto& corners: chessboard_3d_corners){
+            corners_3d.push_back(Vector3d(corners.x, corners.y, corners.z));
+        }
+        // vector<Vector2d> chessboard_points_2d;
+        // image_feature_detector.transform_to_normalized_plane(image_corners, co)
+        // for(auto& corner: image_corners){
+        //     chessboard_points_2d.push_back(Vector2d(corner.x, corner.y));
+        // }
+        chessboard_3d_points.push_back(chessboard_points_3d);
+        chessboard_2d_points.push_back(chessboard_points_2d);
+        image_3d_corners.push_back(corners_3d);
+        valid_image_index.push_back(i);
+    }
+    return;
+}
 
 bool fitBoard(vector<vector<int>> &board, vector<Point2d>& corners, Size &size)
 {
@@ -515,3 +574,4 @@ void ImageFeatureDetector::transform_to_normalized_plane(vector<Point2f>& corner
     }
     return;
 }
+

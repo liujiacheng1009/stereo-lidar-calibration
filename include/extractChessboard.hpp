@@ -48,11 +48,11 @@ struct PassFilterParams{
 
 class ChessboardExtractor{
 public:
-    template<typename T>
-    ChessboardExtractor(T &config) : m_pass_filter_params(PassFilterParams(config.pass_filter_params)),
-                                     m_checkerboard_grid_size(config.checkerboard_grid_size),
-                                     m_checkerboard_square_size(config.checkerboard_square_size),
-                                     m_checkerboard_padding(config.checkerboard_padding) {}
+
+    ChessboardExtractor() : m_pass_filter_params(PassFilterParams(Config::passFilterParams())),
+                                     m_checkerboard_grid_size(Config::checkerboardGridSize()),
+                                     m_checkerboard_square_size(Config::checkerboardSquareSize()),
+                                     m_checkerboard_padding(Config::checkerboardPadding()) {}
 
 public:
     // 主函数， 从环境点云中提取marker board 点云
