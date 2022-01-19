@@ -68,10 +68,11 @@ int main()
     auto& cloud_3d_corners = cloud_features.corners_3d; // 点云3d角点
 
     VectorXd Rt_l1_c1(6), Rt_l1_c2(6), Rt_c1_c2(6);
-
-    Rt_l1_c1<< 1.46485,-1.31589,1.06346,-0.401976,0.301422,-0.130281;
-    Rt_l1_c2<<  1.54296,-1.3,1.06319,-0.5,0.303772,-0.131603;
-    Rt_c1_c2 << 0.0,0.0,0.0,-0.12,0.0,0.0;
+    calculateInitialRt(cloud_3d_corners, left_image_3d_corners, Rt_l1_c1);
+    calculateInitialRt(cloud_3d_corners, right_image_3d_corners, Rt_l1_c2);
+    // Rt_l1_c1<< 1.46485,-1.31589,1.06346,-0.401976,0.301422,-0.130281;
+    // Rt_l1_c2<<  1.54296,-1.3,1.06319,-0.5,0.303772,-0.131603;
+    Rt_c1_c2 << 0.0,0.0,0.0,0.0,0.0,0.0;
 
     Optimizer optimizer;
     ceres::Problem problem;

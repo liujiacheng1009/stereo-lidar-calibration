@@ -13,6 +13,7 @@
 #include "libcbdetect/config.h"
 #include "libcbdetect/find_corners.h"
 #include "libcbdetect/boards_from_corners.h"
+// #include "utils.hpp"
 #include <memory>   
 #include <vector>
 #include <fstream>
@@ -25,6 +26,7 @@
 using namespace std;
 using namespace Eigen;
 using namespace cv;
+// using namespace pcl;
 
 bool fitBoard(vector<vector<int>> &board, vector<Point2d>& corners, Size &size);
 
@@ -126,6 +128,10 @@ bool ImageFeatureDetector<T>::detectImageCorner1(cv::Mat &input_image, vector<cv
     for(auto& corner: board_corners){
         image_corners.push_back(Point2f(float(corner.x), float(corner.y)));
     }
+    // debug 
+    // cv::drawChessboardCorners(input_image, m_board_size, image_corners, true);
+    // cv::imshow("debug", input_image);
+    // cv::waitKey(0);
     return true;
 }
 
@@ -234,7 +240,7 @@ void ImageFeatureDetector<T>::estimatePose1(vector<cv::Point2f> &chessboard_corn
             chessboard_corners[i] = Point2f(pp.x/pp.z, pp.y/pp.z);
         }
     }
-    return;
+
 }
 
 template<typename T>
@@ -253,6 +259,13 @@ void ImageFeatureDetector<T>::calculate3DCorners(vector<cv::Point3d>& chessboard
     for(auto& corner: chessboard_3d_corners){
         corner = rot_matrix*corner + cv::Point3d(tvec);
     }
+    
+    // debug
+    // vector<pcl::PointXYZ> corners_temp;
+    // for(auto& corner:chessboard_3d_corners){
+    //     corners_temp.push_back(pcl::PointXYZ(corner.x, corner.y, corner.z));
+    // }
+    // display_four_corners(corners_temp);
     return ;
 }
 
@@ -366,6 +379,7 @@ void processImage(T& config, vector<string>& image_paths, ImageResults& images_f
         image_feature_detector.transform_to_normalized_plane(image_corners, chessboard_points_2d);
         std::vector<Point3d> chessboard_3d_corners, reordered_image_3d_corners;
         image_feature_detector.calculate3DCorners(chessboard_3d_corners, rvec, tvec);
+        
         Eigen::VectorXd plane;
         image_feature_detector.calculatePlane1(chessboard_3d_corners, plane);
         vector<Eigen::VectorXd> lines;
