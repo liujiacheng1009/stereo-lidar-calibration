@@ -214,7 +214,9 @@ void ImageFeatureDetector<T>::estimatePose1(vector<cv::Point2f> &chessboard_corn
         if(chessboard_corners[i]==Point2f(0,0)) continue;
         chessboard_corners_temp.push_back(chessboard_corners[i]);
     }
-
+    // debug 
+    // cout<< board_points_temp.size()<<endl;
+    // cout<< chessboard_corners_temp.size()<<endl;
     cv::solvePnP(cv::Mat(board_points_temp), cv::Mat(chessboard_corners_temp), m_camera_matrix, m_dist_coeffs, rvec, tvec);
     chessboard_points_3d.clear();
     cv::Matx33d rot_matrix;

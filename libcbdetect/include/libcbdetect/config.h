@@ -119,7 +119,7 @@ typedef struct Params {
   std::vector<int> radius;
 
   Params()
-      : show_processing(true)
+      : show_processing(false)
       , show_debug_image(false)
       , show_grow_processing(false)
       , norm(false)
