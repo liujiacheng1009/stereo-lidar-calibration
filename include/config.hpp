@@ -2,6 +2,7 @@
 #define STEREO_LIDAR_CALIBRATION_CONFIG_HPP
 #include <vector>
 #include <string>
+#include <yaml-cpp/yaml.h>
 #include <opencv2/core.hpp>
 #include <Eigen/Core>
 #include <opencv2/imgcodecs.hpp>
@@ -14,6 +15,41 @@
 using namespace cv;
 using namespace Eigen;
 using namespace std;
+
+
+class Config{
+public:
+    Config(){}
+    ~Config(){}
+    static void loadFromFile( const string & config_file);
+    static Config& getInstance();
+    static string& leftImageDatasetPath(){return getInstance().m_left_images_dataset_path;}
+    static string& lidarCloudDatasetPath(){return getInstance().m_lidar_clouds_dataset_path;}
+    static string& imageFormat(){return getInstance().m_image_format;}
+    static string& cloudFormat(){return getInstance().m_cloud_format;}
+    static cv::Mat& leftCameraMatrix(){return getInstance().m_left_camera_matrix;}
+    static cv::Mat& leftCameraDistCoeffs(){return getInstance().m_left_camera_dist_coeffs;}
+    static double& checkerboardSquareSize(){return getInstance().m_checkerboard_square_size;}
+    static cv::Size& checkerboardGridSize(){return getInstance().m_checkerboard_grid_size;}
+    static vector<double>& checkerboardPadding(){return getInstance().m_checkerboard_padding;}
+    static Eigen::Matrix4d& matlabTform(){return getInstance().m_matlab_tform;}
+    static vector<double>& passFilterParams(){return getInstance().m_pass_filter_params;}
+
+public:
+    string m_left_images_dataset_path; 
+    string m_lidar_clouds_dataset_path; 
+    string m_image_format;
+    string m_cloud_format;
+    cv::Mat m_left_camera_matrix;
+    cv::Mat m_left_camera_dist_coeffs;
+    double m_checkerboard_square_size;
+    cv::Size m_checkerboard_grid_size;
+    vector<double> m_checkerboard_padding;
+    Eigen::Matrix4d m_matlab_tform;
+    vector<double> m_pass_filter_params;
+};
+
+
 
 
 // class Config{

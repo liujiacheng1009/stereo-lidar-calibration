@@ -1,0 +1,52 @@
+# dataset params
+type: mono_lidar
+cam0:
+  image_path: /home/jc/Documents/stereo-lidar-calibration/exclude_dir/lcc/HDL64/images
+  image_format: png
+  cam_model: Pinhole
+  cam_width: 1280
+  cam_height: 960
+  cam_fx: 1614.546232069338
+  cam_fy: 1614.669013419422
+  cam_cx: 641.2276358621397
+  cam_cy: 480.1410561665820
+  cam_d1: -0.004497294509341
+  cam_d2: 0.020426051162860
+  cam_d3: 0.0
+
+lidar0:
+  cloud_path: /home/jc/Documents/stereo-lidar-calibration/exclude_dir/lcc/HDL64/pointCloud
+  cloud_format: pcd
+
+checkerboard:
+  square_size: 0.200
+  width: 7
+  height: 4
+  padding:
+    p1: 0.0
+    p2: 0.0
+    p3: 0.0
+    p4: 0.0
+  
+RoI:
+  min_x: -10
+  max_x: 10
+  min_y: -10
+  max_y: 10
+  min_z: -10
+  max_z: 10
+
+matlab_result:
+  m00: -0.00565596282356831
+  m01: -0.997885643377717
+  m02: 0.0647476086444744
+  m03: -0.00305628991168519
+  m10: -0.156655954239030
+  m11: -0.0630649871213768
+  m12: -0.985637722188452
+  m13: -0.402445253372315
+  m20: 0.987637039648674
+  m21: -0.0157178287310998
+  m22: -0.155968034462138
+  m23: -0.826776648946616
+
