@@ -1,9 +1,8 @@
 #include "extractChessboard.hpp"
 
 using namespace std;
-using namespace cv;
 using namespace Eigen;
-using namespace pcl;
+
 // bool ChessboardExtractor::extract(std::string& lidarPath, pcl::PointCloud<pcl::PointXYZ>::Ptr& plane_cloud)
 // {
 //     pcl::PointCloud<pcl::PointXYZ>::Ptr input_cloud (new pcl::PointCloud<pcl::PointXYZ>);
@@ -191,7 +190,7 @@ bool ChessboardExtractor::check_board_size(pcl::PointCloud<pcl::PointXYZ>::Ptr b
     sort(lens.begin(), lens.end());
     Eigen::Affine3f pose;
     Eigen::Vector3f size;
-    fitMaximumContactBoundingBoxConstrained<PointXYZ>(board_pcd,coeff,pose, size, (float)0.1);
+    fitMaximumContactBoundingBoxConstrained<pcl::PointXYZ>(board_pcd,coeff,pose, size, (float)0.1);
     vector<double> lens2 = {(double)size(0), (double)size(1), (double)size(2)};
     sort(lens2.begin(), lens2.end());
     // debug
@@ -222,7 +221,7 @@ bool ChessboardExtractor::check_board_size(pcl::PointCloud<pcl::PointXYZ>::Ptr b
     vector<double> lens = {len_x, len_y, len_z};
     sort(lens.begin(), lens.end());
 
-    fitMaximumContactBoundingBoxConstrained<PointXYZ>(board_pcd, coeff, pose, size, (float)0.1);
+    fitMaximumContactBoundingBoxConstrained<pcl::PointXYZ>(board_pcd, coeff, pose, size, (float)0.1);
     vector<double> lens2 = {(double)size(0), (double)size(1), (double)size(2)};
     sort(lens2.begin(), lens2.end());
     // debug
@@ -311,7 +310,7 @@ void ChessboardExtractor::pcd_clustering(pcl::PointCloud<pcl::PointXYZ>::Ptr& in
 
 bool ChessboardExtractor::fitPlane(pcl::PointCloud<pcl::PointXYZ>::Ptr &input_pcd,
                                    std::vector<pcl::PointIndices> &indices_clusters,
-                                       PointCloud<PointXYZ>::Ptr &plane_pcd)
+                                       pcl::PointCloud<pcl::PointXYZ>::Ptr &plane_pcd)
 {
     pcl::ExtractIndices<pcl::PointXYZ> extract;
     extract.setInputCloud(input_pcd);
@@ -344,7 +343,7 @@ bool ChessboardExtractor::fitPlane(pcl::PointCloud<pcl::PointXYZ>::Ptr &input_pc
 
 bool ChessboardExtractor::extractChessboard(pcl::PointCloud<pcl::PointXYZ>::Ptr &input_pcd,
                                    std::vector<pcl::PointIndices> &indices_clusters,
-                                       PointCloud<PointXYZ>::Ptr &chessboard_pcd)
+                                       pcl::PointCloud<pcl::PointXYZ>::Ptr &chessboard_pcd)
 {
     pcl::ExtractIndices<pcl::PointXYZ> extract;
     extract.setInputCloud(input_pcd);
@@ -389,7 +388,7 @@ bool ChessboardExtractor::extractChessboard(pcl::PointCloud<pcl::PointXYZ>::Ptr 
 
 bool ChessboardExtractor::fitBoardCubic(pcl::PointCloud<pcl::PointXYZ>::Ptr &input_pcd,
                                    std::vector<pcl::PointIndices> &indices_clusters,
-                                       PointCloud<PointXYZ>::Ptr &chessboard_pcd,
+                                       pcl::PointCloud<pcl::PointXYZ>::Ptr &chessboard_pcd,
                                        Eigen::Affine3f& board_pose,
                                        Eigen::Vector3f& board_size)
 {

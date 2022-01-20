@@ -13,7 +13,7 @@
 #include "libcbdetect/config.h"
 #include "libcbdetect/find_corners.h"
 #include "libcbdetect/boards_from_corners.h"
-// #include "utils.hpp"
+#include "utils.hpp"
 #include <memory>   
 #include <vector>
 #include <fstream>
@@ -25,20 +25,10 @@
 
 using namespace std;
 using namespace Eigen;
-using namespace cv;
-// using namespace pcl;
 
-bool fitBoard(vector<vector<int>> &board, vector<Point2d>& corners, Size &size);
 
-class ImageResults{
-public:
-    vector<int> valid_index; // 有效的图像index
-    vector<vector<Vector3d>> corners_3d; // 图像3d角点
-    vector<vector<Vector2d>> chessboard_points_2d;
-    vector<vector<Vector3d>> chessboard_points_3d;
-    vector<VectorXd> planes_3d; // 图像的平面方程
-    vector<vector<VectorXd>> lines_3d; // 图像边缘直线方程
-};
+bool fitBoard(vector<vector<int>> &board, vector<cv::Point2d>& corners, cv::Size &size);
+
 
 void processImage(vector<string>& image_paths, ImageResults& images_features);
 
@@ -59,7 +49,7 @@ public:
     void calculateLines(std::vector<cv::Point3d>& corners, std::vector<Eigen::VectorXd>& lines); // 通过四个角点计算四条边的方程
     void calculatePlane(std::vector<cv::Point3d>& corners, Eigen::VectorXd& plane); // 通过四个角点计算平面的方程
     void calculatePlane1(std::vector<cv::Point3d>& corners, Eigen::VectorXd& plane); // 通过四个角点计算平面的方程
-    void transform_to_normalized_plane(vector<Point2f>& corners1, vector<Vector2d>& corners2);
+    void transform_to_normalized_plane(vector<cv::Point2f>& corners1, vector<Vector2d>& corners2);
     const cv::Mat get_camera_matrix(){
         return m_camera_matrix;
     }
@@ -72,8 +62,8 @@ private:
     void calcBoardCornerPositions(); // 计算board corners 在世界坐标系的坐标
     cv::Size m_board_size;  // chessboard 规格大小
     double m_square_size; // 格子边长(m)
-    cv::Mat m_camera_matrix = Mat(3, 3, CV_64F);
-    cv::Mat m_dist_coeffs = Mat(5,1, CV_64F); // 相机的内参和畸变矩阵
+    cv::Mat m_camera_matrix = cv::Mat(3, 3, CV_64F);
+    cv::Mat m_dist_coeffs = cv::Mat(5,1, CV_64F); // 相机的内参和畸变矩阵
     //std::vector<cv::Point3f> m_3d_corners; // 世界坐标系下的角点坐标
     std::vector<double> m_padding;
 };

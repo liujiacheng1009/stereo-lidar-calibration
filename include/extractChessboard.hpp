@@ -26,10 +26,8 @@
 #include "utils.hpp"
 #include "box_fitting.hpp"
 
-using namespace cv;
 using namespace Eigen;
 using namespace std;
-using namespace pcl;
 
 struct PassFilterParams{
     double min_x,max_x;
@@ -69,7 +67,7 @@ public:
 
     bool fitBoardCubic(pcl::PointCloud<pcl::PointXYZ>::Ptr &input_pcd,
                        std::vector<pcl::PointIndices> &indices_clusters,
-                       PointCloud<PointXYZ>::Ptr &chessboard_pcd,
+                       pcl::PointCloud<pcl::PointXYZ>::Ptr &chessboard_pcd,
                        Eigen::Affine3f &board_pose,
                        Eigen::Vector3f &board_size);
     // 将原始点云投影到估计的平面上
@@ -92,7 +90,7 @@ private:
                                               Eigen::Vector3f &size);
     PassFilterParams m_pass_filter_params;
     double m_checkerboard_square_size;        // 单位是m
-    Size m_checkerboard_grid_size;     // 标定板的内部方格数，注意水平方向为7
+    cv::Size m_checkerboard_grid_size;     // 标定板的内部方格数，注意水平方向为7
     vector<double> m_checkerboard_padding; // 标定板相对靶纸边缘的padding,方向？
 };
 

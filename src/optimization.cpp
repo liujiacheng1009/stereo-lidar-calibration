@@ -327,7 +327,7 @@ void Optimizer::addClosedLoopConstraints(ceres::Problem &problem,
 }
 
 void Optimizer::addPointToPlaneConstriants(ceres::Problem &problem,
-                                           PointCloud<PointXYZ> &plane_cloud,
+                                           pcl::PointCloud<pcl::PointXYZ> &plane_cloud,
                                            VectorXd &image_plane,
                                            VectorXd &params)
 {

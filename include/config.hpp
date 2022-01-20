@@ -12,7 +12,6 @@
 #include <opencv2/calib3d.hpp>
 #include <opencv2/videoio.hpp>
 
-using namespace cv;
 using namespace Eigen;
 using namespace std;
 
@@ -96,7 +95,7 @@ public:
         cloud_format = ".pcd";
         // 标定板参数
         checkerboard_square_size = 0.200;        // 单位是m
-        checkerboard_grid_size = Size(7, 4);     // 标定板的内部角点数，注意水平方向为7
+        checkerboard_grid_size = cv::Size(7, 4);     // 标定板的内部角点数，注意水平方向为7
         checkerboard_padding = {0., 0., 0., 0.}; // 标定板相对靶纸边缘的padding,方向？
 
         // 左目相机内参
@@ -132,7 +131,7 @@ public:
 
     // 标定板参数
     double checkerboard_square_size;
-    Size checkerboard_grid_size;
+    cv::Size checkerboard_grid_size;
     vector<double> checkerboard_padding;
     // matlab HDL64 数据集的标定结果
     Matrix4d matlab_tform;
@@ -156,7 +155,7 @@ public:
         cloud_format = ".pcd";
         // 标定板参数
         checkerboard_square_size = 0.081;        // 单位是m
-        checkerboard_grid_size = Size(9, 8);     // 标定板的内部方格数，注意水平方向为9
+        checkerboard_grid_size = cv::Size(9, 8);     // 标定板的内部方格数，注意水平方向为9
         checkerboard_padding = {0., 0., 0., 0.}; // 标定板相对靶纸边缘的padding,方向？
 
         // 左目相机内参
@@ -193,7 +192,7 @@ public:
 
     // 标定板参数
     double checkerboard_square_size;
-    Size checkerboard_grid_size;
+    cv::Size checkerboard_grid_size;
     vector<double> checkerboard_padding;
     // matlab HDL64 数据集的标定结果
     Matrix4d matlab_tform;
@@ -218,7 +217,7 @@ public:
         cloud_format = ".pcd";
         // 标定板参数
         checkerboard_square_size = 0.200;        // 单位是m
-        checkerboard_grid_size = Size(7, 4);     // 标定板的内部方格数，注意水平方向为7
+        checkerboard_grid_size = cv::Size(7, 4);     // 标定板的内部方格数，注意水平方向为7
         checkerboard_padding = {0., 0., 0., 0.}; // 标定板相对靶纸边缘的padding,方向？
 
         // 左目相机内参
@@ -256,7 +255,7 @@ public:
 
     // 标定板参数
     double checkerboard_square_size;
-    Size checkerboard_grid_size;
+    cv::Size checkerboard_grid_size;
     vector<double> checkerboard_padding;
     // matlab HDL64 数据集的标定结果
     Matrix4d matlab_tform;
@@ -280,7 +279,7 @@ public:
         cloud_format = ".pcd";
         // 标定板参数
         checkerboard_square_size = 0.200;        // 单位是m
-        checkerboard_grid_size = Size(7, 4);     // 标定板的内部方格数，注意水平方向为7
+        checkerboard_grid_size = cv::Size(7, 4);     // 标定板的内部方格数，注意水平方向为7
         checkerboard_padding = {0., 0., 0., 0.}; // 标定板相对靶纸边缘的padding,方向？
 
         // 左目相机内参
@@ -318,7 +317,7 @@ public:
 
     // 标定板参数
     double checkerboard_square_size;
-    Size checkerboard_grid_size;
+    cv::Size checkerboard_grid_size;
     vector<double> checkerboard_padding;
     // matlab HDL64 数据集的标定结果
     Matrix4d matlab_tform;
@@ -343,7 +342,7 @@ public:
         cloud_format = ".pcd";
         // 标定板参数
         checkerboard_square_size = 0.080;        // 单位是m
-        checkerboard_grid_size = Size(7, 5);     // 标定板的内部方格数，注意水平方向为7
+        checkerboard_grid_size = cv::Size(7, 5);     // 标定板的内部方格数，注意水平方向为7
         checkerboard_padding = {0., 0., 0., 0.}; // 标定板相对靶纸边缘的padding,方向？
 
         // 左目相机内参
@@ -378,7 +377,7 @@ public:
 
     // 标定板参数
     double checkerboard_square_size;
-    Size checkerboard_grid_size;
+    cv::Size checkerboard_grid_size;
     vector<double> checkerboard_padding;
     // matlab HDL64 数据集的标定结果
     Matrix4d matlab_tform;

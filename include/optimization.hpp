@@ -33,8 +33,7 @@
 #include <sophus/so3.hpp>
 using namespace std;
 using namespace Eigen;
-using namespace cv;
-using namespace pcl;
+
 
 // corners refinement error
 class BoardCornersError
@@ -493,7 +492,7 @@ public:
                                       VectorXd &params);
 
     void addPointToPlaneConstriants(ceres::Problem &problem,
-                                    PointCloud<PointXYZ> &plane_cloud,
+                                    pcl::PointCloud<pcl::PointXYZ> &plane_cloud,
                                     VectorXd &image_plane,
                                     VectorXd &params);
 };

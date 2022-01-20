@@ -9,7 +9,6 @@
 #include <boost/program_options.hpp>
 using namespace std;
 using namespace Eigen;
-using namespace cv;
 
 int main(int argc, char** argv)
 {

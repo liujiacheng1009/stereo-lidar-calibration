@@ -2,8 +2,7 @@
 
 using namespace Eigen;
 using namespace std;
-using namespace pcl;
-using namespace cv;
+
 
 void display_colored_by_depth(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud)
 {
@@ -22,11 +21,11 @@ void display_colored_by_depth(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud)
     }
 }
 
-void display_four_corners(vector<PointXYZ>& corners)
+void display_four_corners(vector<pcl::PointXYZ>& corners)
 {   
     pcl::visualization::PCLVisualizer::Ptr viewer (new pcl::visualization::PCLVisualizer ("3D Viewer"));
 
-    pcl::PointCloud<pcl::PointXYZ>::Ptr cloud(new PointCloud<PointXYZ>);
+    pcl::PointCloud<pcl::PointXYZ>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZ>);
     for(auto& corner:corners){
         cloud->push_back(corner);
     }
@@ -40,7 +39,7 @@ void display_four_corners(vector<PointXYZ>& corners)
     return;
 }
 
-void display_multi_clouds(vector<PointCloud<PointXYZ>>& clouds)
+void display_multi_clouds(vector<pcl::PointCloud<pcl::PointXYZ>>& clouds)
 {
     pcl::visualization::PCLVisualizer::Ptr viewer(new pcl::visualization::PCLVisualizer ("debug"));
     viewer->setBackgroundColor(0,0,0);
@@ -145,94 +144,6 @@ pcl::visualization::PCLVisualizer::Ptr show_multi_clouds_with_specified_colors(s
 }
 
 
-// void MonoPattern::getOrderedCorner(const cv::Mat& cam_corners, pcl::PointCloud<pcl::PointXYZ>::Ptr corner_cloud)
-// {
-//   corner_cloud->clear();
-//   // camera coordinate: x axis points to right, y axis points to down, z axis points to front which is vertical to x-y
-//   // plane. So the top point's y is smallest.
-//   double min_y = cam_corners.at<float>(1, 0);
-//   int min_y_pos = 0;
-//   for (int i = 1; i < 4; ++i)
-//   {
-//     if (cam_corners.at<float>(1, i) < min_y)
-//     {
-//       min_y = cam_corners.at<float>(1, i);
-//       min_y_pos = i;
-//     }
-//   }
-//   for (int i = 0; i < 4; ++i)
-//   {
-//     int cur_pos = (i + min_y_pos) % 4;
-//     corner_cloud->points.emplace_back(cam_corners.at<float>(0, cur_pos), cam_corners.at<float>(1, cur_pos),
-//                                       cam_corners.at<float>(2, cur_pos));
-//   }
-// }
-// void reorder_corners1(std::vector<cv::Point3d>& ori_corners, std::vector<cv::Point3d>& reordered_corners)
-// {
-//     sort(ori_corners.begin(), ori_corners.end(),[](cv::Point3d& a, cv::Point3d& b){
-//         return a.x>b.x;
-//     });
-//     if(ori_corners[0].y<ori_corners[1].y){
-//         reordered_corners.push_back(ori_corners[0]);
-//         reordered_corners.push_back(ori_corners[1]);
-//     }else{
-//         reordered_corners.push_back(ori_corners[1]);
-//         reordered_corners.push_back(ori_corners[0]);
-//     }
-//     if(ori_corners[2].y>ori_corners[3].y){
-//         reordered_corners.push_back(ori_corners[2]);
-//         reordered_corners.push_back(ori_corners[3]);
-//     }else{
-//         reordered_corners.push_back(ori_corners[3]);
-//         reordered_corners.push_back(ori_corners[2]);
-//     }
-//     return;
-// }
-
-// void reorder_corners1(std::vector<pcl::PointXYZ>& ori_corners, std::vector<pcl::PointXYZ>& reordered_corners)
-// {
-//     sort(ori_corners.begin(), ori_corners.end(),[](pcl::PointXYZ& a, pcl::PointXYZ& b){
-//         return a.z>b.z;
-//     });
-// }
-
-// void reorder_corners(std::vector<cv::Point3d>& ori_corners, std::vector<cv::Point3d>& reordered_corners)
-// {
-//     //reorder_corners.clear();
-//     double min_y = ori_corners[0].y;
-//     int min_pos = 0;
-//     for(int i=1;i<4;++i){
-//         if(ori_corners[i].y<min_y){
-//             min_y = ori_corners[i].y;
-//             min_pos = i;
-//         }
-//     }
-//     for(int i=0;i<4;++i){
-//         int cur_pos = (i+min_pos) % 4;
-//         reordered_corners.push_back(ori_corners[cur_pos]);
-//     }
-//     if(reordered_corners[0].x>reordered_corners[1].x){
-//         reverse(reordered_corners.begin()+1, reordered_corners.end());
-//     }
-
-//     return;
-// }
-// pcl::visualization::PCLVisualizer::Ptr customColourVis (pcl::PointCloud<pcl::PointXYZ>::ConstPtr cloud)
-// {
-//   // --------------------------------------------
-//   // -----Open 3D viewer and add point cloud-----
-//   // --------------------------------------------
-//   pcl::visualization::PCLVisualizer::Ptr viewer (new pcl::visualization::PCLVisualizer ("3D Viewer"));
-//   viewer->setBackgroundColor (0, 0, 0);
-//   pcl::visualization::PointCloudColorHandlerCustom<pcl::PointXYZ> single_color(cloud, 0, 255, 0);
-//   viewer->addPointCloud<pcl::PointXYZ> (cloud, single_color, "sample cloud");
-//   viewer->setPointCloudRenderingProperties (pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 3, "sample cloud");
-//   viewer->addCoordinateSystem (1.0);
-//   viewer->initCameraParameters ();
-//   return (viewer);
-// }
-
-
 cv::Point2d project(cv::Point3d p, cv::Mat CameraMat)
 {
     cv::Point2d pix;
@@ -279,51 +190,6 @@ bool check_data_by_index(std::vector<std::string>& data1, std::vector<std::strin
     return true;
 }
 
-// bool readConfigFile(const std::string& config_file_name)
-// {
-//   cv::FileStorage fs_reader(config_file_name, cv::FileStorage::READ);
-//   if (!fs_reader.isOpened())
-//   {
-//     std::cout << config_file_name << " is wrong!" << std::endl;
-//     return false;
-//   }
-//   fs_reader["calib_frame_num"] >> calib_frame_num_;
-//   fs_reader["calib_result_file"] >> calib_result_file_;
-//   fs_reader.release();
-//   if (calib_frame_num_ < 0)
-//   {
-//     std::cout << "calib frame num should large than 0 or equal to -1!" << std::endl;
-//     return false;:
-//   }
-//   return true;
-// }
-
-
-// 保存YAML 文件
-// void saveYamlFile(const std::string file_name, const aruco::CameraParameters& cam_param,
-//                   const std::vector<double>& pose, const Eigen::Matrix4d& transformation)
-// {
-//   cv::FileStorage fs_writer(file_name, cv::FileStorage::WRITE);
-//   if (fs_writer.isOpened())
-//   {
-//     cv::Mat trans_mat;
-//     cv::eigen2cv(transformation, trans_mat);
-//     fs_writer << "CameraMat" << cam_param.CameraMatrix;
-//     fs_writer << "DistCoeff" << cam_param.Distorsion;
-//     fs_writer << "ImageSize" << cam_param.CamSize;
-//     fs_writer << "CameraExtrinsicMat" << trans_mat;
-//     fs_writer << "Pose" << pose;
-//     fs_writer.release();
-//     INFO << "Save result file successfully!" << REND;
-//   }
-//   else
-//   {
-//     WARN << "Fail to open yaml file" << REND;
-//   }
-//   fs_writer.release();
-// }
-// }  // namespace cicv
-
 // 文件路径操作
 bool isDirExist(const std::string& path_name)
 {
@@ -334,34 +200,6 @@ bool isDirExist(const std::string& path_name)
   return false;
 }
 
-// bool createNewDir(const std::string& path_name)
-// {
-//   if (isDirExist(path_name))
-//   {
-//     return true;
-//   }
-//   return boost::filesystem::create_directories(path_name);
-// }
-
-// bool isFileExist(const std::string& file_name)
-// {
-//   if (boost::filesystem::exists(file_name) && boost::filesystem::is_regular_file(file_name))
-//   {
-//     return true;
-//   }
-//   return false;
-// }
-
-// bool createNewFile(const std::string& file_name)
-// {
-//   if (isFileExist(file_name))
-//   {
-//     return true;
-//   }
-//   boost::filesystem::ofstream file(file_name);
-//   file.close();
-//   return isFileExist(file_name);
-// }
 
 
 void matrix2Vector(MatrixXd& m, VectorXd& v)
@@ -413,36 +251,6 @@ void  affine2Vector( Eigen::Affine3d& affine_mat,Eigen::VectorXd& Rt)
 }
 
 
-// for (int i = 0; i < image_3d_corners.size(); i++)
-// {
-//     // cv::Mat image = cv::imread(images[valid_image_index[i]], cv::IMREAD_COLOR);
-//     std::vector<cv::Point3d> &corners = image_3d_corners[i];
-//     for (auto &corner : corners)
-//     {
-//         // cv::Point2d p = project(corner, camera_matrix);
-//         // cv::circle(image, p, 5, cv::Scalar(0, 255, 0), -1);
-//         std::cout<<corner<<std::endl;
-//     }
-//     std::cout<<std::endl;
-//     // cv::imwrite("/home/jc/Documents/stereo-lidar-calibration/exclude_dir/test_data/" 
-//     //     + to_string(i) + ".png", image);
-// }
-
-
-// bool loadPointXYZ(string& path, PointCloud<PointXYZ>::Ptr& pcd)
-// {
-//     PCDReader reader;
-//     PointCloud<PointXYZI>::Ptr cloud_xyzi(new PointCloud<PointXYZI>);
-//     PointCloud<PointXYZ>::Ptr cloud_xyz(new PointCloud<PointXYZ>);
-//     if(reader.read(path, *cloud_xyz)!=0){
-//         if(reader.read(path, *cloud_xyzi)!=0){
-//             return false;
-//         }
-//         copyPointCloud(*cloud_xyzi,*cloud_xyz);
-//     }
-//     return true;
-// }
-
 void calculateInitialRt(vector<vector<Vector3d>>& cloud_3d_corners, vector<vector<Vector3d>>& image_3d_corners, VectorXd& R_t)
 {
     assert(cloud_3d_corners.size()== image_3d_corners.size());
@@ -491,4 +299,21 @@ void calculateInitialRt(vector<vector<Vector3d>>& cloud_3d_corners, vector<vecto
     R_t.head(3) = affine.angle() * affine.axis();
     R_t.tail(3) = translation;
     return;
+}
+
+
+
+
+void draw_axis(cv::Mat& img, cv::Mat& rvec, cv::Mat& tvec, cv::Mat K, cv::Mat dist)
+{
+    std::vector<cv::Point3d> objectPoints;
+    objectPoints.push_back(cv::Point3d(0,0,0));
+    objectPoints.push_back(cv::Point3d(0.5,0,0));
+    objectPoints.push_back(cv::Point3d(0,0.5,0));
+    objectPoints.push_back(cv::Point3d(0,0,0.5));
+    std::vector<cv::Point2d> imagePoints;
+    cv::projectPoints(objectPoints, rvec, tvec, K , dist, imagePoints);
+    cv::line(img, imagePoints[0], imagePoints[1], cv::Scalar(0, 255, 0),2);
+    cv::line(img, imagePoints[0], imagePoints[2], cv::Scalar(0, 255, 0),2);
+    cv::line(img, imagePoints[0], imagePoints[3], cv::Scalar(0, 255, 0),2);
 }

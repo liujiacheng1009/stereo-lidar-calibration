@@ -40,26 +40,16 @@
 
 
 using namespace Eigen;
-using namespace cv;
 using namespace std;
-using namespace pcl;
 
-class CloudResults;
 
-bool loadPointXYZ(string& path, PointCloud<PointXYZ>::Ptr& pcd);
+
+bool loadPointXYZ(string& path, pcl::PointCloud<pcl::PointXYZ>::Ptr& pcd);
 void getValidDataSet(ImageResults& images_features, CloudResults& cloud_features);
 void getValidDataSet(ImageResults& images_features1,ImageResults& images_features2, CloudResults& cloud_features);
 
 
-class CloudResults{
-public:
-    vector<int> valid_index; // 有效的点云index
-    vector<vector<Vector3d>> corners_3d; // 点云3d角点
-    vector<PointCloud<PointXYZ>> plane_points_3d; 
-    //vector<vector<Vector3d>> plane_points_3d;
-    vector<vector<VectorXd>> lines_3d; // 点云边缘直线方程
-    vector<vector<PointCloud<PointXYZ>>> lines_points_3d ;//直线包含的点云
-};
+
 
 void processCloud(vector<string>& cloud_paths, CloudResults& cloud_features);
 
@@ -80,9 +70,9 @@ public:
 
     
     // void detectPlane(pcl::PointCloud<PointXYZ>::Ptr& plane_pcd);
-    bool extractPlaneCloud(PointCloud<PointXYZ>::Ptr &input_cloud, PointCloud<PointXYZ>::Ptr &plane_pcd);
-    bool extractPlaneCloud1(PointCloud<PointXYZ>::Ptr &input_cloud,
-                            PointCloud<PointXYZ>::Ptr &plane_pcd,
+    bool extractPlaneCloud(pcl::PointCloud<pcl::PointXYZ>::Ptr &input_cloud, pcl::PointCloud<pcl::PointXYZ>::Ptr &plane_pcd);
+    bool extractPlaneCloud1(pcl::PointCloud<pcl::PointXYZ>::Ptr &input_cloud,
+                            pcl::PointCloud<pcl::PointXYZ>::Ptr &plane_pcd,
                             Eigen::Affine3f &board_pose,
                             Eigen::Vector3f &board_size);
     void extractEdgeCloud(pcl::PointCloud<pcl::PointXYZ>::Ptr &input_cloud, pcl::PointCloud<pcl::PointXYZ>::Ptr &edge_pcd);
@@ -96,12 +86,12 @@ public:
 
     // 调整边缘直线上的点云顺序
     void reorder_line_points(std::vector<pcl::PointXYZ>  &reordered_corners,
-                            vector<PointCloud<PointXYZ>> &reordered_lines_points,
-                            vector<pair<pair<PointXYZ, PointXYZ>, PointCloud<PointXYZ>>> &line_corners_to_points);
+                            vector<pcl::PointCloud<pcl::PointXYZ>> &reordered_lines_points,
+                            vector<pair<pair<pcl::PointXYZ, pcl::PointXYZ>, pcl::PointCloud<pcl::PointXYZ>>> &line_corners_to_points);
     // 利用边界线点云优化角点
-    void refineCorners(vector<Vector3d>& corners_3d, vector<PointCloud<PointXYZ>>& lines_points_3d);
+    void refineCorners(vector<Vector3d>& corners_3d, vector<pcl::PointCloud<pcl::PointXYZ>>& lines_points_3d);
 
-    void estimateCornersFromBoardParams(Eigen::Affine3f& board_pose, Eigen::Vector3f& board_size, vector<PointXYZ>& corners);
+    void estimateCornersFromBoardParams(Eigen::Affine3f& board_pose, Eigen::Vector3f& board_size, vector<pcl::PointXYZ>& corners);
 
 private:
     // void getRings(std::vector<std::vector<pcl::PointXYZ>>& rings); // 将marker board点云按照线束id存储
@@ -115,7 +105,7 @@ private:
     void reorder_lines1(std::vector<Eigen::VectorXf> &lines_params,
                         std::vector<pcl::PointCloud<pcl::PointXYZ>> &lines_points);
 
-    bool isValidCorners(vector<PointXYZ>& corners);
+    bool isValidCorners(vector<pcl::PointXYZ>& corners);
 
 
 
@@ -125,7 +115,7 @@ private:
 private:
     ChessboardExtractor m_chessboard_extractor;
     const double m_checkerboard_square_size;
-    const Size m_checkerboard_grid_size;    
+    const cv::Size m_checkerboard_grid_size;    
     const vector<double> m_checkerboard_padding; 
 };
 

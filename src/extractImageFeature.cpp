@@ -3,7 +3,6 @@
 
 using namespace std;
 using namespace Eigen;
-using namespace cv;
 
 void processImage(vector<string>& image_paths, ImageResults& images_features)
 {
@@ -37,9 +36,18 @@ void processImage(vector<string>& image_paths, ImageResults& images_features)
         cv::Mat rvec, tvec;
         vector<Vector3d> chessboard_points_3d;
         image_feature_detector.estimatePose1(image_corners,chessboard_points_3d, rvec, tvec);
+        
+        // debug 
+        if(1){
+            cv::drawChessboardCorners(img, Config::checkerboardGridSize(), image_corners, true);
+            draw_axis(img, rvec,  tvec, Config::leftCameraMatrix(), Config::leftCameraDistCoeffs());
+            cv::imshow("debug", img);
+            cv::waitKey(0);
+        }
+
         vector<Vector2d> chessboard_points_2d;
         image_feature_detector.transform_to_normalized_plane(image_corners, chessboard_points_2d);
-        std::vector<Point3d> chessboard_3d_corners, reordered_image_3d_corners;
+        std::vector<cv::Point3d> chessboard_3d_corners, reordered_image_3d_corners;
         image_feature_detector.calculate3DCorners(chessboard_3d_corners, rvec, tvec);
         
         Eigen::VectorXd plane;
@@ -65,7 +73,7 @@ void processImage(vector<string>& image_paths, ImageResults& images_features)
     return;
 }
 
-bool fitBoard(vector<vector<int>> &board, vector<Point2d>& corners, Size &size)
+bool fitBoard(vector<vector<int>> &board, vector<cv::Point2d>& corners, cv::Size &size)
 {
 	vector<int> invalid_x_index, invalid_y_index;
 	int m = board.size(), n = board[0].size();
@@ -136,13 +144,13 @@ bool fitBoard(vector<vector<int>> &board, vector<Point2d>& corners, Size &size)
 			return false;
 		}
 	}
-	vector<Point2d> board_corners;
+	vector<cv::Point2d> board_corners;
 	for(int i=0;i<m;++i){
 		if(find(invalid_x_index.begin(), invalid_x_index.end(), i)!= invalid_x_index.end()) continue;
 		for(int j=0;j<n;++j){
 			if(find(invalid_y_index.begin(), invalid_y_index.end(), j)!= invalid_y_index.end()) continue;
 			if(board[i][j]<0){
-				board_corners.push_back(Point2d(0.0,0.0));
+				board_corners.push_back(cv::Point2d(0.0,0.0));
 			}else{
 				board_corners.push_back(corners[board[i][j]]);
 			}
@@ -321,7 +329,7 @@ bool ImageFeatureDetector::detectImageCorner(cv::Mat &input_image, vector<cv::Po
     cv::Mat gray_img;
     cv::cvtColor(input_image, gray_img, cv::COLOR_BGR2GRAY);
     std::vector<cv::Point2f> points;
-    const int chessBoardFlags = CALIB_CB_ADAPTIVE_THRESH | CALIB_CB_FILTER_QUADS;
+    const int chessBoardFlags = cv::CALIB_CB_ADAPTIVE_THRESH | cv::CALIB_CB_FILTER_QUADS;
     // cout<< m_board_size<<endl;
     // cv::imshow("debug", gray_img);
     // cv::waitKey(0);
@@ -357,12 +365,12 @@ bool ImageFeatureDetector::detectImageCorner1(cv::Mat &input_image, vector<cv::P
     if (boards.size() != 1)
 		return false;
     vector<vector<int>> chessboard = boards[0].idx;
-    vector<Point2d> board_corners = corners.p;
+    vector<cv::Point2d> board_corners = corners.p;
     if(!fitBoard(chessboard, board_corners, m_board_size)){
         return false;
     }
     for(auto& corner: board_corners){
-        image_corners.push_back(Point2f(float(corner.x), float(corner.y)));
+        image_corners.push_back(cv::Point2f(float(corner.x), float(corner.y)));
     }
     // debug 
     // cv::drawChessboardCorners(input_image, m_board_size, image_corners, true);
@@ -445,14 +453,14 @@ void ImageFeatureDetector::estimatePose1(vector<cv::Point2f> &chessboard_corners
         {
             board_points.push_back(
                 cv::Point3d(double(i) * m_square_size, double(j) * m_square_size, 0.0));
-            if(chessboard_corners[i*board_width+j]==Point2f(0,0)) continue;
+            if(chessboard_corners[i*board_width+j]==cv::Point2f(0,0)) continue;
             board_points_temp.push_back(
                 cv::Point3d(double(i) * m_square_size, double(j) * m_square_size, 0.0));
         }
     }
     vector<cv::Point2f> chessboard_corners_temp;
     for(int i=0;i<chessboard_corners.size();++i){
-        if(chessboard_corners[i]==Point2f(0,0)) continue;
+        if(chessboard_corners[i]==cv::Point2f(0,0)) continue;
         chessboard_corners_temp.push_back(chessboard_corners[i]);
     }
     // debug 
@@ -469,10 +477,10 @@ void ImageFeatureDetector::estimatePose1(vector<cv::Point2f> &chessboard_corners
     for(int i=0;i<board_points.size();++i){
         auto p = rot_matrix*board_points[i] + cv::Point3d(tvec);
         chessboard_points_3d.push_back(Vector3d(p.x,p.y,p.z));
-        if(chessboard_corners[i]==Point2f(0,0)){
+        if(chessboard_corners[i]==cv::Point2f(0,0)){
             cv::Matx33d K = m_camera_matrix;
             auto pp = K*p;
-            chessboard_corners[i] = Point2f(pp.x/pp.z, pp.y/pp.z);
+            chessboard_corners[i] = cv::Point2f(pp.x/pp.z, pp.y/pp.z);
         }
     }
 
@@ -537,13 +545,13 @@ void ImageFeatureDetector::calculatePlane(std::vector<cv::Point3d>& corners, Eig
 }
 
 
-void ImageFeatureDetector::calculatePlane1(vector<Point3d>& corners, VectorXd& plane)
+void ImageFeatureDetector::calculatePlane1(vector<cv::Point3d>& corners, VectorXd& plane)
 {
     //Point3d zero(0.,0.,0.);
     //auto centroid = accumulate(corners.begin(), corners.end(),zero)/4.0;
     assert(corners.size()==4);
-    auto func1 = [](vector<Point3d>&corners){
-        Point3d p(0.,0.,0.);
+    auto func1 = [](vector<cv::Point3d>&corners){
+        cv::Point3d p(0.,0.,0.);
         for(auto& corner:corners){
             p += corner;
         }
@@ -563,12 +571,12 @@ void ImageFeatureDetector::calculatePlane1(vector<Point3d>& corners, VectorXd& p
 }
 
 
-void ImageFeatureDetector::transform_to_normalized_plane(vector<Point2f>& corners1, vector<Vector2d>& corners2)
+void ImageFeatureDetector::transform_to_normalized_plane(vector<cv::Point2f>& corners1, vector<Eigen::Vector2d>& corners2)
 {
     corners2.clear();
     cv::Matx33d K((double*)m_camera_matrix.ptr());
     for(auto& corner:corners1){
-        Point3d p(corner.x, corner.y, 1.0);
+        cv::Point3d p(corner.x, corner.y, 1.0);
         auto p1 = K.inv()*p;
         corners2.push_back(Vector2d(p1.x,p1.y));
     }
