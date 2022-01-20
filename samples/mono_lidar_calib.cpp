@@ -6,13 +6,26 @@
 #include "config.hpp"
 #include <pcl/common/geometry.h>
 #include <sophus/so3.hpp>
+#include <boost/program_options.hpp>
 using namespace std;
 using namespace Eigen;
 using namespace cv;
 
-int main()
+int main(int argc, char** argv)
 {
-    string config_file = "/home/jc/Documents/stereo-lidar-calibration/config/hdl64_mono.yaml";
+    string config_file;
+    boost::program_options::options_description desc("Allowed options");
+    desc.add_options()
+        ("help", "produce help message")
+        ("config,c", boost::program_options::value<std::string>(&config_file)->default_value("config.yaml"), "config file.");
+    boost::program_options::variables_map vm;
+    boost::program_options::store(boost::program_options::parse_command_line(argc, argv, desc), vm);
+    boost::program_options::notify(vm);
+    if (vm.count("help"))
+    {
+        std::cout << desc << std::endl;
+        return 1;
+    }
     Config::loadFromFile(config_file); // 
     std::string images_dir = Config::leftImageDatasetPath();
     std::string clouds_dir = Config::lidarCloudDatasetPath();
