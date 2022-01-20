@@ -76,7 +76,12 @@ void processCloud(vector<string>& cloud_paths, CloudResults& cloud_features)
         //     display_multi_clouds(cloud_v);
         //     //display_four_corners(reordered_corners);
         // }
-        
+        {
+            for(auto& corner: reordered_corners){
+                std::cout<< corner<<std::endl;
+            }
+            std::cout<<std::endl;
+        }
         cloud_features.plane_points_3d.push_back(*plane_cloud);
         cloud_features.valid_index.push_back(i);
     }
@@ -574,7 +579,7 @@ bool LidarFeatureDetector::extractPlaneCloud1(pcl::PointCloud<pcl::PointXYZ>::Pt
 void LidarFeatureDetector::reorder_corners(std::vector<pcl::PointXYZ>& ori_corners, std::vector<pcl::PointXYZ>& reordered_corners)
 {
     reordered_corners.clear();
-    float d1 = pcl::geometry::distance(ori_corners[0], ori_corners[0]);
+    float d1 = pcl::geometry::distance(ori_corners[0], ori_corners[1]);
     float d2 = pcl::geometry::distance(ori_corners[1], ori_corners[2]);
     if(d1<d2){
         std::reverse(ori_corners.begin()+1, ori_corners.end());
