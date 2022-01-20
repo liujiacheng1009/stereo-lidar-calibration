@@ -1,5 +1,5 @@
 # dataset params
-type: mono_lidar
+type: stereo_lidar
 cam0:
   image_path: /home/jc/Documents/stereo-lidar-calibration/exclude_dir/lcc/HDL64/images
   image_format: png
