@@ -11,11 +11,20 @@ void processCloud(vector<string>& cloud_paths, CloudResults& cloud_features)
         if (!loadPointXYZ(cloud_paths[i], input_cloud)) continue;
         // cout<< input_cloud->points.size()<<endl;
         // display_colored_by_depth(input_cloud);
+        //debug
+        // {
+        //     if(i==5) std::cout<< input_cloud->size()<<std::endl;
+        // }
         pcl::PointCloud<pcl::PointXYZ>::Ptr plane_cloud(new pcl::PointCloud<pcl::PointXYZ>);
         Eigen::Affine3f board_pose;
         Eigen::Vector3f board_size;
         //if(!lidar_feature_detector.extractPlaneCloud(input_cloud,plane_cloud)) continue;
         if(!lidar_feature_detector.extractPlaneCloud1(input_cloud, plane_cloud, board_pose, board_size)) continue;
+        //debug
+        // if(1){
+        //     display_colored_by_depth(plane_cloud);
+        // }
+
         pcl::PointCloud<pcl::PointXYZ>::Ptr edge_cloud(new pcl::PointCloud<pcl::PointXYZ>);
         lidar_feature_detector.extractEdgeCloud(plane_cloud, edge_cloud);// 提取边缘点云
         std::vector<Eigen::VectorXf> lines_params;
@@ -56,7 +65,18 @@ void processCloud(vector<string>& cloud_paths, CloudResults& cloud_features)
             cloud_features.corners_3d.push_back(corners_temp);
         }
         // debug
-        // display_four_corners(corners);
+        // {
+        //     std::vector<pcl::PointCloud<pcl::PointXYZ>> cloud_v;
+        //     cloud_v.push_back(*plane_cloud);
+        //     pcl::PointCloud<pcl::PointXYZ> corners_v;
+        //     for(auto& corner:reordered_corners ){
+        //         corners_v.push_back(corner);
+        //     }
+        //     cloud_v.push_back(corners_v);
+        //     display_multi_clouds(cloud_v);
+        //     //display_four_corners(reordered_corners);
+        // }
+        
         cloud_features.plane_points_3d.push_back(*plane_cloud);
         cloud_features.valid_index.push_back(i);
     }

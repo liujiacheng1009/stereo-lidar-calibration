@@ -12,9 +12,9 @@ cam0:
   cam_cy: 463.042293423070
   cam_d1: 0.0178323718865144
   cam_d2: 0.321404941599071
-  cam_d3: 0.0754546937440090
+  cam_d3: -0.0000732691460008671
   cam_d4: 0.00962879764360772
-  cam_d5: -0.0000732691460008671
+  cam_d5: 0.0754546937440090
 
 lidar0:
   cloud_path: /home/jc/Documents/stereo-lidar-calibration/exclude_dir/lcc/vlp16/pointCloud

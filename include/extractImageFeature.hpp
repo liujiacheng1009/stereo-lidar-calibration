@@ -40,11 +40,12 @@ public:
                                            m_board_size(Config::checkerboardGridSize()),
                                            m_padding(Config::checkerboardPadding()) {}
 
+    bool detectCheckerboardInImage(cv::Mat& img, std::vector<cv::Point2f>& image_corners, cv::Mat& rvec, cv::Mat& tvec,string method="cbdetect");
+    bool detectCheckerboardInImageByCbdetect(cv::Mat& img, std::vector<cv::Point2f>& image_corners, cv::Mat& rvec, cv::Mat& tvec);
+    bool detectCheckerboardInImageByOpenCV(cv::Mat& img, std::vector<cv::Point2f>& image_corners, cv::Mat& rvec, cv::Mat& tvec);
     bool detectImageCorner(cv::Mat& input_image, vector<cv::Point2f>& image_corners); // 从图像检测角点
-    bool detectImageCorner1(cv::Mat &input_image, vector<cv::Point2f> &image_corners);
     void undistort_corners(vector<cv::Point2f>& input_corners, cv::Mat &rectified_corners); // 角点畸变校正
-    void estimatePose(vector<cv::Point2f>& chessboard_corners,vector<Vector3d>& chessboard_points_3d, cv::Mat& rvec, cv::Mat&tvec); // 从角点pnp恢复位姿
-    void estimatePose1(vector<cv::Point2f>& chessboard_corners,vector<Vector3d>& chessboard_points_3d, cv::Mat& rvec, cv::Mat&tvec); // 从角点pnp恢复位姿
+    void estimatePose(vector<cv::Point2f>& chessboard_corners, cv::Mat& rvec, cv::Mat&tvec); // 从角点pnp恢复位姿
     void calculate3DCorners(vector<cv::Point3d>& chessboard_3d_corners, cv::Mat& rvec, cv::Mat& tvec); // 计算marker板的3D角点位置，需考虑偏移
     void calculateLines(std::vector<cv::Point3d>& corners, std::vector<Eigen::VectorXd>& lines); // 通过四个角点计算四条边的方程
     void calculatePlane(std::vector<cv::Point3d>& corners, Eigen::VectorXd& plane); // 通过四个角点计算平面的方程

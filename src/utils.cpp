@@ -313,7 +313,24 @@ void draw_axis(cv::Mat& img, cv::Mat& rvec, cv::Mat& tvec, cv::Mat K, cv::Mat di
     objectPoints.push_back(cv::Point3d(0,0,0.5));
     std::vector<cv::Point2d> imagePoints;
     cv::projectPoints(objectPoints, rvec, tvec, K , dist, imagePoints);
-    cv::line(img, imagePoints[0], imagePoints[1], cv::Scalar(0, 255, 0),2);
+    cv::line(img, imagePoints[0], imagePoints[1], cv::Scalar(255, 0, 0),2);
     cv::line(img, imagePoints[0], imagePoints[2], cv::Scalar(0, 255, 0),2);
-    cv::line(img, imagePoints[0], imagePoints[3], cv::Scalar(0, 255, 0),2);
+    cv::line(img, imagePoints[0], imagePoints[3], cv::Scalar(0, 0, 255),2);
 }
+
+void draw_corners_in_image(cv::Mat& img, std::vector<cv::Point3d>& corners, cv::Mat& rvec, cv::Mat& tvec, cv::Mat K, cv::Mat dist)
+{
+    std::vector<cv::Point2d> image_corners;
+    cv::projectPoints(corners, rvec, tvec, K , dist, image_corners);
+    //debug
+    // if(1){
+    //     for(auto& corner:image_corners){
+    //         std::cout<<corner<<std::endl;
+    //     }
+    // }
+    cv::circle( img, image_corners[0], 5, cv::Scalar( 0, 0, 255 ), cv::FILLED,cv::LINE_8 );
+    cv::circle( img, image_corners[1], 5, cv::Scalar( 0, 0, 255 ), cv::FILLED,cv::LINE_8 );
+    cv::circle( img, image_corners[2], 5, cv::Scalar( 0, 0, 255 ), cv::FILLED,cv::LINE_8 );
+    cv::circle( img, image_corners[3], 5, cv::Scalar( 0, 0, 255 ), cv::FILLED,cv::LINE_8 );
+}
+

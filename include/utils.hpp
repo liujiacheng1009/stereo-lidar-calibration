@@ -107,5 +107,6 @@ void  affine2Vector( Eigen::Affine3d& affine_mat,Eigen::VectorXd& Rt);
 
 void draw_axis(cv::Mat& img, cv::Mat& rvec, cv::Mat& tvec, cv::Mat K, cv::Mat dist);
 
+void draw_corners_in_image(cv::Mat& img, std::vector<cv::Point3d>& corners, cv::Mat& rvec, cv::Mat& tvec, cv::Mat K, cv::Mat dist);
 
 #endif
