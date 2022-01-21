@@ -1,12 +1,13 @@
 #include "extractChessboard.hpp"
 #include "extractImageFeature.hpp"
 #include "extractLidarFeature.hpp"
-#include "optimization.hpp"
-#include "utils.hpp"
-#include "config.hpp"
 #include <pcl/common/geometry.h>
 #include <sophus/so3.hpp>
 #include <boost/program_options.hpp>
+#include "optimization.hpp"
+#include "utils.hpp"
+#include "config.hpp"
+#include "evaluation.hpp"
 using namespace std;
 using namespace Eigen;
 
@@ -97,5 +98,28 @@ int main(int argc, char** argv)
     Rt.block(0,3,3,1) = R_t.tail(3);
     cout << Rt << std::endl;
     cout << Rt-Config::matlabTform()<<endl;
+
+    bool eval = true;
+    if(eval){
+        cv::Mat rvec = cv::Mat::zeros(cv::Size(1,3), CV_64FC1);
+        rvec.at<double>(0,0) = R_t(0);
+        rvec.at<double>(1,0) = R_t(1);
+        rvec.at<double>(2,0) = R_t(2);
+        cv::Mat tvec = cv::Mat::zeros(cv::Size(1,3), CV_64FC1);
+        tvec.at<double>(0,0) = R_t(3);
+        tvec.at<double>(1,0) = R_t(4);
+        tvec.at<double>(2,0) = R_t(5);
+
+        auto& valid_index = cloud_features.valid_index;
+
+        for(int i = 0;i<valid_index.size();++i)
+        {
+            int k = valid_index[i];
+            cv::Mat img = cv::imread(images[k], cv::IMREAD_COLOR);
+            projectLidarOnImage(img, plane_clouds_3d[i] , rvec, tvec, Config::leftCameraMatrix(), Config::leftCameraDistCoeffs());
+            cv::imshow("eval", img);
+            cv::waitKey(0);
+        }
+    }
     return 0;
 }

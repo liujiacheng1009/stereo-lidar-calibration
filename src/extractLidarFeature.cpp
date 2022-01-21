@@ -76,30 +76,18 @@ void processCloud(vector<string>& cloud_paths, CloudResults& cloud_features)
         //     display_multi_clouds(cloud_v);
         //     //display_four_corners(reordered_corners);
         // }
-        {
-            for(auto& corner: reordered_corners){
-                std::cout<< corner<<std::endl;
-            }
-            std::cout<<std::endl;
-        }
+        // {
+        //     for(auto& corner: reordered_corners){
+        //         std::cout<< corner<<std::endl;
+        //     }
+        //     std::cout<<std::endl;
+        // }
         cloud_features.plane_points_3d.push_back(*plane_cloud);
         cloud_features.valid_index.push_back(i);
     }
     return;
 }
 
-
-
-bool loadPointXYZ(string& path, pcl::PointCloud<pcl::PointXYZ>::Ptr& pcd)
-{
-    pcl::PCDReader reader;
-    pcl::PCLPointCloud2::Ptr cloud(new pcl::PCLPointCloud2);
-    if(reader.read(path, *cloud)!=0){
-        return false;
-    }
-    pcl::fromPCLPointCloud2(*cloud, *pcd);
-    return true;
-}
 
 void getValidDataSet(ImageResults& images_features, CloudResults& cloud_features)
 {
@@ -140,7 +128,9 @@ void getValidDataSet(ImageResults& images_features, CloudResults& cloud_features
     images_features.planes_3d = valid_image_plane_3d;
     cloud_features.corners_3d = valid_cloud_corners_3d;
     cloud_features.plane_points_3d = valid_plane_cloud_3d;
-
+    std::vector<int > v(valid_index.begin(), valid_index.end());
+    valid_image_index = v;
+    valid_cloud_index = v;
     return;
 }
 
@@ -575,7 +565,7 @@ bool LidarFeatureDetector::extractPlaneCloud1(pcl::PointCloud<pcl::PointXYZ>::Pt
     return false;
 }
 
-// 调整lidar points 的顺序
+// 调整lidar points 的顺序, 长边在上
 void LidarFeatureDetector::reorder_corners(std::vector<pcl::PointXYZ>& ori_corners, std::vector<pcl::PointXYZ>& reordered_corners)
 {
     reordered_corners.clear();

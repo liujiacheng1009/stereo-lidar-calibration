@@ -55,11 +55,11 @@ static cv::Mat getLeftCameraDistCoeffs(const YAML::Node& config)
 {
     cv::Mat left_camera_dist_coeffs = cv::Mat::zeros(5, 1, CV_64F);
     auto& cam0 = config["cam0"];
-    left_camera_dist_coeffs.at<double>(0, 0) = loadSafe(cam0, "cam_d1",0.0);
-    left_camera_dist_coeffs.at<double>(1, 0) = loadSafe(cam0, "cam_d2",0.0);
-    left_camera_dist_coeffs.at<double>(2, 0) = loadSafe(cam0, "cam_d3",0.0);
-    left_camera_dist_coeffs.at<double>(3, 0) = loadSafe(cam0, "cam_d4",0.0);
-    left_camera_dist_coeffs.at<double>(4, 0) = loadSafe(cam0, "cam_d5",0.0);
+    left_camera_dist_coeffs.at<double>(0, 0) = loadSafe(cam0, "cam_k1",0.0);
+    left_camera_dist_coeffs.at<double>(1, 0) = loadSafe(cam0, "cam_k2",0.0);
+    left_camera_dist_coeffs.at<double>(2, 0) = loadSafe(cam0, "cam_p1",0.0);
+    left_camera_dist_coeffs.at<double>(3, 0) = loadSafe(cam0, "cam_p2",0.0);
+    left_camera_dist_coeffs.at<double>(4, 0) = loadSafe(cam0, "cam_k3",0.0);
     return left_camera_dist_coeffs;
 }
 

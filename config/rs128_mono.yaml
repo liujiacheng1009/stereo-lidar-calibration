@@ -4,26 +4,26 @@ cam0:
   image_path: /home/jc/Documents/stereo-lidar-calibration/exclude_dir/lcc/vlp16/images
   image_format: png
   cam_model: Pinhole
-  cam_width: 1280
-  cam_height: 960
-  cam_fx: 1424.83896073639
-  cam_fy: 1427.78622106906
-  cam_cx: 633.679883272555
-  cam_cy: 463.042293423070
-  cam_k1: 0.0178323718865144
-  cam_k2: 0.321404941599071
-  cam_p1: -0.0000732691460008671
-  cam_p2: 0.00962879764360772
-  cam_k3: 0.0754546937440090
+  cam_width: 1920
+  cam_height: 540
+  cam_fx: 3940.811260452396
+  cam_fy: 3947.257205852834
+  cam_cx: 1334.71146679388
+  cam_cy: -253.823662066860
+  cam_k1: -0.331655580211445
+  cam_k2: 1.79112737448211
+  cam_p1: 0.0
+  cam_p2: 0.0
+  cam_k3: 0.0
 
 lidar0:
   cloud_path: /home/jc/Documents/stereo-lidar-calibration/exclude_dir/lcc/vlp16/pointCloud
   cloud_format: pcd
 
 checkerboard:
-  square_size: 0.081
-  width: 9
-  height: 8
+  square_size: 0.08
+  width: 8
+  height: 6
   padding:
     p1: 0.0
     p2: 0.0

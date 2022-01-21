@@ -44,7 +44,7 @@ using namespace std;
 
 
 
-bool loadPointXYZ(string& path, pcl::PointCloud<pcl::PointXYZ>::Ptr& pcd);
+
 void getValidDataSet(ImageResults& images_features, CloudResults& cloud_features);
 void getValidDataSet(ImageResults& images_features1,ImageResults& images_features2, CloudResults& cloud_features);
 

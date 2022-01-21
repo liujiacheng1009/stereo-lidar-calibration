@@ -94,6 +94,7 @@ void get_data_by_path(std::vector<std::string>& data, std::string& path, std::st
 // 检查图像和激光点云的文件是否对应
 bool check_data_by_index(std::vector<std::string>& data1, std::vector<std::string>& data2);
 
+bool loadPointXYZ(string& path, pcl::PointCloud<pcl::PointXYZ>::Ptr& pcd);
 // 文件路径操作
 bool isDirExist(const std::string& path_name);
 

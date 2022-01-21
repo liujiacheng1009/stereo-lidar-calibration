@@ -172,6 +172,17 @@ void get_data_by_path(std::vector<std::string>& data, std::string& path, std::st
     return;
 }
 
+bool loadPointXYZ(string& path, pcl::PointCloud<pcl::PointXYZ>::Ptr& pcd)
+{
+    pcl::PCDReader reader;
+    pcl::PCLPointCloud2::Ptr cloud(new pcl::PCLPointCloud2);
+    if(reader.read(path, *cloud)!=0){
+        return false;
+    }
+    pcl::fromPCLPointCloud2(*cloud, *pcd);
+    return true;
+}
+
 // 检查图像和激光点云的文件是否对应
 bool check_data_by_index(std::vector<std::string>& data1, std::vector<std::string>& data2)
 {
@@ -327,10 +338,10 @@ void draw_corners_in_image(cv::Mat& img, std::vector<cv::Point3d>& corners, cv::
     //     for(auto& corner:image_corners){
     //         std::cout<<corner<<std::endl;
     //     }
+    //     std::cout<<std::endl;
     // }
-    cv::circle( img, image_corners[0], 5, cv::Scalar( 0, 0, 255 ), cv::FILLED,cv::LINE_8 );
-    cv::circle( img, image_corners[1], 5, cv::Scalar( 0, 0, 255 ), cv::FILLED,cv::LINE_8 );
-    cv::circle( img, image_corners[2], 5, cv::Scalar( 0, 0, 255 ), cv::FILLED,cv::LINE_8 );
-    cv::circle( img, image_corners[3], 5, cv::Scalar( 0, 0, 255 ), cv::FILLED,cv::LINE_8 );
+    for(auto& corner: image_corners){
+        cv::circle( img, corner, 5, cv::Scalar( 0, 0, 255 ), cv::FILLED,cv::LINE_8 );
+    }
 }
 
