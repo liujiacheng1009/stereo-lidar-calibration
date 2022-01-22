@@ -33,14 +33,38 @@ pcl::PointCloud<pcl::PointXYZRGB>::Ptr colorizeCloud(cv::Mat &img,
         auto& cloud_point = cloud_points[i];
         auto& image_corner = image_corners[i];
         int x = image_corner.x, y = image_corner.y;
-        pcl::PointXYZRGB rgb_point(cloud_point.x, cloud_point.y,cloud_point.z);
-        if(x>=0&&x<width&&y>=0&&y<height){
-            cv::Vec3b color = img.at<cv::Vec3b>(cv::Point(x, y));
-            rgb_point.r = color[0];
-            rgb_point.g = color[1];
-            rgb_point.b = color[2];
+        pcl::PointXYZRGB rgb_point;
+        rgb_point.x = cloud_point.x;
+        rgb_point.y = cloud_point.y;
+        rgb_point.z = cloud_point.z;
+
+        //debug
+        // {
+        //     std::cout<< cloud_point.x<<std::endl;
+        //     std::cout<< cloud_point.y<<std::endl;
+        //     std::cout<< cloud_point.z<<std::endl;
+        // }
+
+
+        if(cloud_point.x<0.0){
+            rgb_point.r = 255;
+            rgb_point.g = 0;
+            rgb_point.b = 0;
         }
-        color_pcd->push_back(rgb_point);
+        else if (x >= 0 && x < width && y >= 0 && y < height)
+        {
+            rgb_point.b = img.at<cv::Vec3b>(y, x)[0]; // blue
+            rgb_point.g = img.at<cv::Vec3b>(y, x)[1]; // green
+            rgb_point.r = img.at<cv::Vec3b>(y, x)[2];
+
+            //debug
+            // {
+            //     std::cout << x <<" "<< y<<std::endl;
+            //     std::cout<< img.at<cv::Vec3b>(y,x)[0]<< " "<<img.at<cv::Vec3b>(y,x)[1] << " "<< img.at<cv::Vec3b>(y,x)[2] <<std::endl;
+            //     // exit(17);
+            // }
+        }
+        color_pcd->points.push_back(rgb_point);
     }
     return color_pcd;
 }

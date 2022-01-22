@@ -4,6 +4,7 @@
 #include <pcl/common/geometry.h>
 #include <sophus/so3.hpp>
 #include <boost/program_options.hpp>
+#include <opencv2/core/eigen.hpp>
 #include "optimization.hpp"
 #include "utils.hpp"
 #include "config.hpp"
@@ -101,6 +102,16 @@ int main(int argc, char** argv)
 
     bool eval = true;
     if(eval){
+        // debug
+        // {
+        //     auto mat = Config::matlabTform();
+        //     Eigen::Matrix3d mat_R = mat.block(0,0,3,3);
+        //     Eigen::AngleAxisd aa;
+        //     aa.fromRotationMatrix(mat_R);
+        //     R_t.head(3) = aa.angle() * aa.axis();
+        //     R_t.tail(3) = mat.block(0,3,3,1);
+        // }
+
         cv::Mat rvec = cv::Mat::zeros(cv::Size(1,3), CV_64FC1);
         rvec.at<double>(0,0) = R_t(0);
         rvec.at<double>(1,0) = R_t(1);
@@ -116,9 +127,34 @@ int main(int argc, char** argv)
         {
             int k = valid_index[i];
             cv::Mat img = cv::imread(images[k], cv::IMREAD_COLOR);
+
             projectLidarOnImage(img, plane_clouds_3d[i] , rvec, tvec, Config::leftCameraMatrix(), Config::leftCameraDistCoeffs());
             cv::imshow("eval", img);
             cv::waitKey(0);
+
+            pcl::PointCloud<pcl::PointXYZ>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZ>);
+            if (!loadPointXYZ(clouds[k], cloud)) continue;
+            // debug 
+            // {
+            //     std::vector<pcl::PointCloud<pcl::PointXYZ>> show_cloud;
+            //     show_cloud.push_back(*cloud);
+            //     show_cloud.push_back(plane_clouds_3d[i]);
+            //     display_multi_clouds(show_cloud);
+            // }
+
+            auto color_pcd = colorizeCloud(img, *cloud , rvec, tvec, Config::leftCameraMatrix(), Config::leftCameraDistCoeffs());
+            boost::shared_ptr<pcl::visualization::PCLVisualizer> viewer(new pcl::visualization::PCLVisualizer("3D Viewer"));
+            // viewer->addPointCloud<pcl::PointXYZRGB>(*color_pcd , "sample cloud");
+            pcl::visualization::PointCloudColorHandlerRGBField<pcl::PointXYZRGB> rgb(color_pcd);
+            viewer->addPointCloud<pcl::PointXYZRGB> (color_pcd, "sample cloud");
+            viewer->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 1, "sample cloud"); // 设置点云大小
+            viewer->addCoordinateSystem (1.0);
+            viewer->initCameraParameters ();
+            while (!viewer->wasStopped())
+            {
+                viewer->spinOnce(100);
+                sleep(0.1);
+            }
         }
     }
     return 0;

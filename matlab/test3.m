@@ -12,9 +12,13 @@ ptcFilePaths = { '/home/jc/Documents/stereo-lidar-calibration/exclude_dir/lcc/vl
     };
 for i = 1:11
     ptCloud = pcread(ptcFilePaths{i});
-    locations = single(ptCloud.Location);
+    locations = ptCloud.Location;
+    locations = reshape(locations,1,[],3);
+    a = all(~isnan(locations),3);
+
+    locations = locations(:,all(~isnan(locations),3),:);
     ptCloudXYZ = pointCloud(locations);
     id = num2str(i,'%04d');
-    pcwrite(ptCloudXYZ,"pointCloud/"+id+".pcd")
+    pcwrite(ptCloudXYZ,"pointCloud/"+id+".pcd",'Encoding','binary')
 end
 
