@@ -1,23 +1,23 @@
 # dataset params
 type: mono_lidar
 cam0:
-  image_path: /home/jc/Documents/stereo-lidar-calibration/exclude_dir/lcc/vlp16/images
-  image_format: png
+  image_path: /home/jc/Documents/stereo-lidar-calibration/exclude_dir/lcc/rs128/image_2
+  image_format: jpg
   cam_model: Pinhole
   cam_width: 1920
   cam_height: 540
-  cam_fx: 3940.811260452396
-  cam_fy: 3947.257205852834
-  cam_cx: 1334.71146679388
-  cam_cy: -253.823662066860
-  cam_k1: -0.331655580211445
-  cam_k2: 1.79112737448211
+  cam_fx: 3108.71615968495
+  cam_fy: 3118.54813014356
+  cam_cx: 835.346781745177
+  cam_cy: 225.971775341861
+  cam_k1: 0.184099014152906
+  cam_k2: -2.453842369882309
   cam_p1: 0.0
   cam_p2: 0.0
   cam_k3: 0.0
 
 lidar0:
-  cloud_path: /home/jc/Documents/stereo-lidar-calibration/exclude_dir/lcc/vlp16/pointCloud
+  cloud_path: /home/jc/Documents/stereo-lidar-calibration/exclude_dir/lcc/rs128/robosense_points
   cloud_format: pcd
 
 checkerboard:
@@ -39,16 +39,15 @@ RoI:
   max_z: 10
 
 matlab_result:
-  m00: 0.358120655431643
-  m01: -0.933636463967183
-  m02: -0.00851758792536429
-  m03: -0.549091711357024
-  m10: 0.203056602224736
-  m11: 0.0867854722367882
-  m12: -0.975313435825419
-  m13: -0.0474739719504715
-  m20: 0.911327390374149
-  m21: 0.347550334425812
-  m22: 0.220660718285677
-  m23: 0.0113785638988029
-
+  m00: 0.0414141504058489
+  m01: -0.998943736924005
+  m02: 0.0199067477621519
+  m03: 0.0501793737270080
+  m10: -0.0565231671667882
+  m11: -0.0222343377611700
+  m12: -0.998153678447241
+  m13: -0.113671149534546
+  m20: 0.997541978925998
+  m21: 0.0402124941358581
+  m22: -0.0573842800405872
+  m23: 0.866277933800574
