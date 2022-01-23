@@ -92,7 +92,7 @@ int main(int argc, char** argv)
     ceres::Solver::Summary summary;
     ceres::Solve(options, &problem, &summary);
     std::cout << summary.BriefReport() << "\n";
-    MatrixXd Rt = Matrix<double,4,4>::Identity();
+    Eigen::Matrix4d Rt = Matrix<double,4,4>::Identity();
     cout<< "Rt \n"<< R_t<<endl; 
     Eigen::Matrix3d R = Sophus::SO3d::exp(R_t.head(3)).matrix();
     Rt.block(0,0,3,3) = R;
@@ -100,7 +100,7 @@ int main(int argc, char** argv)
     cout << Rt << std::endl;
     cout << Rt-Config::matlabTform()<<endl;
 
-    bool eval = true;
+    bool eval = false;
     if(eval){
         // debug
         // {
@@ -157,5 +157,28 @@ int main(int argc, char** argv)
             }
         }
     }
+
+    bool compute_error = true;
+    if(compute_error){
+        auto translation_error = computeTranslationError(image_3d_corners, cloud_3d_corners,Rt );
+        std::cout<< " translation_error:\n ";
+        for(auto& error:translation_error){
+            std::cout<< error <<" ";
+        }
+        std::cout<<std::endl;
+        auto rotation_error = computeRotationError(image_3d_corners, cloud_3d_corners,Rt );
+        std::cout<< " rotation_error:\n ";
+        for(auto& error:rotation_error){
+            std::cout<< error <<" ";
+        }
+        std::cout<<std::endl;
+        auto reprojection_error = computeReprojectionError(image_3d_corners, cloud_3d_corners,Rt );
+        std::cout<< " reprojection_error:\n ";
+        for(auto& error:reprojection_error){
+            std::cout<< error <<" ";
+        }
+        std::cout<<std::endl;
+    }
+    
     return 0;
 }
