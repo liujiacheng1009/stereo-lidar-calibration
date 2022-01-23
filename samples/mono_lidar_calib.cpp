@@ -100,7 +100,7 @@ int main(int argc, char** argv)
     cout << Rt << std::endl;
     cout << Rt-Config::matlabTform()<<endl;
 
-    bool eval = false;
+    bool eval = true;
     if(eval){
         // debug
         // {
@@ -128,9 +128,9 @@ int main(int argc, char** argv)
             int k = valid_index[i];
             cv::Mat img = cv::imread(images[k], cv::IMREAD_COLOR);
 
-            projectLidarOnImage(img, plane_clouds_3d[i] , rvec, tvec, Config::leftCameraMatrix(), Config::leftCameraDistCoeffs());
-            cv::imshow("eval", img);
-            cv::waitKey(0);
+            // projectLidarOnImage(img, plane_clouds_3d[i] , rvec, tvec, Config::leftCameraMatrix(), Config::leftCameraDistCoeffs());
+            // cv::imshow("eval", img);
+            // cv::waitKey(0);
 
             pcl::PointCloud<pcl::PointXYZ>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZ>);
             if (!loadPointXYZ(clouds[k], cloud)) continue;

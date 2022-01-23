@@ -42,7 +42,12 @@ bool ChessboardExtractor::check_board_size(pcl::PointCloud<pcl::PointXYZ>::Ptr b
     fitMaximumContactBoundingBoxConstrained<pcl::PointXYZ>(board_pcd,coeff,pose, size, (float)0.1);
     vector<double> lens2 = {(double)size(0), (double)size(1), (double)size(2)};
     sort(lens2.begin(), lens2.end());
+    // debug
+    // {
+    //     if(board_pcd->points.size()==621){
 
+    //     }
+    // }
     // cout<< board_pcd->points.size()<<endl;
     // cout<< coeff <<endl;
     // cout<< "----------------------------"<<endl;
@@ -74,14 +79,15 @@ bool ChessboardExtractor::check_board_size(pcl::PointCloud<pcl::PointXYZ>::Ptr b
     vector<double> lens2 = {(double)size(0), (double)size(1), (double)size(2)};
     sort(lens2.begin(), lens2.end());
     // debug
-    // {
-    //     if(board_pcd->size()==317){
-    //         std::cout<< abs(lens2[0] - lens[0])<<std::endl;
-    //         std::cout<< abs(lens2[1] - lens[1])<<std::endl;
-    //         std::cout<< abs(lens2[2] - lens[2])<<std::endl;
-    //         std::cout<< m_checkerboard_square_size<<std::endl;
-    //     }
-    // }
+    {
+        // if(board_pcd->size()==621){
+            // std::cout<< abs(lens2[0] - lens[0])<<std::endl;
+            // std::cout<< abs(lens2[1] - lens[1])<<std::endl;
+            // std::cout<< abs(lens2[2] - lens[2])<<std::endl;
+        //     std::cout<< m_checkerboard_square_size<<std::endl;
+        //     display_colored_by_depth(board_pcd);
+        // }
+    }
 
     // debug
     // cout<< board_pcd->points.size()<<endl;
@@ -91,11 +97,11 @@ bool ChessboardExtractor::check_board_size(pcl::PointCloud<pcl::PointXYZ>::Ptr b
     // cout<< size<<endl;
     // cout<< pose.matrix()<<endl;
     // cout<< "----------------------------"<<endl;
-    if (abs(lens2[0] - lens[0]) > m_checkerboard_square_size)
+    if (abs(lens2[0] - lens[0]) > 0.03)
         return false;
     if (abs(lens2[1] - lens[1]) > m_checkerboard_square_size)
         return false;
-    if (abs(lens2[2] - lens[2]) > 0.03)
+    if (abs(lens2[2] - lens[2]) > m_checkerboard_square_size)
         return false;
     return true;
 }
@@ -150,19 +156,25 @@ void ChessboardExtractor::pcd_clustering(pcl::PointCloud<pcl::PointXYZ>::Ptr& in
 
     reg.extract(pcd_clusters);
     // dubug
-    // pcl::ExtractIndices<pcl::PointXYZ> extract;
-    // extract.setInputCloud(input_pcd);
-    // for(auto& cluster:pcd_clusters){
-    //     pcl::PointCloud<pcl::PointXYZ>::Ptr pcd_cluster(new pcl::PointCloud<pcl::PointXYZ>);
-    //     extract.setIndices(boost::shared_ptr<pcl::PointIndices>(new pcl::PointIndices(cluster)));
-    //     extract.setNegative(false);
-    //     extract.filter(*pcd_cluster);
-    //     // check_board_size(pcd_cluster);
-    //     cout<< pcd_cluster->points.size() <<endl;
-    //     // display_colored_by_depth(pcd_cluster);
+    // {
+    //     std::vector<pcl::PointCloud<pcl::PointXYZ> > cloud_clusters;
+    //     pcl::ExtractIndices<pcl::PointXYZ> extract;
+    //     extract.setInputCloud(input_pcd);
+    //     for(auto& cluster:pcd_clusters){
+    //         pcl::PointCloud<pcl::PointXYZ>::Ptr pcd_cluster(new pcl::PointCloud<pcl::PointXYZ>);
+    //         extract.setIndices(boost::shared_ptr<pcl::PointIndices>(new pcl::PointIndices(cluster)));
+    //         extract.setNegative(false);
+    //         extract.filter(*pcd_cluster);
+    //         // check_board_size(pcd_cluster);
+    //         cout<< pcd_cluster->points.size() <<endl;
+    //         // cloud_clusters.push_back(*pcd_cluster );
+    //         display_colored_by_depth(pcd_cluster);
+    //     }
+    //     // display_multi_clouds(cloud_clusters);
+    //     exit(17);
+    //     cout<< "-------------------------"<<endl;
     // }
-    // exit(17);
-    // cout<< "-------------------------"<<endl;
+
     return;
 }
 
@@ -276,18 +288,25 @@ bool ChessboardExtractor::fitBoardCubic(pcl::PointCloud<pcl::PointXYZ>::Ptr &inp
         ransac.getModelCoefficients(coeff);
         double inliers_percentage = double(inliers.size()) / pcd_cluster->points.size();
         //debug
-        // {
-        //     if(input_pcd->size()==17448){
-        //         std::cout<< pcd_cluster->size()<<std::endl;
-        //         std::cout<< inliers_percentage <<std::endl;
-        //         display_colored_by_depth(pcd_cluster);
-        //     }
-        // }
+        {
+            // if(input_pcd->size()==28237){
+            //     std::cout<< pcd_cluster->size()<<std::endl;
+            //     std::cout<< inliers_percentage <<std::endl;
+            //     display_colored_by_depth(pcd_cluster);
+            // }
+            // std::cout<< "input_pcd size: "<<input_pcd->size()<<std::endl;
+        }
 
         if (inliers_percentage > 0.9)
         {
             pcl::copyPointCloud(*pcd_cluster, inliers, *chessboard_pcd);
-
+            // debug
+            // {
+            //     if(input_pcd->size()==28237){
+            //         std::cout<< "chessboard_pcd size: "<<chessboard_pcd->size()<<std::endl;
+            //         display_colored_by_depth(chessboard_pcd);
+            //     }
+            // }
             if(!check_board_size(chessboard_pcd, coeff, board_pose, board_size)) continue;
             // debug
             // display_colored_by_depth(chessboard_pcd);

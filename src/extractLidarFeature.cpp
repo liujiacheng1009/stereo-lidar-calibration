@@ -555,9 +555,9 @@ bool LidarFeatureDetector::extractPlaneCloud1(pcl::PointCloud<pcl::PointXYZ>::Pt
     vector<pcl::PointIndices> indices_clusters;
     m_chessboard_extractor.pcd_clustering(input_cloud, indices_clusters); // 聚类
     //debug
-    {
-        display_colored_by_depth(input_cloud);
-    }
+    // {
+    //     display_colored_by_depth(input_cloud);
+    // }
     if (m_chessboard_extractor.fitBoardCubic(input_cloud, indices_clusters, plane_pcd, board_pose, board_size))
     {
         //Todo 保留平面上的点
