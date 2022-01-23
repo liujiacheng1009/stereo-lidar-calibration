@@ -37,7 +37,7 @@
 #include <opencv2/highgui.hpp>
 #include <opencv2/imgproc.hpp>
 #include <opencv2/calib3d.hpp>
-
+#include <sophus/so3.hpp>
 
 using namespace Eigen;
 using namespace std;
@@ -98,9 +98,9 @@ bool loadPointXYZ(string& path, pcl::PointCloud<pcl::PointXYZ>::Ptr& pcd);
 // 文件路径操作
 bool isDirExist(const std::string& path_name);
 
-void matrix2Vector(MatrixXd& m, VectorXd& v);
+void matrix2Vector(Matrix4d& m, VectorXd& v);
 
-void vector2Matrix(VectorXd& v, MatrixXd& m);
+void vector2Matrix(VectorXd& v, Matrix4d& m);
 
 void  vector2Affine(Eigen::VectorXd& Rt, Eigen::Affine3d& affine_mat);
 

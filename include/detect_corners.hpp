@@ -129,8 +129,11 @@ bool detectCorner(cv::Mat &input_image, vector<cv::Point2f> &image_corners)
     return true;
 }
 
-
-void estimatePoseAndCompleteCorners(vector<cv::Point2f> &chessboard_corners, cv::Mat &rvec, cv::Mat &tvec)
+void estimatePoseAndCompleteCorners(vector<cv::Point2f> &chessboard_corners,
+									cv::Mat &rvec,
+									cv::Mat &tvec,
+									cv::Mat camera_matrix,
+									cv::Mat dist_coeffs)
 {
     cv::Size board_size = Config::checkerboardGridSize();
     double square_size = Config::checkerboardSquareSize();
@@ -156,8 +159,7 @@ void estimatePoseAndCompleteCorners(vector<cv::Point2f> &chessboard_corners, cv:
     // debug 
     // cout<< board_points_temp.size()<<endl;
     // cout<< chessboard_corners_temp.size()<<endl;
-    cv::Mat camera_matrix = Config::leftCameraMatrix();
-    cv::Mat dist_coeffs = Config::leftCameraDistCoeffs();
+
     cv::solvePnP(cv::Mat(board_points_temp), cv::Mat(chessboard_corners_temp), camera_matrix, dist_coeffs, rvec, tvec);
     // debug 
     // if(1){

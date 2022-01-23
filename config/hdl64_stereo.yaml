@@ -1,23 +1,39 @@
 # dataset params
 type: stereo_lidar
 cam0:
-  image_path: /home/jc/Documents/stereo-lidar-calibration/exclude_dir/lcc/HDL64/images
+  image_path: /home/jc/Documents/stereo-lidar-calibration/exclude_dir/lcc/HDL64_stereo/left_images
   image_format: png
   cam_model: Pinhole
   cam_width: 1280
   cam_height: 960
-  cam_fx: 1614.546232069338
-  cam_fy: 1614.669013419422
-  cam_cx: 641.2276358621397
-  cam_cy: 480.1410561665820
-  cam_d1: -0.004497294509341
-  cam_d2: 0.020426051162860
+  cam_fx: 1625.51202880799
+  cam_fy: 1625.60338178797
+  cam_cx: 640.192524836779
+  cam_cy: 480.619178662295
+  cam_d1: -0.000103058512210208
+  cam_d2: -0.00564163864590723
+  cam_d3: 0.0
+  cam_d4: 0.0
+  cam_d5: 0.0
+
+cam1:
+  image_path: /home/jc/Documents/stereo-lidar-calibration/exclude_dir/lcc/HDL64_stereo/right_images
+  image_format: png
+  cam_model: Pinhole
+  cam_width: 1280
+  cam_height: 960
+  cam_fx: 1624.85736756878
+  cam_fy: 1624.93598961025
+  cam_cx: 639.970457013175
+  cam_cy: 480.848625423083
+  cam_d1: -0.00132142538297009
+  cam_d2: 0.0200478364181037
   cam_d3: 0.0
   cam_d4: 0.0
   cam_d5: 0.0
 
 lidar0:
-  cloud_path: /home/jc/Documents/stereo-lidar-calibration/exclude_dir/lcc/HDL64/pointCloud
+  cloud_path: /home/jc/Documents/stereo-lidar-calibration/exclude_dir/lcc/HDL64_stereo/pointclouds
   cloud_format: pcd
 
 checkerboard:
@@ -38,17 +54,44 @@ RoI:
   min_z: -10
   max_z: 10
 
-matlab_result:
-  m00: -0.00565596282356831
-  m01: -0.997885643377717
-  m02: 0.0647476086444744
-  m03: -0.00305628991168519
-  m10: -0.156655954239030
-  m11: -0.0630649871213768
-  m12: -0.985637722188452
-  m13: -0.402445253372315
-  m20: 0.987637039648674
-  m21: -0.0157178287310998
-  m22: -0.155968034462138
-  m23: -0.826776648946616
+tform_l1_c1:
+  m00: 0.101543730536081
+  m01: -0.991475609085563
+  m02: 0.0816393739394687
+  m03: -0.431648607617924
+  m10: -0.295711600634137
+  m11: -0.108436175003452
+  m12: -0.949102863340438
+  m13: 0.318155358454925
+  m20: 0.949865000954985
+  m21: 0.0722337354636556
+  m22: -0.304201853087311
+  m23: -0.124019056751103
 
+tform_l1_c2:
+  m00: 0.101435033268656
+  m01: -0.991480526744161
+  m02: 0.0817147423229575
+  m03: -0.551897899409753
+  m10: -0.295891603851525
+  m11: -0.108488662300839
+  m12: -0.949040762518843
+  m13: 0.317724570579735
+  m20: 0.949820558208738
+  m21: 0.0720872751551550
+  m22: -0.304375314315642
+  m23: -0.128621813491007
+
+tform_c1_c2:
+  m00: 1.0
+  m01: 0.0
+  m02: 0.0
+  m03: -0.12
+  m10: 0.0
+  m11: 1.0
+  m12: 0.0
+  m13: 0.0
+  m20: 0.0
+  m21: 0.0
+  m22: 1.0
+  m23: 0.0

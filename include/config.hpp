@@ -28,24 +28,37 @@ public:
     static string& cloudFormat(){return getInstance().m_cloud_format;}
     static cv::Mat& leftCameraMatrix(){return getInstance().m_left_camera_matrix;}
     static cv::Mat& leftCameraDistCoeffs(){return getInstance().m_left_camera_dist_coeffs;}
+    static cv::Mat& rightCameraMatrix(){return getInstance().m_right_camera_matrix;}
+    static cv::Mat& rightCameraDistCoeffs(){return getInstance().m_right_camera_dist_coeffs;}
     static double& checkerboardSquareSize(){return getInstance().m_checkerboard_square_size;}
     static cv::Size& checkerboardGridSize(){return getInstance().m_checkerboard_grid_size;}
     static vector<double>& checkerboardPadding(){return getInstance().m_checkerboard_padding;}
-    static Eigen::Matrix4d& matlabTform(){return getInstance().m_matlab_tform;}
-    static vector<double>& passFilterParams(){return getInstance().m_pass_filter_params;}
+    static Eigen::Matrix4d& tformL1C1(){return getInstance().m_tform_l1_c1;}
+    static Eigen::Matrix4d& tformL1C2(){return getInstance().m_tform_l1_c2;}
+    static Eigen::Matrix4d& tformC1C2(){return getInstance().m_tform_c1_c2;}
+    static std::vector<double>& passFilterParams(){return getInstance().m_pass_filter_params;}
+    static std::string& calibType(){return getInstance().m_calib_type;}
+    static std::string& rightImageDatasetPath(){return getInstance().m_right_images_dataset_path;}
+    
 
 public:
-    string m_left_images_dataset_path; 
-    string m_lidar_clouds_dataset_path; 
-    string m_image_format;
-    string m_cloud_format;
+    std::string m_left_images_dataset_path; 
+    std::string m_right_images_dataset_path;
+    std::string m_lidar_clouds_dataset_path; 
+    std::string m_image_format;
+    std::string m_cloud_format;
     cv::Mat m_left_camera_matrix;
     cv::Mat m_left_camera_dist_coeffs;
+    cv::Mat m_right_camera_matrix;
+    cv::Mat m_right_camera_dist_coeffs;
     double m_checkerboard_square_size;
     cv::Size m_checkerboard_grid_size;
     vector<double> m_checkerboard_padding;
-    Eigen::Matrix4d m_matlab_tform;
-    vector<double> m_pass_filter_params;
+    Eigen::Matrix4d m_tform_l1_c1;
+    Eigen::Matrix4d m_tform_l1_c2;
+    Eigen::Matrix4d m_tform_c1_c2;
+    std::vector<double> m_pass_filter_params;
+    std::string m_calib_type;
 };
 
 

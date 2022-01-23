@@ -21,6 +21,12 @@ static string getLeftImageDatasetPath(const YAML::Node& config)
     return loadSafe(cam0, "image_path", Config::leftImageDatasetPath());
 }
 
+static string getRightImageDatasetPath(const YAML::Node& config)
+{
+    auto& cam0 = config["cam1"];
+    return loadSafe(cam0, "image_path", Config::rightImageDatasetPath());
+}
+
 static string getLidarCloudDatasetPath(const YAML::Node& config)
 {
     auto& lidar0 = config["lidar0"];
@@ -51,10 +57,33 @@ static cv::Mat getLeftCameraMatrix(const YAML::Node& config)
     return left_camera_matrix;
 }
 
+static cv::Mat getRightCameraMatrix(const YAML::Node& config)
+{
+    cv::Mat left_camera_matrix = cv::Mat::eye(3, 3, CV_64F);
+    auto& cam0 = config["cam1"];
+    left_camera_matrix.at<double>(0, 0) = loadSafe(cam0, "cam_fx",0.0);
+    left_camera_matrix.at<double>(0, 2) = loadSafe(cam0, "cam_cx",0.0);
+    left_camera_matrix.at<double>(1, 1) = loadSafe(cam0, "cam_fy",0.0);
+    left_camera_matrix.at<double>(1, 2) = loadSafe(cam0, "cam_cy",0.0);
+    return left_camera_matrix;
+}
+
 static cv::Mat getLeftCameraDistCoeffs(const YAML::Node& config)
 {
     cv::Mat left_camera_dist_coeffs = cv::Mat::zeros(5, 1, CV_64F);
     auto& cam0 = config["cam0"];
+    left_camera_dist_coeffs.at<double>(0, 0) = loadSafe(cam0, "cam_k1",0.0);
+    left_camera_dist_coeffs.at<double>(1, 0) = loadSafe(cam0, "cam_k2",0.0);
+    left_camera_dist_coeffs.at<double>(2, 0) = loadSafe(cam0, "cam_p1",0.0);
+    left_camera_dist_coeffs.at<double>(3, 0) = loadSafe(cam0, "cam_p2",0.0);
+    left_camera_dist_coeffs.at<double>(4, 0) = loadSafe(cam0, "cam_k3",0.0);
+    return left_camera_dist_coeffs;
+}
+
+static cv::Mat getRightCameraDistCoeffs(const YAML::Node& config)
+{
+    cv::Mat left_camera_dist_coeffs = cv::Mat::zeros(5, 1, CV_64F);
+    auto& cam0 = config["cam1"];
     left_camera_dist_coeffs.at<double>(0, 0) = loadSafe(cam0, "cam_k1",0.0);
     left_camera_dist_coeffs.at<double>(1, 0) = loadSafe(cam0, "cam_k2",0.0);
     left_camera_dist_coeffs.at<double>(2, 0) = loadSafe(cam0, "cam_p1",0.0);
@@ -89,10 +118,48 @@ static vector<double> getCheckerboardPadding(const YAML::Node& config)
     return checkerboard_padding;
 }
 
-static Eigen::Matrix4d getMatlabTform(const YAML::Node& config)
+static Eigen::Matrix4d getTformL1C1(const YAML::Node& config)
 {
     Eigen::Matrix4d matlab_tform = Eigen::Matrix4d::Identity();
-    auto& matlab_result = config["matlab_result"];
+    auto& matlab_result = config["tform_l1_c1"];
+    matlab_tform(0, 0) = loadSafe(matlab_result, "m00",0.0);
+    matlab_tform(0, 1) = loadSafe(matlab_result, "m01",0.0);
+    matlab_tform(0, 2) = loadSafe(matlab_result, "m02",0.0);
+    matlab_tform(0, 3) = loadSafe(matlab_result, "m03",0.0);
+    matlab_tform(1, 0) = loadSafe(matlab_result, "m10",0.0);
+    matlab_tform(1, 1) = loadSafe(matlab_result, "m11",0.0);
+    matlab_tform(1, 2) = loadSafe(matlab_result, "m12",0.0);
+    matlab_tform(1, 3) = loadSafe(matlab_result, "m13",0.0);
+    matlab_tform(2, 0) = loadSafe(matlab_result, "m20",0.0);
+    matlab_tform(2, 1) = loadSafe(matlab_result, "m21",0.0);
+    matlab_tform(2, 2) = loadSafe(matlab_result, "m22",0.0);
+    matlab_tform(2, 3) = loadSafe(matlab_result, "m23",0.0);
+    return matlab_tform;
+}
+
+static Eigen::Matrix4d getTformL1C2(const YAML::Node& config)
+{
+    Eigen::Matrix4d matlab_tform = Eigen::Matrix4d::Identity();
+    auto& matlab_result = config["tform_l1_c2"];
+    matlab_tform(0, 0) = loadSafe(matlab_result, "m00",0.0);
+    matlab_tform(0, 1) = loadSafe(matlab_result, "m01",0.0);
+    matlab_tform(0, 2) = loadSafe(matlab_result, "m02",0.0);
+    matlab_tform(0, 3) = loadSafe(matlab_result, "m03",0.0);
+    matlab_tform(1, 0) = loadSafe(matlab_result, "m10",0.0);
+    matlab_tform(1, 1) = loadSafe(matlab_result, "m11",0.0);
+    matlab_tform(1, 2) = loadSafe(matlab_result, "m12",0.0);
+    matlab_tform(1, 3) = loadSafe(matlab_result, "m13",0.0);
+    matlab_tform(2, 0) = loadSafe(matlab_result, "m20",0.0);
+    matlab_tform(2, 1) = loadSafe(matlab_result, "m21",0.0);
+    matlab_tform(2, 2) = loadSafe(matlab_result, "m22",0.0);
+    matlab_tform(2, 3) = loadSafe(matlab_result, "m23",0.0);
+    return matlab_tform;
+}
+
+static Eigen::Matrix4d getTformC1C2(const YAML::Node& config)
+{
+    Eigen::Matrix4d matlab_tform = Eigen::Matrix4d::Identity();
+    auto& matlab_result = config["tform_c1_c2"];
     matlab_tform(0, 0) = loadSafe(matlab_result, "m00",0.0);
     matlab_tform(0, 1) = loadSafe(matlab_result, "m01",0.0);
     matlab_tform(0, 2) = loadSafe(matlab_result, "m02",0.0);
@@ -121,9 +188,15 @@ static vector<double> getPassFilterParams(const YAML::Node& config)
     return pass_filter_params;
 }
 
+static std::string getCalibType(const YAML::Node& config)
+{
+    return loadSafe(config, "type",Config::calibType());
+}
+
 void Config::loadFromFile(const string& config_file)
 {
     YAML::Node config = YAML::LoadFile(config_file);
+    Config::calibType() = getCalibType(config);
     Config::leftImageDatasetPath() = getLeftImageDatasetPath(config);
     Config::lidarCloudDatasetPath() = getLidarCloudDatasetPath(config);
     Config::imageFormat() = getImageFormat(config);
@@ -133,6 +206,14 @@ void Config::loadFromFile(const string& config_file)
     Config::checkerboardSquareSize() = getCheckerboardSquareSize(config);
     Config::checkerboardGridSize() = getCheckerboardGridSize(config);
     Config::checkerboardPadding() = getCheckerboardPadding(config);
-    Config::matlabTform() = getMatlabTform(config);
+    Config::tformL1C1() = getTformL1C1(config);
     Config::passFilterParams() = getPassFilterParams(config);
+    if(Config::calibType()=="stereo_lidar"){
+        Config::rightImageDatasetPath() = getRightImageDatasetPath(config);
+        Config::rightCameraMatrix() = getRightCameraMatrix(config);
+        Config::rightCameraDistCoeffs() = getRightCameraDistCoeffs(config);
+        Config::tformL1C2() = getTformL1C2(config);
+        Config::tformC1C2() = getTformC1C2(config);
+    }
+    
 }

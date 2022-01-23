@@ -30,15 +30,15 @@ using namespace Eigen;
 bool fitBoard(vector<vector<int>> &board, vector<cv::Point2d>& corners, cv::Size &size);
 
 
-void processImage(vector<string>& image_paths, ImageResults& images_features);
+void processImage(vector<string>& image_paths, ImageResults& images_features, cv::Mat camera_matrix, cv::Mat dist);
 
 class ImageFeatureDetector{
 public:
-    ImageFeatureDetector() : m_camera_matrix(Config::leftCameraMatrix()),
-                                           m_dist_coeffs(Config::leftCameraDistCoeffs()),
-                                           m_square_size(Config::checkerboardSquareSize()),
-                                           m_board_size(Config::checkerboardGridSize()),
-                                           m_padding(Config::checkerboardPadding()) {}
+    ImageFeatureDetector(cv::Mat camera_matrix, cv::Mat dist_coeffs) : m_camera_matrix(camera_matrix),
+                                                                       m_dist_coeffs(dist_coeffs),
+                                                                       m_square_size(Config::checkerboardSquareSize()),
+                                                                       m_board_size(Config::checkerboardGridSize()),
+                                                                       m_padding(Config::checkerboardPadding()) {}
 
     bool detectCheckerboardInImage(cv::Mat& img, std::vector<cv::Point2f>& image_corners, cv::Mat& rvec, cv::Mat& tvec,string method="cbdetect");
     bool detectCheckerboardInImageByCbdetect(cv::Mat& img, std::vector<cv::Point2f>& image_corners, cv::Mat& rvec, cv::Mat& tvec);
@@ -51,6 +51,7 @@ public:
     void calculatePlane(std::vector<cv::Point3d>& corners, Eigen::VectorXd& plane); // 通过四个角点计算平面的方程
     void calculatePlane1(std::vector<cv::Point3d>& corners, Eigen::VectorXd& plane); // 通过四个角点计算平面的方程
     void transform_to_normalized_plane(vector<cv::Point2f>& corners1, vector<Vector2d>& corners2);
+    void calc_chessboard_points_3d(std::vector<Eigen::Vector3d>&chessboard_points_3d, cv::Mat& rvec, cv::Mat& tvec);
     const cv::Mat get_camera_matrix(){
         return m_camera_matrix;
     }

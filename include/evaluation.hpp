@@ -7,10 +7,11 @@ void projectLidarOnImage(cv::Mat& img, pcl::PointCloud<pcl::PointXYZ>& cloud, cv
 
 pcl::PointCloud<pcl::PointXYZRGB>::Ptr colorizeCloud(cv::Mat& img, pcl::PointCloud<pcl::PointXYZ>& cloud, cv::Mat& rvec, cv::Mat& tvec, cv::Mat K, cv::Mat dist);
 
-
 std::vector<double> computeReprojectionError(std::vector<std::vector<Eigen::Vector3d>> &image_corners_3d,
                                             std::vector<std::vector<Eigen::Vector3d>> &cloud_corners_3d,
-                                            Eigen::Matrix4d &tform);
+                                            Eigen::Matrix4d &tform, 
+                                            cv::Mat camera_matrix = Config::leftCameraMatrix(), 
+                                            cv::Mat dist_coeff = Config::leftCameraDistCoeffs());
 
 std::vector<double> computeRotationError(std::vector<std::vector<Eigen::Vector3d>> &image_corners_3d,
                                             std::vector<std::vector<Eigen::Vector3d>> &cloud_corners_3d,

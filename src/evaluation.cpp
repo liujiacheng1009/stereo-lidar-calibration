@@ -147,11 +147,11 @@ std::vector<double> computeRotationError(std::vector<std::vector<Eigen::Vector3d
 
 std::vector<double> computeReprojectionError(std::vector<std::vector<Eigen::Vector3d>> &image_corners_3d,
                                             std::vector<std::vector<Eigen::Vector3d>> &cloud_corners_3d,
-                                            Eigen::Matrix4d &tform)
+                                            Eigen::Matrix4d &tform, cv::Mat camera_matrix, cv::Mat dist_coeff)
 {
     // todo
-    auto camera_matrix = Config::leftCameraMatrix();
-    auto dist_coeff = Config::leftCameraDistCoeffs();
+    // auto camera_matrix = Config::leftCameraMatrix();
+    // auto dist_coeff = Config::leftCameraDistCoeffs();
     int n_pairs = image_corners_3d.size();
     std::vector<double> reprojection_errors;
     std::vector<std::vector<Eigen::Vector3d>> transformed_cloud_corners_3d(n_pairs);

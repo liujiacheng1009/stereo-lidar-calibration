@@ -4,9 +4,9 @@
 using namespace std;
 using namespace Eigen;
 
-void processImage(vector<string>& image_paths, ImageResults& images_features)
+void processImage(vector<string>& image_paths, ImageResults& images_features, cv::Mat camera_matrix, cv::Mat dist)
 {
-    ImageFeatureDetector image_feature_detector;
+    ImageFeatureDetector image_feature_detector(camera_matrix, dist);
     auto& valid_image_index = images_features.valid_index;
     auto& image_3d_corners = images_features.corners_3d; // 图像3d角点
     auto& chessboard_2d_points = images_features.chessboard_points_2d;
@@ -33,7 +33,8 @@ void processImage(vector<string>& image_paths, ImageResults& images_features)
         //     cv::waitKey(0);
         // }
 
-        vector<Vector3d> chessboard_points_3d;
+        std::vector<Eigen::Vector3d> chessboard_points_3d;
+        image_feature_detector.calc_chessboard_points_3d(chessboard_points_3d, rvec,tvec);
         vector<Vector2d> chessboard_points_2d;
         image_feature_detector.transform_to_normalized_plane(image_corners, chessboard_points_2d);
         std::vector<cv::Point3d> chessboard_3d_corners, reordered_image_3d_corners;
@@ -76,6 +77,28 @@ void processImage(vector<string>& image_paths, ImageResults& images_features)
     return;
 }
 
+void ImageFeatureDetector::calc_chessboard_points_3d(std::vector<Eigen::Vector3d>&chessboard_points_3d, cv::Mat& rvec, cv::Mat& tvec)
+{
+    chessboard_points_3d.clear();
+    std::vector<cv::Point3d> board_points;
+    int &board_width = m_board_size.width;
+    int &board_height = m_board_size.height;
+    for (int i = 0; i < board_height; i++)
+    {
+        for (int j = 0; j < board_width; j++)
+        {
+            board_points.push_back(
+                cv::Point3d(double(i) * m_square_size, double(j) * m_square_size, 0.0));
+        }
+    }
+    cv::Matx33d rot_matrix;
+    cv::Rodrigues(rvec, rot_matrix);
+    for(auto& point:board_points){
+        auto p = rot_matrix*point + cv::Point3d(tvec);
+        chessboard_points_3d.push_back(Vector3d(p.x,p.y,p.z));
+    }
+
+}
 
 bool ImageFeatureDetector::detectImageCorner(cv::Mat &input_image, vector<cv::Point2f> &image_corners)
 {
@@ -253,7 +276,7 @@ bool ImageFeatureDetector::detectCheckerboardInImageByCbdetect(cv::Mat &input_im
                                                                cv::Mat &tvec)
 {
     if(!cbdetectModified::detectCorner(input_image,chessboard_corners)) return false;
-    cbdetectModified::estimatePoseAndCompleteCorners(chessboard_corners,rvec, tvec);
+    cbdetectModified::estimatePoseAndCompleteCorners(chessboard_corners,rvec, tvec,  m_camera_matrix, m_dist_coeffs);
     return true;
 }
 

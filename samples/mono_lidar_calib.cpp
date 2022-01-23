@@ -40,7 +40,7 @@ int main(int argc, char** argv)
     }
 
     ImageResults images_features;
-    processImage(images, images_features);
+    processImage(images, images_features, Config::leftCameraMatrix(), Config::leftCameraDistCoeffs());
     cout<< "有效的图像帧有： "<<endl;
     for(auto& id:images_features.valid_index){
         cout<< id<<" ";
@@ -98,13 +98,14 @@ int main(int argc, char** argv)
     Rt.block(0,0,3,3) = R;
     Rt.block(0,3,3,1) = R_t.tail(3);
     cout << Rt << std::endl;
-    cout << Rt-Config::matlabTform()<<endl;
+    cout << Rt-Config::tformL1C1()<<endl;
 
-    bool eval = true;
+
+    bool eval =  false;
     if(eval){
         // debug
         // {
-        //     auto mat = Config::matlabTform();
+        //     auto mat = Config::tformL1C1();
         //     Eigen::Matrix3d mat_R = mat.block(0,0,3,3);
         //     Eigen::AngleAxisd aa;
         //     aa.fromRotationMatrix(mat_R);
