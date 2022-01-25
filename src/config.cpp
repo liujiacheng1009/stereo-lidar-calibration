@@ -59,13 +59,13 @@ static cv::Mat getLeftCameraMatrix(const YAML::Node& config)
 
 static cv::Mat getRightCameraMatrix(const YAML::Node& config)
 {
-    cv::Mat left_camera_matrix = cv::Mat::eye(3, 3, CV_64F);
-    auto& cam0 = config["cam1"];
-    left_camera_matrix.at<double>(0, 0) = loadSafe(cam0, "cam_fx",0.0);
-    left_camera_matrix.at<double>(0, 2) = loadSafe(cam0, "cam_cx",0.0);
-    left_camera_matrix.at<double>(1, 1) = loadSafe(cam0, "cam_fy",0.0);
-    left_camera_matrix.at<double>(1, 2) = loadSafe(cam0, "cam_cy",0.0);
-    return left_camera_matrix;
+    cv::Mat camera_matrix = cv::Mat::eye(3, 3, CV_64F);
+    auto& cam = config["cam1"];
+    camera_matrix.at<double>(0, 0) = loadSafe(cam, "cam_fx",0.0);
+    camera_matrix.at<double>(0, 2) = loadSafe(cam, "cam_cx",0.0);
+    camera_matrix.at<double>(1, 1) = loadSafe(cam, "cam_fy",0.0);
+    camera_matrix.at<double>(1, 2) = loadSafe(cam, "cam_cy",0.0);
+    return camera_matrix;
 }
 
 static cv::Mat getLeftCameraDistCoeffs(const YAML::Node& config)

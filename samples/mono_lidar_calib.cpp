@@ -63,7 +63,16 @@ int main(int argc, char** argv)
     Eigen::VectorXd R_t(6);
     calculateInitialRt(cloud_3d_corners, image_3d_corners, R_t);
     cout<< "initial Rt \n"<< R_t<<endl; 
-    // R_t << 0., 0., 0., 0., 0., 0.;
+
+    // debug 
+    // {
+    //     for(auto& corners: image_3d_corners){
+    //         for(auto& corner: corners)
+    //         std::cout<< corner.transpose()<<std::endl;
+    //     }
+    //     exit(17);
+    // }
+
     Optimizer optimizer_lc;
     ceres::Problem problem;
     std::vector<Vector3d> p1, p2;
@@ -97,11 +106,12 @@ int main(int argc, char** argv)
     Eigen::Matrix3d R = Sophus::SO3d::exp(R_t.head(3)).matrix();
     Rt.block(0,0,3,3) = R;
     Rt.block(0,3,3,1) = R_t.tail(3);
-    cout << Rt << std::endl;
-    cout << Rt-Config::tformL1C1()<<endl;
+    std::cout << Rt << std::endl;
+    std::cout<< Config::tformL1C1()<<std::endl;
+    std::cout << Rt-Config::tformL1C1()<<std::endl;
 
 
-    bool eval =  false;
+    bool eval =  true;
     if(eval){
         // debug
         // {

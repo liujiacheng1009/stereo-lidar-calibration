@@ -109,10 +109,10 @@ class ClosedupError
 {
 public:
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-    ClosedupError(const double& w):
-                    m_w(w){}
+    ClosedupError(const Eigen::VectorXd &Rt_c1_c2,
+                  const double &w) : m_Rt_c1_c2(Rt_c1_c2), m_w(w) {}
     template<typename T>
-    bool operator()(const T* const Rt1, const T* const Rt2, const T* const Rt3,T* residual) const{
+    bool operator()(const T* const Rt1, const T* const Rt2, T* residual) const{
         T rot1[3*3];
         ceres::AngleAxisToRotationMatrix(Rt1, rot1);
         Eigen::Map<const Eigen::Matrix<T,3,3>> R1(rot1);
@@ -129,15 +129,17 @@ public:
         trans2.block(0,0,3,3) = R2;
         trans2.block(0,3,3,1) = t2;
 
-        T rot3[3*3];
-        ceres::AngleAxisToRotationMatrix(Rt3, rot3);
-        Eigen::Map<const Eigen::Matrix<T,3,3>> R3(rot3);
-        Eigen::Map<const Eigen::Matrix<T,3,1>> t3(Rt3+3);
+        // T rot3[3*3];
+        // const T* const Rt3 = m_Rt_c1_c2.template cast<T>().data();
+        // ceres::AngleAxisToRotationMatrix(Rt3, rot3);
+        // Eigen::Map<const Eigen::Matrix<T,3,3>> R3(rot3);
+        // Eigen::Map<const Eigen::Matrix<T,3,1>> t3(Rt3+3);
         Eigen::Matrix<T,4,4> trans3 = Eigen::Matrix<T,4,4>::Identity();
+        Eigen::Matrix<T,3,3> R3 = Sophus::SO3d::exp(m_Rt_c1_c2.head(3)).matrix().template cast<T>();
         trans3.block(0,0,3,3) = R3;
-        trans3.block(0,3,3,1) = t3;
+        trans3.block(0,3,3,1) = m_Rt_c1_c2.tail(3).template cast<T>();
 
-        Eigen::Matrix<T,4,4> loop = trans1*trans3*(trans2.inverse().template cast<T>());
+        Eigen::Matrix<T,4,4> loop = trans1*(trans2.inverse().template cast<T>())*trans3;
         residual[0] = loop.block(0,3,3,1).norm();
         residual[0] *= m_w;
         residual[1] = (Matrix<T,3,3>::Identity()-loop.block(0,0,3,3)).trace();
@@ -146,6 +148,7 @@ public:
     }
 private:
     const double m_w;
+    const Eigen::VectorXd& m_Rt_c1_c2;
 };
 
 
