@@ -18,6 +18,9 @@
 - 单目相机与激光雷达外参标定  
 首先，需要提供配置文件，以Matlab提供的hdl64线激光雷达数据为例(config/hdl64_mono.yaml), 需要提供的参数包括：标定类型、相机内参、图像和点云文件夹目录(文件名保持一致)、标定板参数、点云的虚拟边界、tform_l1_c1是用来对比的标定结果，这里提供的是Matlab LCC标定得到的参数。
 
+Matlab示例数据集链接：https://pan.baidu.com/s/1qgrUpctPIxrGzjBrsZFwKQ?pwd=6rbc 
+提取码：6rbc
+
 标定命令：./samples/mono_lidar_calib -c  config/hdl64_mono.yaml
 
 **标定结果**
