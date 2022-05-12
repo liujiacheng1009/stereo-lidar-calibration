@@ -1,6 +1,8 @@
 # stereo-lidar-calibration
 **双目与激光雷达外参联合标定算法**   
+
 该算法利用位姿闭环约束联合了双目外参标定和相机与激光雷达标定过程，同时获得双目外参和相机与激光雷达外参估计。算法框图如下：
+
 ![image](https://user-images.githubusercontent.com/26436149/168028076-f15c1050-d20f-4cd4-ad9d-e7f3fddae00f.png)
 
 **算法特点**
