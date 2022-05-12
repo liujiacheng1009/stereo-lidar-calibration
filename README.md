@@ -28,7 +28,9 @@
 
 - 双目相机与激光雷达外参标定  
 
-标定命令：./samples/stereo_lidar_calib -c  config/$Your_Config_File$
+标定命令：./samples/stereo_lidar_calib -c  config/$Your_Config_File$  
 当前正在开发从Gazebo中自动获取仿真数据的工具，waiting for update.
 
 
+*License*  
+任君取用：-）
