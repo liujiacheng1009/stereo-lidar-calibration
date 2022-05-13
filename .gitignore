@@ -36,5 +36,4 @@ build/
 
 .vscode/
 
-*.txt
 *.csv
