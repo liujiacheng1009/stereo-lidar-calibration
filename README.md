@@ -47,8 +47,13 @@ Ours
 **双目相机与激光雷达外参标定**
 
 标定命令：./samples/stereo_lidar_calib -c  config/$Your_Config_File$  
-当前正在开发从Gazebo中自动获取仿真数据的工具，waiting for update.
+在gazebo仿真环境[camera-lidar-gazebo-simulation](https://github.com/td092/camera-lidar-gazebo-simulation)中生成了
+24组双目图像与点云
+![image](https://user-images.githubusercontent.com/26436149/181396105-3653feed-136e-42b1-88d8-d31d9ac1623e.png)  
 
+与Matlab LCC的结果对比：  
+
+![image](https://user-images.githubusercontent.com/26436149/181396156-04d791c6-269f-458e-8143-7c160348f751.png)
 
 **License**
 
